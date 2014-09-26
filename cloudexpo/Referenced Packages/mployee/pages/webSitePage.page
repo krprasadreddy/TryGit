@@ -1,0 +1,49 @@
+<apex:page id="home" 
+           docType="html-5.0" 
+           controller="mployee.webSiteContentController"
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"            
+>
+    
+    <apex:composition template="mployee__SiteTemplate">
+        <apex:define name="body">
+            
+           
+            
+            <div class="container">
+                
+                <apex:outputPanel layout="block" styleClass="row">
+		
+					<apex:outputPanel layout="block" styleClass="col-md-4">
+					
+					
+					</apex:outputPanel>
+					
+					<apex:outputPanel layout="block" styleClass="col-md-8">
+						
+						<h3><apex:outputField value="{!article.Name}" /></h3>
+						
+						<apex:outputText escape="false" value="{!article.mployee__introtext__c}" />
+						
+						<apex:repeat value="{!article.Attachments}" var="image">
+							
+							<apex:outputPanel layout="block" styleClass="col-md-4">
+								<apex:image styleClass="img-thumbnail"  style="height:100px" url="{!URLFOR($Action.Attachment.Download, image.Id)}"  />					
+							</apex:outputPanel>
+						
+						</apex:repeat>
+						
+					
+					
+					</apex:outputPanel>
+				
+				</apex:outputPanel>
+                
+            </div>
+            
+        </apex:define>
+    </apex:composition>
+</apex:page>

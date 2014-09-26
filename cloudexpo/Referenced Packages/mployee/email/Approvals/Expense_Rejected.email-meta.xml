@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <description>This Email template is used for the rejection of an Expense</description>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Letterhead_Expense</letterhead>
+    <name>Expense Rejected</name>
+    <style>freeForm</style>
+    <subject>Rejected: Expense Request Amount {!MF_EmployeeExpense__c.Amount__c}</subject>
+    <textOnly>The next Expense request is not approved.
+
+Detail information:
+
+Transaction Date: {!MF_EmployeeExpense__c.DateTransaction__c}
+Category: {!MF_EmployeeExpense__c.ExpenseCategory__c}
+Type: {!MF_EmployeeExpense__c.Type__c}
+Amount: {!MF_EmployeeExpense__c.Amount__c}
+Description: {!MF_EmployeeExpense__c.BusinessPurpose__c}
+
+Comments:  {!MF_EmployeeExpense__c.Comments__c}</textOnly>
+    <type>html</type>
+</EmailTemplate>

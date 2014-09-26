@@ -1,0 +1,33 @@
+<apex:component id="siteMod_articles_category"
+	controller="mployee.webSiteContentController"
+>
+	
+	<apex:outputPanel layout="block" styleClass="row">
+		<apex:repeat value="{!categories}" var="cat">
+		
+			<apex:outputPanel layout="block" styleClass="col-md-4">
+				
+				<h3><apex:outputField value="{!cat.Name}" /></h3>
+				<ul>
+				<apex:repeat value="{!cat.mployee__content__r}" var="article">
+					<li>
+						<apex:outputLink value="{!$Page.mployee__webSitePage}" >
+							<apex:param name="id" value="{!article.Id}" />
+							<apex:outputField value="{!article.Name}" />
+						</apex:outputLink>
+					</li>
+				
+				</apex:repeat>
+				</ul>
+			
+			
+			</apex:outputPanel>
+		
+		
+	
+		
+	
+		</apex:repeat>
+	</apex:outputPanel>
+
+</apex:component>

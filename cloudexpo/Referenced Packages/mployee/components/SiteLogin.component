@@ -1,0 +1,56 @@
+<apex:component id="loginComponent" controller="mployee.SiteClass" layout="none">
+
+	<apex:form id="loginForm" forceSSL="true">
+	
+		<h1>Sign In</h1>		
+		
+		<div class="login-fields">
+			<apex:messages styleClass="alert alert-info" />
+			<p>Sign in using your registered account:</p>
+			
+			<div class="field">
+				
+				<apex:outputLabel value="{!$Label.site.username}" for="username"/>
+				<apex:inputText id="username" value="{!username}" styleClass="form-control input-lg username-field"/>
+				
+			</div> <!-- /field -->
+			
+			<div class="field">					
+				<apex:outputLabel value="{!$Label.site.password}" for="password"/>
+				<apex:inputSecret id="password" value="{!password}" styleClass="form-control input-lg password-field"/>
+				
+			</div> <!-- /password -->
+			
+		</div> <!-- /login-fields -->
+		 
+		<div class="login-actions">
+		
+			<apex:commandButton action="{!login}" value="{!$Label.site.login_button}" id="loginButton" styleClass="login-action btn btn-primary"/>
+			
+		</div> <!-- .actions -->
+		
+		<div class="login-social">
+			<p>Sign in using social network:</p>
+			<apex:commandLink rendered="true" styleClass="btn"  action="{!SiteAuth}">
+               	<apex:param name="serviceName" value="LinkedIn" assignTo="{!serviceName}"/>
+               	<i class="icon-linkedin-sign"></i>&nbsp;&nbsp;<apex:outputText value="SITE_LOGIN_BUTTON_LINKEDIN" />
+			</apex:commandLink>
+			
+			<apex:commandLink rendered="true" styleClass="btn"  action="{!SiteAuth}">
+                	<apex:param name="serviceName" value="Xing" assignTo="{!serviceName}"/>
+                	<i class="icon-xing-sign"></i>&nbsp;&nbsp;<apex:outputText value="SITE_LOGIN_BUTTON_XING" />
+                </apex:commandLink>
+			
+			<div class="twitter">
+				<a href="#" class="btn_1">Login with Twitter</a>				
+			</div>
+			
+			<div class="fb">
+				<a href="#" class="btn_2">Login with Facebook</a>				
+			</div>
+		</div>			
+		
+		
+	</apex:form>
+
+</apex:component>

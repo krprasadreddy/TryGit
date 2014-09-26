@@ -1,0 +1,45 @@
+<apex:page sidebar="false" tabStyle="employee__tab" >
+<apex:composition template="mployee__templateMployee">
+<apex:define name="toolbar">
+    <c:MFToolbar title="My m|ployee" icon="icon-48-article-add"/>
+</apex:define>
+
+<apex:define name="body">
+<div id="cpanel" class="AdminCpanel">
+    <div class="adminform">
+        <!-- Start Cpanel left-->
+        <div class="cpanel-left">
+        <apex:form >
+            <div id="cpanel">                
+                <!-- Employees -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_EmployeeFile__c}/o" title="{!$ObjectType.mployee__MF_EmployeeFile__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_employees_employees.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_EmployeeFile__c.label}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+                
+              
+                <!-- MF_Documents__c -->
+               
+            </div>
+        </apex:form>
+        </div>
+        <!-- End Cpanel left-->
+        
+        <!-- Start Cpanel right-->
+        <div class="cpanel-right">            
+        
+        </div>
+        <!-- End Cpanel right-->
+    </div>
+    <div class="clr"></div>
+</div>
+<div class="clr"></div>
+
+</apex:define>
+
+</apex:composition>
+</apex:page>

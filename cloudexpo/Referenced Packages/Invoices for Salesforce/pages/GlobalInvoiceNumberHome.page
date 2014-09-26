@@ -1,0 +1,106 @@
+<apex:page controller="kognoz1.GlobalInvoiceNumberHomeController" tabStyle="Invoices_Configuration__tab" title="Global Invoice Numbers: Home">
+
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+	<script type="text/javascript">
+	    $(function(){
+	        $("#errorInfoPanel").dialog({
+	                modal: true, 
+	                autoOpen: false,
+	                width: 550,
+	                height:'auto',
+	                title:'Processing information'
+	        });
+		});	
+		
+		function deleteGIN()
+		{
+			var bsname = $("input[id$=notDeletableBillingScenarioContField]").val();
+			var isdel = $("input[id$=isDeletableContField]").val();
+			if(isdel=="true")
+				deleteGlobalInvoiceNumber();
+			else
+			{
+				var msg = "The gobal invoice number you are trying to delete is used in the "+bsname+" billing scenario. Replace it before trying to delete it.";
+				var errorHtml="<p>"+msg+"</p>";
+				$("span[id*=errorPanel]").html(errorHtml);
+				$("#errorInfoPanel").dialog("open"); 
+			}
+		}
+	</script>    
+	<style type="text/css">
+		.ifsthBack {font-size:0.95em;}
+	</style>
+
+	<apex:outputPanel layout="block" style="clear:both;">
+		<br/>&nbsp;« &nbsp;
+		<apex:outputLink value="InvoicesConfigurationHome" style="color:#015BA7;text-decoration:none;">Back to Invoices Configuration page</apex:outputLink>
+	</apex:outputPanel>
+	<apex:sectionHeader title="Global Invoice Numbers" subtitle="Home" help="{!ifsHelpUrl}"/>
+	<p>
+		Global Invoice Numbers can be used across different billing scenarios so that they all share the same invoice number display format
+		and running auto number counter. For example, if you have multiple billing scenarios but you need the invoices created for each scenario
+		to share the the invoice number auto generation, you can create a global invoice number and assign it to each of your billing scenarios.  
+	</p>
+	<apex:form >
+		<apex:pageBlock title="Available Global Invoice Numbers" mode="detail">
+			<apex:pageBlockButtons location="top">
+				<apex:commandButton value="New" action="{!redirectToCreateGlobalInvoiceNumber}"/>
+			</apex:pageBlockButtons>
+
+			<apex:outputPanel layout="block" id="globalInvoiceNumberList" style="background-color:#FFFFFF;">
+				<apex:dataTable value="{!globalInvoiceNumbers}" var="globalInvoiceNumber" id="globalInvoiceNumberTable" headerClass="ifsthBack" rowClasses="ifsTableRows" columnsWidth="10%,15%,15%,10%,50%" width="100%" cellspacing="0" cellpadding="2px">
+	
+					<apex:column >
+						<apex:facet name="header">Action</apex:facet>
+						<apex:outputPanel style="color:#999999">
+							<apex:outputLink value="GlobalInvoiceNumberEdit?Id={!globalInvoiceNumber.Id}" style="color:#015BA7;text-decoration:none;">Edit</apex:outputLink>
+								&nbsp;|&nbsp;
+                             <apex:commandLink style="color:#015BA7;text-decoration:none;"  action="{!checkDeletable}" value="Del" onclick="if(!confirm('Are you sure ?')) return false;" reRender="isDeletableContField,notDeletableBillingScenarioContField" id="delLinkId" oncomplete="deleteGIN();">
+                                 <apex:param value="{!globalInvoiceNumber.Id}" name="globalInvoiceNumberId"/> 
+                             </apex:commandLink>
+
+						</apex:outputPanel>
+					</apex:column>
+	
+					<apex:column >
+						<apex:facet name="header">Name</apex:facet>
+						<apex:outputText value="{!globalInvoiceNumber.Name}" />
+					</apex:column>
+	
+					<apex:column >
+						<apex:facet name="header">Format</apex:facet>
+						<apex:outputText value="{!globalInvoiceNumber.kognoz1__Invoice_Number_Format__c}" />
+					</apex:column>
+	
+					<apex:column >
+						<apex:facet name="header">Counter</apex:facet>
+						<apex:outputText value="{!globalInvoiceNumber.kognoz1__Invoice_Number_Counter__c}" />
+					</apex:column>
+	
+					<apex:column >
+						<apex:facet name="header">Last Modified</apex:facet>
+						<apex:outputField value="{!globalInvoiceNumber.LastModifiedDate}" />
+					</apex:column>
+				
+				</apex:dataTable>
+			</apex:outputPanel>
+
+		</apex:pageBlock>
+        <apex:actionFunction action="{!deleteGlobalInvoiceNumber}" name="deleteGlobalInvoiceNumber" reRender="globalInvoiceNumberList"/>
+         <apex:inputText value="{!isDeletable}" id="isDeletableContField" style="display:none"/> 
+         <apex:inputText value="{!notDeletableBillingScenario}" id="notDeletableBillingScenarioContField" style="display:none"/> 
+		
+	</apex:form>	
+    <!-- ###########################################
+            ERROR HANDLING MODAL DIALOG BOX
+     ###############################################-->
+    <div id="errorInfoPanel" style="display:none;">
+        <apex:outputPanel id="errorPanel">
+        </apex:outputPanel>
+    </div>  
+
+</apex:page>

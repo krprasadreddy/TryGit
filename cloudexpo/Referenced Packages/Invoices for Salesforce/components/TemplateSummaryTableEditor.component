@@ -1,0 +1,1390 @@
+<apex:component controller="kognoz1.InvoiceTemplateComponentController">
+     <apex:attribute name="pageController" type="kognoz1.InvoiceTemplateEditorController" description="Invoice template controller" assignTo="{!cont}" required="true"/>
+
+<script type="text/javascript" >
+
+    function stCellClass() {}  
+    var stColsArray = new Array(); 
+    var prevstColsArray = new Array(); 
+    var prevSTCellHeight= "10.0";
+    var stPageWidthExceeded = false;
+    var actualTextArea = null;
+
+    function stDisplayTableWidthMessage(flag, width)
+    {
+        if(flag)
+        {
+            $("#stWidth").empty();  
+            $("#stWidth").html('<span >Table width:'+width+'cm </span>');
+            $("#stWidth").css("color","grey");
+            
+        }
+        else
+        {
+            $("#stWidth").empty();  
+            $("#stWidth").html('<span >Page width exceeded</span>');
+            $("#stWidth").css("color","red");
+        }
+        
+    }
+
+    function stDecreaseColWidth(btn)
+    {
+        var val = $(btn).parent().siblings().children('#inc_dec_num').html();
+        var widthSum = 0;
+        $(stColsArray).each(function(i){
+            var rowsArray = this;
+            widthSum+=rowsArray[0].width;
+        });      
+        if (val> 1){
+            val = parseFloat(val) - 0.5;
+            widthSum = widthSum - 0.5;
+            $(btn).parent().siblings().children('#inc_dec_num').html(val);
+            var maxTableWidth = parseFloat($("#mainContainer").width()) / 20;
+            if(maxTableWidth>=widthSum)
+                stPageWidthExceeded = false;
+            var colId = $(btn).parent().siblings().children('#inc_dec_num').attr("colId");
+            var rows = stColsArray[colId];
+            $(rows).each(function(){this.width=val;});
+            stDisplayTableWidthMessage(true,widthSum);
+        }
+    
+    }
+
+    function stIncreaseColWidth(btn)
+    {
+        var maxTableWidth = parseFloat($("#mainContainer").width()) / 20;
+        var widthSum = 0;
+        $(stColsArray).each(function(i){
+            var rowsArray = this;
+            widthSum+=rowsArray[0].width;
+        });
+        widthSum+=0.5;      
+        if (widthSum <= maxTableWidth)
+        {
+            var val = $(btn).parent().siblings().children('#inc_dec_num').html();
+            val = parseFloat(val) + 0.5;
+            $(btn).parent().siblings().children('#inc_dec_num').html(val);
+            var colId = $(btn).parent().siblings().children('#inc_dec_num').attr("colId");
+            var rows = stColsArray[colId];
+            $(rows).each(function(){this.width=val;});
+            stDisplayTableWidthMessage(true,widthSum);
+            stPageWidthExceeded = false;
+        }
+        else
+        {
+            stDisplayTableWidthMessage(false,0);
+            stPageWidthExceeded = true;
+        }
+    
+    }
+
+
+    function createWidthTable()
+    {
+
+        if(parseFloat($("#ncols").html()) >= 1)
+        {
+            var stTotalWidth = 0;
+            var stNoOfCols = parseFloat($("#ncols").html());
+
+            var tableHtml = '<table cellspacing="0" cellpadding="0" border="0" width="100%" style="table-layout: fixed; border-collapse: collapse;">'+
+                                '<colgroup span="2" >'+
+                                    '<col width="40px">'+
+                                    '<col width="90px">'+
+                                '</colgroup>'+
+                                '<tbody>'+
+                                    '<tr>'+
+                                        '<td style="text-align:center;font-size:0.9em;font-weight:bold;">Col.</td>'+
+                                        '<td style="text-align:center;font-size:0.9em;font-weight:bold;">Width(cm)</td>'+
+                                    '</tr>'+
+                                '</tbody>'+
+                               '</table>';
+            var dynTableHtml = '<div style="overflow-y:auto;hidden;height:100px">'+
+                                '<table cellspacing="0" cellpadding="0" border="0" width="100%" style="table-layout:fixed;border-collapse:collapse;">'+
+                                    '<colgroup span="2" >'+
+                                        '<col width="40px">'+
+                                        '<col width="90px">'+
+                                    '</colgroup>'+
+                                    '<tbody>';
+            var trVar = '';
+
+            var colNum = 0;
+            var delBtnImgSrc = $("#deleteBtnIcon").attr("src"); 
+            var addBtnImgSrc = $("#addBtnIcon").attr("src"); 
+            $(stColsArray).each(function(i){
+                var rowsArray = this;
+                colNum = i+1;
+                var td1 = '<td style="text-align:center;">'+colNum+'</td>';             
+                var td2 = '<td style="padding-left:10px;"><div id="inc_dec">'+
+                '<table border="0" cellpadding="1" cellspacing="0" width="50%"><tr>'+   
+                '<td style="padding-left:2px;padding-right:2px;"><div id="inc_dec_num" style="width:25px; float:left; text-align:center" colId="'+i+'" >'+rowsArray[0].width+'</div></td>'+
+                '<td><input type="image" src="'+delBtnImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="stDecreaseColWidth(this); " title="Decrease Width"/></td>'+
+                '<td><input type="image" src="'+addBtnImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="stIncreaseColWidth(this);" title="Increase Width" /></td>'+
+                '</tr></table></div></td>';
+                trVar = '<tr>'+td1+td2+'</tr>';
+                dynTableHtml+=trVar;
+                stTotalWidth+=rowsArray[0].width;
+            });
+
+            dynTableHtml+='</tbody></table></div>';
+            tableHtml+=dynTableHtml;
+
+            var maxTableWidth = parseFloat($("#mainContainer").width()) / 20;
+            if (maxTableWidth >= stTotalWidth)
+            {
+                stDisplayTableWidthMessage(true,stTotalWidth);
+                stPageWidthExceeded = false;
+                $("#colsandrowsConf").empty();
+                $("#colsandrowsConf").css("border","1px solid lightgrey");
+                $("#colsandrowsConf").html(tableHtml);
+
+            }           
+            else
+            {
+                stDisplayTableWidthMessage(false,0);
+                stPageWidthExceeded = true;
+                var noOfCols = parseFloat($("#ncols").html());
+                $("#ncols").html( noOfCols - 1);
+                stColsArray.pop(); 
+            }           
+            
+        }
+        else
+        {
+            $("#stWidth").empty();
+            $("#colsandrowsConf").css("border","none");
+            $("#colsandrowsConf").html('<span style="font-size:0.8em; color:grey;margin-left:0px;">No columns or rows yet</span>');
+        
+        }
+        
+    }
+    
+    function createCellButtonPanel(row,col)
+    {
+        var srccoloricon = $("#coloriconImage").attr('src');
+        var srcaligncenter = $("#aligncenterImage").attr('src');
+        var srcalignright = $("#alignrightImage").attr('src');
+        var srcalignleft = $("#alignleftImage").attr('src');
+        var srcbold = $("#boldImage").attr('src');
+        var srcitalics = $("#italicsImage").attr('src');
+        var srcfontsize = $("#fontsizeImage").attr('src');
+        var srcfontfamily = $("#fontfamilyImage").attr('src');
+        var srcbackcolor = $("#backcolorImage").attr('src');
+        var srcfontcolor = $("#fontcolorImage").attr('src');
+        
+        var tdId = ("cell"+row)+col;
+        var cell = stColsArray[col][row];
+        
+        var cellBtnPanel = '<table border="0" cellpadding="0" cellspacing="0" width="100%"><tr>';
+        
+        var boldBtnBorder;
+        if($.trim(cell.fontweight)=="normal")
+            boldBtnBorder = "0px";
+        else
+            boldBtnBorder = "1px";
+        
+        var boldBt = '<td attr="font-weight"><input type="image" onclick="cellToBold(\''+tdId+'\')"'+
+                            ' src="'+srcbold+'" style="background-color: transparent; background-repeat: no-repeat;'+ 
+                            'width: 20px; height: 20px; border-width:'+boldBtnBorder+' ; border-color: #1797C0;border-style:solid;" title="Bold"/>'+
+                        '</td>';
+        var italicBtnBorder;                        
+        if($.trim(cell.fontstyle)=="normal")
+            italicBtnBorder = "0px";
+        else
+            italicBtnBorder = "1px";
+                        
+        var italicBt = '<td attr="font-style"><input type="image" onclick="cellToItalic(\''+tdId+'\')"'+
+                            'src="'+srcitalics+'" style="background-color: transparent; background-repeat: no-repeat;'+ 
+                            'width: 20px; height: 20px; border-width:'+italicBtnBorder+'; border-color: #1797C0;border-style:solid;" title="Italic" />'+
+                        '</td>';
+
+        var txtAlignLeftBtnBorder;                      
+        var txtAlignCenterBtnBorder;                        
+        var txtAlignRightBtnBorder;
+        switch($.trim(cell.textalign))
+        {
+            case "left":
+                txtAlignLeftBtnBorder = "1px";
+                txtAlignCenterBtnBorder = "0px";
+                txtAlignRightBtnBorder = "0px";
+                break;
+            case "center":
+                txtAlignLeftBtnBorder = "0px";
+                txtAlignCenterBtnBorder = "1px";
+                txtAlignRightBtnBorder = "0px";
+                break;
+            case "right":
+                txtAlignLeftBtnBorder = "0px";
+                txtAlignCenterBtnBorder = "0px";
+                txtAlignRightBtnBorder = "1px";
+                break;
+        
+        }                       
+        var alignBt =       '<td attr="text-align">'+
+                            '<table border="0" cellpadding="0" cellspacing="0" width="100%"><tr>'+
+                            '<td>'+
+                            '<span class="textAlignSelect" style="display: none">left</span>'+
+                            '<input type="image" class="summaryAlignleft" alt="Left Align" onclick="cellTxtAlign(\'left\', \''+tdId+'\');" '+
+                            'src="'+srcalignleft+'" style="background-color: transparent; background-repeat: no-repeat; width: 20px; height: 20px; border-width: '+txtAlignLeftBtnBorder+'; border-color: #1797C0;border-style:solid;" title="Left Align"/>'+
+                            '</td>'+
+                            '<td>'+
+                            '<input type="image" class="summaryAligncenter" alt="Center Align" onclick="cellTxtAlign(\'center\', \''+tdId+'\')" '+
+                            'src="'+srcaligncenter+'" style="background-color: transparent; background-repeat: no-repeat; width: 20px; height: 20px; border-width:'+txtAlignCenterBtnBorder+'; border-color: #1797C0;border-style:solid;" title="Center Align" />'+
+                            '</td>'+
+                            '<td>'+
+                            '<input type="image" class="summaryAlignright" alt="Right Align" onclick="cellTxtAlign(\'right\', \''+tdId+'\') " '+
+                            'src="'+srcalignright+'" style="background-color: transparent; background-repeat: no-repeat; width: 20px; height: 20px; border-width:'+txtAlignRightBtnBorder+'; border-color: #1797C0;border-style:solid;" title="Right Align"/>'+
+                            '</td>'+
+                            '</tr></table>'+
+                        '</td>'; 
+                        
+        var fontsizeBt = '<td attr="font-size">'+
+                        '<input type="image" id="fontSize" class="cellFontSize" alt="Font Size" cell="'+tdId+'"'+ 
+                            'src="'+srcfontsize+'" style="background-color: transparent; background-repeat: no-repeat;'+ 
+                            'width: 20px; height: 20px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Font Size" />'+
+                            '<select id="cellfontSizeSelect'+tdId+'" row="'+row+'" col="'+col+'" size="11" style="display: none;z-index:1800;" onclick="cellFontSize(\''+tdId+'\');">'+
+                                '<option value="6px">6px</option>'+
+                                '<option value="7px">7px</option>'+
+                                '<option value="8px">8px</option>'+
+                                '<option value="9px">9px</option>'+
+                                '<option value="10px">10px</option>'+
+                                '<option value="11px">11px</option>'+
+                                '<option value="12px">12px</option>'+
+                                '<option value="13px">13px</option>'+
+                                '<option value="15px">15px</option>'+
+                                '<option value="19px">19px</option>'+
+                                '<option value="22px">22px</option>'+
+                                '<option value="24px">24px</option>'+
+                                '<option value="26px">26px</option>'+
+                            '</select>'+
+                        '</td>';
+                        
+        var fontfamilyBt = '<td attr="font-family">'+
+                            '<input type="image" id="fontFamily" class="cellFontFamily" alt="Font Family" cell="'+tdId+'"'+ 
+                            'src="'+srcfontfamily+'" style="background-color: transparent; background-repeat: no-repeat;'+ 
+                            'width: 20px; height: 20px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Font Type" />'+
+                            '<select id="cellfontFamilySelect'+tdId+'" row="'+row+'" col="'+col+'" style="display:none;z-index:1800;" size="10" onclick="cellFontFamily(\''+tdId+'\');">'+
+                                '<option value="Arial, Helvetica, sans-serif" style="font-family:Arial, Helvetica, sans-serif;">Arial</option>'+
+                                '<option value="Arial Narrow, Helvetica, sans-serif" style="font-family:Arial Narrow, Helvetica, sans-serif;">Arial Narrow</option>'+
+                                '<option value="Book Antiqua, serif" style="font-family:Book Antiqua, serif;">Book Antiqua</option>'+
+                                '<option value="Bookman Old Style, serif" style="font-family:Bookman Old Style, serif;">Bookman Old Style</option>'+
+                                '<option value="Calibri, sans-serif" style="font-family:Calibri, serif;">Calibri</option>'+
+                                '<option value="Comic Sans MS,cursive" style="font-family:Comic Sans MS, cursive;">Comic Sans MS</option>'+
+                                '<option value="Consolas,monospace" style="font-family:Consolas, monospace;">Consolas</option>'+
+                                '<option value="Courier New, Courier, monospace" style="font-family:Courier New, Courier, monospace;">Courier New</option>'+
+                                '<option value="Georgia, serif" style="font-family:Georgia, serif;">Georgia</option>'+
+                                '<option value="Helvetica, Arial, sans-serif" style="font-family:Helvetica, Arial, sans-serif;">Helvetica</option>'+
+                                '<option value="Lucida Sans, sans-serif" style="font-family:Lucida Sans, sans-serif;">Lucida Sans</option>'+
+                                '<option value="Palatino Linotype, serif" style="font-family:Palatino Linotype, serif;">Palatino Linotype</option>'+
+                                '<option value="Tahoma, serif" style="font-family:Tahoma, serif;">Tahoma</option>'+
+                                '<option value="Times New Roman, serif" style="font-family:Times New Roman, serif;">Times New Roman</option>'+
+                                '<option value="Trebuchet MS, sans-serif" style="font-family:Trebuchet MS, sans-serif;">Trebuchet MS</option>'+
+                                '<option value="Verdana, Arial, Helvetica, sans-serif" style="font-family:Verdana, Arial, Helvetica, sans-serif;">Verdana</option>'+
+                                '<option value="MS Gothic, monospace" style="font-family:MS Gothic, monospace;">MS Gothic</option>'+
+                            '</select>'+
+                            '</td>';
+        var backcolorBt = '<td attr="background-color"><div id="cellbkgColor'+tdId+'" row="'+row+'" col="'+col+'" class="summaryBackColor" style="width:20px; height:20px; background-color: #FFFFFF">'+
+                            '<img alt="" src="'+srcbackcolor+'" title="Background Color" />'+
+                            '</div></td>';  
+        
+        var fontcolorBt = '<td attr="color"><div id="cellfontColor'+tdId+'" row="'+row+'" col="'+col+'" class="summaryFontColor" style="width:20px; height:20px; background-color: #000000" >'+
+                                '<img alt="" src="'+srcfontcolor+'" title="Font Color"/>'+
+                            '</div></td>';
+                            
+        cellBtnPanel+= boldBt+italicBt+alignBt+fontsizeBt+fontfamilyBt+backcolorBt+fontcolorBt+'</tr></table>';
+        return cellBtnPanel;                    
+    }
+    
+    function generateSummaryTable()
+    {
+        if(stColsArray.length>0)
+        {
+            if(!stPageWidthExceeded)
+            {
+                $("#summaryTableInEditor").empty();
+                var summaryTblHtml = '<table id="summaryTbl" border="0" cellpadding="1" cellspacing="2" >';
+                var transposeStColArray = stColsArray.transpose();
+                $(transposeStColArray).each(function(j) {
+                    var stRowHtml = '<tr>';
+                    var stRowCellsHtml='';
+                    $(this).each(function(i) {
+                        var cellId = "cell"+j+i;
+                        var cellBtnPanel = createCellButtonPanel(j,i);
+                        var td = '<td class="summaryCellTd" id="'+cellId+'">'+cellBtnPanel+'<textarea id="txtArea'+cellId+'" col="'+i+'" row="'+j+'" class="summaryTextArea" style="width: 175px; height: 30px;overflow-y:auto;font-weight:'+this.fontweight+';font-style:'+this.fontstyle+';text-align:'+this.textalign+';font-size:'+this.fontsize+';font-family:'+this.fontfamily+';background-color:'+this.backcolor+';color:'+this.fontcolor+';" onchange="setCellText(this);">'+this.text+'</textarea></td>';
+                        stRowCellsHtml+=td;
+                    });
+                   stRowHtml+=stRowCellsHtml+'</tr>';
+                   summaryTblHtml+=stRowHtml; 
+                });
+                summaryTblHtml+='</table>';     
+                $("#summaryTableInEditor").html(summaryTblHtml);        
+                bindCellColorPickers("#summaryTableInEditor");
+                setDropdowns();
+            }       
+        }
+        else
+        {
+            $("#summaryTableInEditor").empty();
+            $("#summaryTableInEditor").html('<span style="font-size:0.8em; color:grey;margin-left:-20px;">No columns and rows set yet</span>');
+        }
+    }
+
+
+    function insertMergeFieldInSummaryTable()
+    {
+    
+        if (actualTextArea != null){
+            var mergefieldText = $("#tracerelsContainerSummarySummaryTable").html();
+            var toInsert = '{'+'!'+mergefieldText+'}';
+            var jqueryId = '#'+actualTextArea;
+            $(jqueryId).insertAtCaretPos(toInsert);
+            $(jqueryId).change();
+        }
+        else{
+            alert('Select the table cell to insert the merge field formula.');
+        }
+    }
+    
+    function insertSTRollupField()
+    {
+        if (actualTextArea != null)
+        {
+            var selRollupField = $("select[id$=stRollupFieldOptions]").val();
+            if(selRollupField!="-- Select field to roll-up --")
+            {
+                var toInsert = 'SUM('+selRollupField+')';
+                var jqueryId = '#'+actualTextArea;
+                $(jqueryId).insertAtCaretPos(toInsert);
+                $(jqueryId).change();
+                $("select[id$=stRollupFieldOptions]").val("-- Select field to roll-up --");
+            }
+            else
+                window.alert("Select a field to roll-up before trying to insert.");
+        }
+        else
+        {
+            alert('Select the table cell to insert the merge field formula.');
+        }
+    }
+
+
+    function setSTTableModel(btn,model) 
+    {
+        $("input[id=stTableType]").val(model);
+        $("input[id^=summodel]").each(function(){ $(this).css("border-width","0px");});
+        $(btn).css("border","2px solid grey");
+    }
+
+
+    function setCellText(txtArea)
+    {
+        var col = parseInt($(txtArea).attr("col"));
+        var row = parseInt($(txtArea).attr("row"));
+        stColsArray[col][row].text = $(txtArea).val();  
+    }
+
+    function cellToBold(id){
+        var txtAreaSelector = "textarea[id=txtArea"+id+"]";
+        var col = $(txtAreaSelector).attr("col");
+        var row = $(txtAreaSelector).attr("row");
+        if($.trim($(txtAreaSelector).css("font-weight"))=="normal" || $.trim($(txtAreaSelector).css("font-weight"))=="400")
+        {
+            $(txtAreaSelector).css("font-weight","bold");
+            stColsArray[col][row].fontweight = "bold";  
+            var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-weight";});
+            $(btn).children("input").css("border-width","1px");         
+        }
+        else
+        {
+            $(txtAreaSelector).css("font-weight","normal");
+            stColsArray[col][row].fontweight = "normal";    
+            var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-weight";});
+            $(btn).children("input").css("border-width","0px");         
+        
+        }       
+    }
+
+
+    function cellToItalic(id){
+        var txtAreaSelector = "textarea[id=txtArea"+id+"]";
+        var col = $(txtAreaSelector).attr("col");
+        var row = $(txtAreaSelector).attr("row");
+        if($.trim($(txtAreaSelector).css("font-style"))=="normal")
+        {
+            $(txtAreaSelector).css("font-style","italic");
+            stColsArray[col][row].fontstyle = "italic"; 
+            var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-style";});
+            $(btn).children("input").css("border-width","1px");         
+        }
+        else
+        {
+            $(txtAreaSelector).css("font-style","normal");
+            stColsArray[col][row].fontstyle = "normal"; 
+            var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-style";});
+            $(btn).children("input").css("border-width","0px");         
+        
+        }       
+    }
+
+    function cellTxtAlign(alignType,id){
+        var txtAreaSelector = "textarea[id=txtArea"+id+"]";
+        var col = $(txtAreaSelector).attr("col");
+        var row = $(txtAreaSelector).attr("row");
+
+        switch(alignType)
+        {
+            case "left":
+                if($.trim($(txtAreaSelector).css("text-align"))=="center" || $.trim($(txtAreaSelector).css("text-align"))=="right")
+                {
+                    $(txtAreaSelector).css("text-align","left");
+                    stColsArray[col][row].textalign = "left";   
+                    var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="text-align";});
+                    $(btn).find("input[class=summaryAlignleft]").css("border","1px solid #1797C0");     
+                    $(btn).find("input[class=summaryAligncenter]").css("border-width","0px");       
+                    $(btn).find("input[class=summaryAlignright]").css("border-width","0px");        
+                }
+                break;
+            case "center":
+                if($.trim($(txtAreaSelector).css("text-align"))=="left" || $.trim($(txtAreaSelector).css("text-align"))=="right")
+                {
+                    $(txtAreaSelector).css("text-align","center");
+                    stColsArray[col][row].textalign = "center"; 
+                    var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="text-align";});
+                    $(btn).find("input[class=summaryAlignleft]").css("border-width","0px");     
+                    $(btn).find("input[class=summaryAligncenter]").css("border","1px solid #1797C0");       
+                    $(btn).find("input[class=summaryAlignright]").css("border-width","0px");        
+                }
+                break;
+            case "right":
+                if($.trim($(txtAreaSelector).css("text-align"))=="left" || $.trim($(txtAreaSelector).css("text-align"))=="center")
+                {
+                    $(txtAreaSelector).css("text-align","right");
+                    stColsArray[col][row].textalign = "right";  
+                    var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="text-align";});
+                    $(btn).find("input[class=summaryAlignleft]").css("border-width","0px");     
+                    $(btn).find("input[class=summaryAligncenter]").css("border-width","0px");       
+                    $(btn).find("input[class=summaryAlignright]").css("border","1px solid #1797C0");        
+                }
+                break;
+        }
+    }
+
+    function cellFontSize(id)
+    {
+        var txtAreaSelector = "textarea[id=txtArea"+id+"]";
+        var col = $(txtAreaSelector).attr("col");
+        var row = $(txtAreaSelector).attr("row");
+        var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-size";});
+        var fontsize = $(btn).children("select").val();
+        stColsArray[col][row].fontsize = fontsize;
+        $(txtAreaSelector).css("font-size",fontsize);   
+        $(btn).children("select").css("display","none");    
+    }
+
+    function cellFontFamily(id)
+    {
+        var txtAreaSelector = "textarea[id=txtArea"+id+"]";
+        var col = $(txtAreaSelector).attr("col");
+        var row = $(txtAreaSelector).attr("row");
+        var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-family";});
+        var fontfamily = $(btn).children("select").val();
+        stColsArray[col][row].fontfamily = fontfamily;
+        $(txtAreaSelector).css("font-family",fontfamily);   
+        $(btn).children("select").css("display","none");    
+    }
+
+    function cleanColorPickers()
+    {
+        $("#summaryTableInEditor").find("div[id^=cellfontColor]").each(function(){
+            var cpId = $(this).data("colorpickerId");
+            $("#"+cpId).remove();
+        })          
+        $("#summaryTableInEditor").find("div[id^=cellbkgColor]").each(function(){
+            var cpId = $(this).data("colorpickerId");
+            $("#"+cpId).remove();
+        })          
+    }
+
+
+    function bindCellColorPickers(obj)
+    {
+        $(obj).find("div[id^=cellbkgColor]").each(function(){
+            $(this).ColorPicker({
+                onSubmit: function(hsb, hex, rgb, colorPckr) {
+                    var hexColor = '#'+hex+'';
+                    var col = $(colorPckr).attr("col").toString();
+                    var row = $(colorPckr).attr("row").toString();
+                    var txtAreaSelector = "textarea[id=txtAreacell"+row+col+"]";
+                    $(txtAreaSelector).css("background-color",hexColor);
+                    stColsArray[col][row].backcolor = hexColor;
+                    $(colorPckr).ColorPickerHide();
+                },
+                onBeforeShow: function (colorPckr) {
+                    var col = $(this).attr("col").toString();
+                    var row = $(this).attr("row").toString();
+                    var txtAreaSelector = "textarea[id=txtAreacell"+row+col+"]";
+                    var backcolor = $.trim(stColsArray[col][row].backcolor);
+                    if(backcolor.charAt(0)=="#")
+                        backcolor = $.trim(backcolor.replace("#",""));
+                    else
+                        backcolor = $.trim(RGBtoHEX(backcolor).replace("#",""));
+                    $(this).ColorPickerSetColor(backcolor);
+                },
+            });
+        });
+
+        $(obj).find("div[id^=cellfontColor]").each(function(){
+            $(this).ColorPicker({
+                onSubmit: function(hsb, hex, rgb, colorPckr) {
+                    var hexColor = '#'+hex+'';
+                    var col = $(colorPckr).attr("col").toString();
+                    var row = $(colorPckr).attr("row").toString();
+                    var txtAreaSelector = "textarea[id=txtAreacell"+row+col+"]";
+                    $(txtAreaSelector).css("color",hexColor);
+                    stColsArray[col][row].fontcolor = hexColor;
+                    $(colorPckr).ColorPickerHide();
+                },
+                onBeforeShow: function (colorPckr) {
+                    var col = $(this).attr("col").toString();
+                    var row = $(this).attr("row").toString();
+                    var txtAreaSelector = "textarea[id=txtAreacell"+row+col+"]";
+                    var fontcolor = $.trim(stColsArray[col][row].fontcolor);
+                    if(fontcolor.charAt(0)=="#")
+                        fontcolor = $.trim(fontcolor.replace("#",""));
+                    else
+                        fontcolor = $.trim(RGBtoHEX(fontcolor).replace("#",""));
+                    $(this).ColorPickerSetColor(fontcolor);
+                },
+            });
+        });
+    }
+
+    function initSTProperties()
+    {
+        var cmodel = $("input[id=stTableType]").val();
+        var btn = $.grep($("input[id^=summodel]"),function(o){return $.trim($(o).attr("model"))==$.trim(cmodel);});
+        $(btn).css("border","2px solid grey");
+    }
+
+    function initNewSTProperties()
+    {
+        $("#ncols").html("0");
+        $("#nrows").html("0");
+        $("input[id=stTableType]").val("model1");
+        $("#summodel1Bt").css("border","2px solid grey")    
+        $("input[id=stBorderColor]").val("#000000");
+        $("select[id=stCellHeightSelector] option[value=10.0]" ).attr("selected","selected");
+    }
+
+    function setDropdowns()
+    {
+        $(stColsArray).each(function(j) {
+            $(this).each(function(i) {
+                var fontsize = $.trim(this.fontsize.toString());
+                $('select[id=cellfontSizeSelectcell'+i+j+']').val(fontsize);
+                var fontfamily = this.fontfamily;
+                var calcFontFamily = getFontFamilyValue($.trim(fontfamily));
+                $('select[id=cellfontFamilySelectcell'+i+j+']').val(calcFontFamily);
+            });
+        });
+    }
+
+
+    $(function(){
+        $("#dynSTDataTabs").tabs({
+            select:  function(event, ui) {/*$("input[id$=selectedPredefinedTabContField]").val(ui.panel.id);*/}
+        });
+
+        $("#summaryTableEditorCancelBtn").click(function(event) {
+            $("input[id^=summodel]").each(function(){
+                $(this).css("border","0px");
+            });
+            stColsArray = $.evalJSON($.toJSON(prevstColsArray));
+            if(prevstColsArray.length==0)
+            {
+                initNewSTProperties();
+            }
+            $("select[id=stCellHeightSelector]").val(prevSTCellHeight);
+            createWidthTable();                     
+            cleanColorPickers();
+            generateSummaryTable();
+
+            $("#summaryTable").removeClass('ui-selected');
+            $("#summaryTable").children('.imgsDiv').children('img').addClass('hideEditBt');
+            $("#summaryTable").children('.imgsDiv').children('img').removeClass('showEditBt');
+
+            cleanupSTmfui();
+            $("#summaryTableEditor").dialog("close");
+        
+        });
+
+        $("#summaryTableEditorDoneBtn").click(function(event) {
+        
+            var editorMode = $("#summaryTableEditor").dialog("option","dialogMode");
+            if(editorMode=="createNewItem")
+            {
+                if(!stPageWidthExceeded)
+                {
+                    if(stColsArray.length>0)
+                    {
+                        if(!checkEmptyCells())
+                        {
+                            if(validateSTSyntax() && validateSTChars() && validateRollupSTSyntax())
+                            {
+                                var invalidMfs = validateSTMfs();
+                                var invalidRollups = validateSTRollups();
+                                if((invalidMfs.length>0) || (invalidRollups.length>0))
+                                {
+                                    var invMfList = '';
+                                    if(invalidMfs.length>0)
+                                    {
+                                        $(invalidMfs).each(function(){
+                                            invMfList+= this+"\n";
+                                        });
+                                    }
+                                    var invRuList = '';
+                                    if(invalidRollups.length>0)
+                                    {
+                                        $(invalidRollups).each(function(){
+                                            invRuList+= this+"\n";
+                                        });
+                                    }
+                                    if((invalidMfs.length>0) && (invalidRollups.length>0)) 
+                                        window.alert("The following merge field formulas are invalid:\n "+invMfList+"\n The following roll-up fields are invalid:\n "+invRuList);
+                                    else if(invalidMfs.length>0)
+                                        window.alert("The following merge field formulas are invalid:\n "+invMfList);
+                                    else if(invalidRollups.length>0)
+                                        window.alert("The following roll-up fields are invalid:\n "+invRuList);
+                                }
+                                else
+                                {
+                                    summaryTableCounter++;
+                                    
+                                    var stTotalWidth = 0;
+                                    var topMargin = parseInt($("#mainContainer").css("margin-top").replace("px",""));
+                                    var leftMargin = parseInt($("#mainContainer").css("margin-left").replace("px",""));
+                                    var topPos = $("#mainContainer").position().top + topMargin;
+                                    var leftPos = $("#mainContainer").position().left + leftMargin;
+                                    var tableContainerStyle = "cursor:pointer;";//z-index:"+summaryTableCounter+";";
+                                    tableContainerStyle = 'position: absolute; top: '+topPos+'px; left:'+leftPos+'px;'+tableContainerStyle;
+                                    $("#mainContainer").append('<div id="summaryTable"  style="'+tableContainerStyle+'" ></div>');
+    
+                                    var cellHeight = $("select[id=stCellHeightSelector]").val();
+                                    var borderColor = $("input[id=stBorderColor]").val();                               
+                                    var stTableType = $("input[id=stTableType]").val();
+                                    var summaryTblCanvasHtml = '';
+                                    var transposeStColArray = stColsArray.transpose();
+                                    $(transposeStColArray).each(function(j) {
+                                        var stRowHtml = '<tr style="height:'+cellHeight+'px;border-color:'+borderColor+'">';
+                                        var stRowCellsHtml='';
+                                        $(this).each(function(i) {
+                                            if(j==0)
+                                            {
+                                                stTotalWidth+=this.width*20;
+                                            }
+                                            var cellId = "cell"+j+i;
+                                            
+                                            var colWidth;
+                                            if($.trim(stTableType)=="model1" || $.trim(stTableType)=="model5")
+                                            {
+                                                var width = this.width*20 -1;
+                                                colWidth = "width:"+width+"px"
+                                            }
+                                            else if($.trim(stTableType)=="model6")
+                                            {
+                                                if(j==0)
+                                                {
+                                                    var width = this.width*20 -1;
+                                                    colWidth = "width:"+width+"px"
+                                                }
+                                                else
+                                                    colWidth = "";
+                                            }
+                                            else
+                                                colWidth = "width:"+this.width*20+"px";
+                                                
+                                            var td = '<td class="summaryCellTd" id="'+cellId+'" style="'+colWidth+';font-weight:'+this.fontweight+';font-style:'+this.fontstyle+';text-align:'+this.textalign+';font-size:'+this.fontsize+';font-family:'+this.fontfamily+';background-color:'+this.backcolor+';color:'+this.fontcolor+';border-color:'+borderColor+';overflow:hidden; white-space: nowrap;vertical-align:middle; " col="'+i+'" row="'+j+'">'+this.text+'</td>';
+                                            stRowCellsHtml+=td;
+                                        });
+                                       stRowHtml+=stRowCellsHtml+'</tr>';
+                                       summaryTblCanvasHtml+=stRowHtml; 
+                                    });
+                                    var stTotalWidthStr=stTotalWidth+"px";
+                                    var colsHtml = '<col span="'+stColsArray.length+'" />';
+                                    summaryTblCanvasHtml='<table id="summaryTbl'+summaryTableCounter+'" cellpadding="0" style="position:absolute;table-layout: fixed;border-color:'+borderColor+';" class="'+stTableType+'" width="'+stTotalWidthStr+'">'+colsHtml+summaryTblCanvasHtml+'</table>';     
+                                    $("#summaryTable").html(summaryTblCanvasHtml);
+                                    $("#summaryTable").css("width",$('#summaryTbl'+summaryTableCounter).width());
+                                    $("#summaryTable").css("height",$('#summaryTbl'+summaryTableCounter).height());
+                
+                                    var imgsrc = $("#deleteEditorItemImg").attr("src");
+                                    var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+                                    var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+                                    $("#summaryTable").append(imgNode);
+                                    
+                                    $("#summaryTable").click(function() {
+                                        $('.ui-selected').each(function(index){
+                                            $(this).removeClass('ui-selected');
+                                            $(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+                                            $(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+                                        });
+                                        $(this).addClass('ui-selected');
+                                        $(this).children('.imgsDiv').children('img').addClass('showEditBt');
+                                        $(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+                                        var zindex = calculateMaxZIndex();
+                                        $(this).css("z-index",zindex);
+                                    });
+                                    var zindex = calculateMaxZIndex();
+                                    $("#summaryTable").css("z-index",zindex);
+                                    
+                                    $("#summaryTable").draggable({
+                                        containment: 'parent',
+                                        grid: [1, 1], 
+                                        stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable],div[id^=lineElement]" 
+                                    });
+                                    
+                                    var stDataObj = new Object();
+                                    if(stColsArray.length > 0)
+                                    {
+                                        stDataObj.cols = stColsArray.length;
+                                        stDataObj.rows = stColsArray[0].length;
+                                    }
+                                    else
+                                    {
+                                        stDataObj.cols = 0;
+                                        stDataObj.rows = 0;
+                                    }
+                                    stDataObj.model = $("input[id=stTableType]").val();
+                                    stDataObj.bordercolor = borderColor;
+                                    stDataObj.cellheight = cellHeight;
+                                    prevstColsArray = $.evalJSON($.toJSON(stColsArray));
+                                    prevSTCellHeight = $("select[id=stCellHeightSelector]").val();
+                                    $("#summaryTable").dblclick(function() {
+                                        $("#ncols").html(stDataObj.cols);
+                                        $("#nrows").html(stDataObj.rows);
+                                        $("input[id=stTableType]").val(stDataObj.model);
+                                        $("input[id=stBorderColor]").val(stDataObj.bordercolor);
+                                        $("select[id=stCellHeightSelector]").val(stDataObj.cellheight);
+                                        createWidthTable();                     
+                                        cleanColorPickers();
+                                        generateSummaryTable();
+                                        initSTProperties();
+                                        $("#dynSTDataTabs").tabs("select",0);
+                                        $("#summaryTableEditor").dialog("option","dialogMode","editExistingItem");
+                                        $("#summaryTableEditor").dialog("option","selectorId",$(this).attr("id"));
+                                        $("#summaryTableEditor").dialog("open");
+                                    });
+    
+                                    $("#summaryTable").addClass("ui-selected");
+                                    $("#summaryTable").children('.imgsDiv').children('img').addClass('showEditBt');
+                                    $("#summaryTable").children('.imgsDiv').children('img').removeClass('hideEditBt');
+                                    cleanupSTmfui();
+                                    // close the editor
+                                    $("#summaryTableEditor").dialog("close");
+                                }
+                            }
+                            else
+                                window.alert("There is a syntax error. Please check the merge fields and roll-up summary formulas included in the cells. Note that charcters \"<\", \">\", \"\"\" (double quotes), and \"\'\" (single quotes) are not allowed in the content.");
+                        }
+                        else
+                            window.alert("The table has empty cells. Enter a value or remove empty cells.");                        
+                    }
+                    else
+                        window.alert("The table has no columns and rows.\nAdd columns and rows or cancel.");
+                }
+                else
+                    window.alert("The table exceeds the page width.\nReduce the columns width or remove columns.");
+                
+            }
+            else
+            {
+                var selectorId = $("#summaryTableEditor").dialog("option","selectorId");
+                if(!stPageWidthExceeded)
+                {
+                    if(stColsArray.length>0)
+                    {
+                        if(!checkEmptyCells())
+                        {
+                            if(validateSTSyntax() && validateSTChars() && validateRollupSTSyntax())
+                            {
+                                var invalidMfs = validateSTMfs();
+                                var invalidRollups = validateSTRollups();
+                                if((invalidMfs.length>0) || (invalidRollups.length>0))
+                                {
+                                    var invMfList = '';
+                                    if(invalidMfs.length>0)
+                                    {
+                                        $(invalidMfs).each(function(){
+                                            invMfList+= this+"\n";
+                                        });
+                                    }
+                                    var invRuList = '';
+                                    if(invalidRollups.length>0)
+                                    {
+                                        $(invalidRollups).each(function(){
+                                            invRuList+= this+"\n";
+                                        });
+                                    }
+                                    if((invalidMfs.length>0) && (invalidRollups.length>0)) 
+                                        window.alert("The following merge field formulas are invalid:\n "+invMfList+"\n The following roll-up fields are invalid:\n "+invRuList);
+                                    else if(invalidMfs.length>0)
+                                        window.alert("The following merge field formulas are invalid:\n "+invMfList);
+                                    else if(invalidRollups.length>0)
+                                        window.alert("The following roll-up fields are invalid:\n "+invRuList);
+                                }
+                                else
+                                {
+                                    var cellHeight = $("select[id=stCellHeightSelector]").val();
+                                    var borderColor = $("input[id=stBorderColor]").val();                               
+                                    var stTableType = $("input[id=stTableType]").val();
+                                    var stTotalWidth = 0;
+                                    $("#summaryTable").empty();     
+                                    var summaryTblCanvasHtml = '';
+                                    var transposeStColArray = stColsArray.transpose();
+                                    $(transposeStColArray).each(function(j) {
+                                        var stRowHtml = '<tr style="height:'+cellHeight+'px;border-color:'+borderColor+'">';
+                                        var stRowCellsHtml='';
+                                        $(this).each(function(i) {
+                                            if(j==0)
+                                            {
+                                                stTotalWidth+=this.width*20;
+                                            }
+                                            var cellId = "cell"+j+i;
+    
+                                            var colWidth;
+                                            if($.trim(stTableType)=="model1" || $.trim(stTableType)=="model5")
+                                            {
+                                                var width = this.width*20 -1;
+                                                colWidth = "width:"+width+"px"
+                                            }
+                                            else if($.trim(stTableType)=="model6")
+                                            {
+                                                if(j==0)
+                                                {
+                                                    var width = this.width*20 -1;
+                                                    colWidth = "width:"+width+"px"
+                                                }
+                                                else 
+                                                    colWidth = "";
+                                            }
+                                            else
+                                                colWidth = "width:"+this.width*20+"px";
+                                                
+                                            var td = '<td class="summaryCellTd" id="'+cellId+'" style="'+colWidth+';font-weight:'+this.fontweight+';font-style:'+this.fontstyle+';text-align:'+this.textalign+';font-size:'+this.fontsize+';font-family:'+this.fontfamily+';background-color:'+this.backcolor+';color:'+this.fontcolor+';overflow:hidden; white-space: nowrap; vertical-align:middle;border-color:'+borderColor+';" col="'+i+'" row="'+j+'">'+this.text+'</td>';
+                                            stRowCellsHtml+=td;
+                                        });
+                                       stRowHtml+=stRowCellsHtml+'</tr>';
+                                       summaryTblCanvasHtml+=stRowHtml; 
+                                    });
+                                    var stTotalWidthStr=stTotalWidth+"px";
+                                    var colsHtml = '<col span="'+stColsArray.length+'" />';
+                                    summaryTblCanvasHtml='<table id="summaryTbl'+summaryTableCounter+'"  cellpadding="0" style="position:absolute;table-layout: fixed; border-color:'+borderColor+';" class="'+stTableType+'" width="'+stTotalWidthStr+'">'+colsHtml+summaryTblCanvasHtml+'</table>';       
+                                    $("#summaryTable").html(summaryTblCanvasHtml);      
+                                    $("#summaryTable").css("width",$('#summaryTbl'+summaryTableCounter).width());
+                                    $("#summaryTable").css("height",$('#summaryTbl'+summaryTableCounter).height());
+                
+                                    var imgsrc = $("#deleteEditorItemImg").attr("src");
+                                    var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+                                    var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+                                    $("#summaryTable").append(imgNode);
+    
+                                    var stDataObj = new Object();
+                                    if(stColsArray.length > 0)
+                                    {
+                                        stDataObj.cols = stColsArray.length;
+                                        stDataObj.rows = stColsArray[0].length;
+                                    }
+                                    else
+                                    {
+                                        stDataObj.cols = 0;
+                                        stDataObj.rows = 0;
+                                    }
+                                    stDataObj.model = $("input[id=stTableType]").val();
+                                    stDataObj.bordercolor = borderColor;
+                                    stDataObj.cellheight = cellHeight;
+                                    prevstColsArray = $.evalJSON($.toJSON(stColsArray));
+                                    prevSTCellHeight = $("select[id=stCellHeightSelector]").val();
+                                    $("#summaryTable").unbind("dblclick");
+                                    $("#summaryTable").dblclick(function() {
+                                        $("#ncols").html(stDataObj.cols);
+                                        $("#nrows").html(stDataObj.rows);
+                                        $("input[id=stTableType]").val(stDataObj.model);
+                                        $("input[id=stBorderColor]").val(stDataObj.bordercolor);
+                                        $("select[id=stCellHeightSelector]").val(stDataObj.cellheight);
+                                        createWidthTable();                     
+                                        cleanColorPickers();
+                                        generateSummaryTable();
+                                        initSTProperties();
+                                        $("#dynSTDataTabs").tabs("select",0);
+                                        $("#summaryTableEditor").dialog("option","dialogMode","editExistingItem");
+                                        $("#summaryTableEditor").dialog("option","selectorId",$(this).attr("id"));
+                                        $("#summaryTableEditor").dialog("open");
+                                    });
+    
+                                    $("#summaryTable").removeClass('ui-selected');
+                                    $("#summaryTable").children('.imgsDiv').children('img').addClass('hideEditBt');
+                                    $("#summaryTable").children('.imgsDiv').children('img').removeClass('showEditBt');
+    
+                                    cleanupSTmfui();
+                                    // close the editor
+                                    $("#summaryTableEditor").dialog("close");
+                                }
+                            }
+                            else
+                                window.alert("There is a syntax error. Please check the merge fields and roll-up summary formulas included in the cells. Note that charcters \"<\", \">\", \"\"\" (double quotes), and \"\'\" (single quotes) are not allowed in the content.");
+                        }
+                        else
+                            window.alert("The table has empty cells. Enter a value or remove empty cells.");                        
+                        
+                    }
+                    else
+                        window.alert("The table has no columns and rows.\nAdd columns and rows or cancel.");
+
+                }
+                else
+                    window.alert("The table exceeds the page width.\nReduce the columns width or remove columns.");
+                
+            }
+        
+        
+        });
+
+
+        /*
+            Add and Remove rows and cols
+        */
+        
+        $("#addRowBtn").click(function(event) {
+            var noOfCols = parseFloat($("#ncols").html());
+            var noOfRows = parseFloat($("#nrows").html());
+
+            noOfRows+=1;
+            if(noOfCols == 0)
+            {
+                $("#ncols").html("1");
+                noOfCols = 1;
+                for(var i = 0; i < noOfCols; i++)
+                {
+                    var rowsArray = new Array();
+                    for(var j = 0; j < noOfRows; j++)
+                    {
+                        var cell = new stCellClass();
+                        cell.col = i;
+                        cell.row = j;
+                        cell.width = 3;
+                        cell.text = "";
+                        cell.fontweight = "normal";
+                        cell.fontstyle = "normal";
+                        cell.textalign = "left";
+                        cell.fontsize = "9px";
+                        cell.fontfamily = "Arial, Helvetica, sans-serif";
+                        cell.backcolor = "#FFFFFF";
+                        cell.fontcolor = "#000000";
+                        rowsArray.push(cell);
+                    }
+                    stColsArray.push(rowsArray);
+                }
+            }
+            else
+            {
+                for(var i = 0; i < noOfCols; i++)
+                {
+                    var lastRow = noOfRows-1; 
+                    for(var j = lastRow; j < noOfRows; j++)
+                    {
+                        var rowsArray = stColsArray[i];
+                        var cell = new stCellClass();
+                        cell.text = '';
+                        cell.col = i;
+                        cell.row = j;
+                        cell.width = 3;
+                        cell.fontweight = "normal";
+                        cell.fontstyle = "normal";
+                        cell.textalign = "left";
+                        cell.fontsize = "9px";
+                        cell.fontfamily = "Arial, Helvetica, sans-serif";
+                        cell.backcolor = "#FFFFFF";
+                        cell.fontcolor = "#000000";
+                        rowsArray.push(cell);
+                    }
+                }
+            }
+
+            $("#nrows").html( noOfRows);
+
+            createWidthTable();                     
+            cleanColorPickers();
+            generateSummaryTable();
+        });
+
+        $("#removeRowBtn").click(function(event) {
+            var noOfCols = parseFloat($("#ncols").html());
+            var noOfRows = parseFloat($("#nrows").html());
+
+            if(noOfRows >= 1)
+            {
+                noOfRows-=1;
+                $("#nrows").html(noOfRows);
+                for(var i = 0; i < noOfCols; i++)
+                {
+                    stColsArray[i].pop();
+                }
+            }
+            if(noOfRows==0)
+            {
+                $("#ncols").html("0");
+                for(var i = 0; i < noOfCols; i++)
+                    stColsArray.pop();
+            }
+
+            createWidthTable();                     
+            cleanColorPickers();
+            generateSummaryTable();
+        });
+
+        $("#addColBtn").click(function(event) {
+            var noOfCols = parseFloat($("#ncols").html());
+            var noOfRows = parseFloat($("#nrows").html());
+            
+            noOfCols+=1;
+            if(noOfRows==0)
+            {
+                $("#nrows").html("1");
+                noOfRows = 1;
+                for(var i = 0; i < noOfCols; i++)
+                {
+                    var rowsArray = new Array();
+                    for(var j = 0; j < noOfRows; j++)
+                    {
+                        var cell = new stCellClass();
+                        cell.col = i;
+                        cell.row = j;
+                        cell.width = 3;
+                        cell.text = "";
+                        cell.fontweight = "normal";
+                        cell.fontstyle = "normal";
+                        cell.textalign = "left";
+                        cell.fontsize = "9px";
+                        cell.fontfamily = "Arial, Helvetica, sans-serif";
+                        cell.backcolor = "#FFFFFF";
+                        cell.fontcolor = "#000000";
+                        rowsArray.push(cell);
+                    }
+                    stColsArray.push(rowsArray);
+                }
+            }
+            else
+            {
+                for(var i = noOfCols-1; i < noOfCols; i++)
+                {
+                    var rowsArray = new Array();
+                    for(var j = 0; j < noOfRows; j++)
+                    {
+                        var cell = new stCellClass();
+                        cell.col = i;
+                        cell.row = j;
+                        cell.width = 3;
+                        cell.text = "";
+                        cell.fontweight = "normal";
+                        cell.fontstyle = "normal";
+                        cell.textalign = "left";
+                        cell.fontsize = "9px";
+                        cell.fontfamily = "Arial, Helvetica, sans-serif";
+                        cell.backcolor = "#FFFFFF";
+                        cell.fontcolor = "#000000";
+                        rowsArray.push(cell);
+                    }
+                    stColsArray.push(rowsArray);
+                }
+            }
+
+            $("#ncols").html( noOfCols);
+
+            createWidthTable();                     
+            cleanColorPickers();
+            generateSummaryTable();
+        });
+
+        $("#removeColBtn").click(function(event) {
+            var noOfCols = parseFloat($("#ncols").html());
+            var noOfRows = parseFloat($("#nrows").html());
+
+            if(noOfCols >= 1)
+                $("#ncols").html( noOfCols - 1);
+            if(noOfCols -1 == 0)
+                $("#nrows").html("0");
+            stColsArray.pop(); 
+        
+            createWidthTable();                     
+            cleanColorPickers();
+            generateSummaryTable();
+        });
+        
+        $(".summaryTextArea").live('focusin', function() {
+            actualTextArea = $(this).attr("id");
+        });
+
+        $("img[id=stBorderColorIcon]").ColorPicker({
+            onSubmit: function(hsb, hex, rgb, colorPckr) {
+                var hexColor = '#'+hex+'';
+                $("#stBorderColor").val(hexColor);
+                $(colorPckr).ColorPickerHide();
+            },
+            onBeforeShow: function (colorPckr) {
+                var bordercolor = $("#stBorderColor").val();
+                if(bordercolor.charAt(0)=="#")
+                    bordercolor = $.trim(bordercolor.replace("#",""));
+                else
+                    bordercolor = $.trim(RGBtoHEX(bordercolor).replace("#",""));
+                $(this).ColorPickerSetColor(bordercolor);
+            },
+        });
+        
+        $("div[id=summaryTableEditor]").click(function(e){
+            var tgt = e.target;
+            var targetId = $(tgt).attr("id");
+            var targetCell = $(tgt).attr("cell"); 
+            if(targetId=="fontSize")
+            {
+                var txtAreaSelector = "textarea[id=txtArea"+targetCell+"]";
+                var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-size";});
+                if($(btn).children("select").css("display")=="none")
+                    $(btn).children("select").css("display","block");
+                else    
+                    $(btn).children("select").css("display","none");
+                $(btn).children("select").css("position","absolute");   
+            
+            }
+            else if(targetId=="fontFamily")
+            {
+                var txtAreaSelector = "textarea[id=txtArea"+targetCell+"]";
+                var btn = $.grep($(txtAreaSelector).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-family";});
+                if($(btn).children("select").css("display")=="none")
+                    $(btn).children("select").css("display","block");
+                else    
+                    $(btn).children("select").css("display","none");
+                $(btn).children("select").css("position","absolute");   
+            }
+            else
+            {
+                $("textarea[id^=txtArea]").each(function(){
+                    var btnFontFamily = $.grep($(this).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-family";});                
+                    $(btnFontFamily).children("select").css("display","none");
+                    var btnFontSize = $.grep($(this).siblings("table").children("tbody").children("tr").children("td"),function(o){return $(o).attr("attr")=="font-size";});                
+                    $(btnFontSize).children("select").css("display","none");
+                });
+            }
+        });
+        
+    });
+
+        function validateSTChars()
+        {
+            var isValidChars = true;
+            var contentTxt = "";
+            $(".summaryTextArea").each(function(){
+                contentTxt+= $(this).val();
+            });                     
+            var naCharsMatcher = contentTxt.match(/[<>\"\']/g);
+            if(naCharsMatcher!=null)
+                isValidChars = false;
+            return isValidChars;
+        }
+        
+        function checkEmptyCells()
+        {
+            var hasEmptyCells = false;
+            $(".summaryTextArea").each(function(){
+                if($(this).val()=="" || $(this).val()==null)
+                    hasEmptyCells = true;
+            });
+            return hasEmptyCells;       
+        }
+
+</script>
+    
+  <apex:form >
+    <div id="summaryTableEditor" style="background-color:white; display: none;">
+        <div style="float:right;padding-bottom:5px">
+            <input id="summaryTableEditorCancelBtn" type="button" value="Cancel"/>
+            <input id="summaryTableEditorDoneBtn" type="button" value="Done"/>
+        </div>
+
+        <div style ="font-size:0.93em;font-weight: normal;display:block;clear:both;border-top:solid thin;padding-top:5px">
+
+        <table width="100%" style="display:block;clear:border-top:solid thin;padding-top:5px;">
+            <tr>
+                <th width="20%"><span style="font-size:0.93em;font-weight: normal;">1. Select the table number of columns and rows</span></th>
+                <th ><table style="table-layout: fixed; border-collapse: collapse;" width="270px"><tr><td><span style="font-size:0.93em;font-weight: normal; margin-left:30px;">2. Set columns width</span></td><td><div id="stWidth" style="text-align: center; font-size: 0.75em; color: grey; padding-left: 7px;"></div></td></tr></table></th>
+                <th><span style="font-size:0.93em;font-weight: normal;">3. Select the table type, border color, and cells height</span></th>
+            </tr>
+            <tr>
+                <td style="vertical-align:top;">
+                    <table>
+                        <tr>
+                            <td>
+                                <span style="font-size:0.93em;font-weight: normal;">No. of Rows</span>
+                            </td>
+                            <td>
+                                <table cellpadding="1"  cellspacing="0" border="0">
+                                    <tr>
+                                        <td><span id="nrows">0</span></td>
+                                        <td><input id="removeRowBtn" type="image" src="{!URLFOR($Resource.invoicesforsalesforce,'images/deleteBtn.png')}" style="background-color: transparent; background-repeat: no-repeat;" title="Decrease Rows"/></td>
+                                        <td><input id="addRowBtn" type="image" src="{!URLFOR($Resource.invoicesforsalesforce,'images/addBtn.png')}" style="background-color: transparent; background-repeat: no-repeat;" title="Increase Rows"/></td>
+                                    </tr>
+                                </table>                                
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span style="font-size:0.93em;font-weight: normal;" >No. of Columns</span>
+                            </td>
+                            <td>
+                                <table cellpadding="1"  cellspacing="0" border="0">
+                                    <tr>
+                                        <td><span id="ncols">0</span></td>
+                                        <td><input id="removeColBtn" type="image" src="{!URLFOR($Resource.invoicesforsalesforce,'images/deleteBtn.png')}" style="background-color: transparent; background-repeat: no-repeat;" title="Decrease Columns" /></td>
+                                        <td><input id="addColBtn" type="image" src="{!URLFOR($Resource.invoicesforsalesforce,'images/addBtn.png')}" style="background-color: transparent; background-repeat: no-repeat;" title="Increase Columns" /></td>
+                                    </tr>
+                                </table>
+                            </td>   
+                        </tr>
+                    </table>
+                </td>   
+                <td style="text-align:center;vertical-align:top">
+                    <div id="colsandrowsConf" class="tableContainer" style="margin-left:30px; width:150px;height:115px;">
+                        <span style="font-size:0.8em; color:grey;margin-left:-20px;">No columns and rows set yet</span>
+                    </div>
+                </td>
+                <td style="vertical-align:top;">
+                    <table>
+                        <tr>
+                            <td>
+                                <fieldset style="padding: 1pt; font-size: 0.75em; font-family: inherit; font-weight: normal;">
+                                    <legend style="font-weight:normal;">Table type</legend>
+                                    <table id="summaryTableModel" style="width: 60%;">
+                                        <tr>
+                                            <td>
+                                            <input type="button" model="model1" class="summaryModelButton" id="summodel1Bt" alt="" onclick="setSTTableModel(this, 'model1'); " 
+                                                style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model1.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+                                                width: 38px; height: 38px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Grid"/>
+                                            </td>
+                                            <td>
+                                            <input type="button"  model="model2" class="summaryModelButton" id="summodel2Bt" alt="" onclick="setSTTableModel(this, 'model2'); " 
+                                                style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model2.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+                                                width: 38px; height: 38px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Normal" />
+                                            </td>
+                                            <td>
+                                            <input type="button"  model="model3s" class="summaryModelButton" id="summodel3Bt" alt="" onclick="setSTTableModel(this, 'model3s'); " 
+                                                style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model3s.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+                                                width: 38px; height: 38px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="List" />
+                                            </td>
+                                            <td>
+                                            <input type="button"  model="model5" class="summaryModelButton" id="summodel5Bt" alt="" onclick="setSTTableModel(this, 'model5'); " 
+                                                style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model5.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+                                                width: 38px; height: 38px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Columns" />
+                                            </td>
+                                            <td>
+                                            <input type="button"  model="model6" class="summaryModelButton" id="summodel6Bt" alt="" onclick="setSTTableModel(this, 'model6'); " 
+                                                style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model6.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+                                                width: 38px; height: 38px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Simple" />
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </fieldset>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <table width="100%">
+                                    <tr>
+                                        <td>
+                                            <fieldset style="padding: 4pt; font-size: 0.75em; font-family: inherit; font-weight: normal;">
+                                                <legend style="font-weight:normal;">Border color</legend>
+                                                    <img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/color_icon.gif')}" style="display:block;margin-left:35px;" id="stBorderColorIcon" title="Border Color"/>
+                                            </fieldset>
+                                        </td>
+                                        <td>
+                                            <fieldset style="padding: 4pt; font-size: 0.75em; font-family: inherit; font-weight: normal;">
+                                                <legend style="font-weight:normal;">Cell height</legend>
+                                                    <select id="stCellHeightSelector" size="1">
+                                                        <option value="10.0">0.5 cm</option>
+                                                        <option value="20.0">1.0 cm</option>
+                                                        <option value="30.0">1.5 cm</option>
+                                                        <option value="40.0">2.0 cm</option>
+                                                        <option value="50.0">2.5 cm</option>
+                                                        <option value="60.0">3.0 cm</option>
+                                                    </select> 
+                                            </fieldset>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                
+                </td>
+            </tr>
+        </table>    
+
+        <hr ></hr >
+        <span style="font-size:0.93em;font-weight: normal">4. Enter the table cells content and set their style</span>      
+        <center>
+            <div id="summaryTableInEditor" style="min-height:230px;padding-top:10px">
+                <span style="font-size:0.8em; color:grey;margin-left:-20px;">No columns and rows set yet</span>
+            </div>
+        </center>
+        <hr ></hr >
+
+
+
+                <!-- IFS2 start -->
+                <span style="font-size:0.93em;font-weight: normal">5. Use merge fields or roll-up summaries to add live and invoice summmary data content to the text box</span>
+                <div id="dynSTDataTabs" class="ui-tabs ui-widget ui-widget-content ui-corner-all" style="margin-top:5px;">
+                    <ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" style="background:none;">
+                        <li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#mergeFieldsTab">Merge Fields</a></li>
+                        <li class="ui-state-default ui-corner-top "><a href="#rollupsTab">Roll-Up Summaries</a></li>
+                    </ul>
+                    <div id="mergeFieldsTab">
+                        <ul style="font-size:0.93em;font-weight: normal">
+                          <li>Put the cursor in the text box where the live data is required.</li>
+                          <li>Select one of the available fields.</li>
+                          <li>Click the Insert button to add to merge field expression for the field at the cursor position.</li>
+                        </ul>
+                        
+                        <c:MergeFieldsSummaryTable mainController="{!cont}"/> 
+                    </div> 
+                    <div id="rollupsTab">
+                        <ul style="font-size:0.93em;font-weight: normal">
+                          <li>Put the cursor in the text box where the roll-up summary is required.</li>
+                          <li>Select the field to add up over all the invoice line items.</li>
+                          <li>Click the Insert button to add the roll-up summary at the cursor position.</li>
+                        </ul>
+                        
+                        <c:RollupSummarySTEditor />
+
+                    </div>  
+                </div>          
+                <!-- IFS2 end -->
+
+            <input id="stTableType" style="display:none"/>
+            <input id="stBorderColor" style="display:none"/>
+     </div>
+    </div>
+   </apex:form>
+
+
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/color_icon.gif')}" style="display:none" id="coloriconImage" />
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/align_center_icon.gif')}" style="display:none" id="aligncenterImage" />
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/align_right.gif')}" style="display:none" id="alignrightImage" />
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/left_align.gif')}" style="display:none" id="alignleftImage" />
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/bold_icon.gif')}" style="display:none" id="boldImage" />
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/italics_icon.gif')}" style="display:none" id="italicsImage" />
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/font_size_icon.gif')}" style="display:none" id="fontsizeImage" />
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/background_color_icon.gif')}" style="display:none" id="backcolorImage"/>
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/color_icon.gif')}" style="display:none" id="fontcolorImage"/>
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/font_icon.gif')}" style="display:none" id="fontfamilyImage"/>
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/deleteBtn.png')}" style="display:none" id="deleteBtnIcon"/>
+<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/addBtn.png')}" style="display:none" id="addBtnIcon"/>
+
+</apex:component>

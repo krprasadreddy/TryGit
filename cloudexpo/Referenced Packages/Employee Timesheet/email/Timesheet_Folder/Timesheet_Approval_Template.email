@@ -1,0 +1,8 @@
+Timestamp: {!Timesheet__c.CreatedDate}<br/>
+Project Name :  {!Timesheet__c.Project__c} <br/> 
+Task : {!Timesheet__c.Task__c} <br/>
+Hours : {!Timesheet__c.Hours__c} <br/>
+Status : {!Timesheet__c.Status__c} <br/> 
+Comments<br/><br/>
+
+----------

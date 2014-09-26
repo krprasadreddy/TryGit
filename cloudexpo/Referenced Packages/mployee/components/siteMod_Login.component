@@ -1,0 +1,88 @@
+<apex:component id="loginComponent" controller="mployee.SiteClass" layout="none">
+
+	<apex:attribute name="config" description="Config settings" type="mployee.SiteModConfig" required="false"/>
+	
+	<style>
+		.login-fields, .login-actions, .login-social, .login-account  {
+			color: #838383;
+		}
+		.login-fields .field-password{
+			margin-bottom:0.5em;
+		}
+		.login-account{
+			float: left;
+			padding-top:10px;
+		}
+		.account-container {
+			width:420px;
+		}
+	</style>
+
+	<apex:form id="loginForm" forceSSL="true">
+	
+		<h1><apex:outputText value="{!$Label.SITE_MOD_LOGIN_HEADER_TITLE}"/></h1>
+		
+		<div class="login-fields">
+			<apex:messages styleClass="alert alert-info" />
+			<p><apex:outputText value="{!$Label.SITE_MOD_LOGIN_HEADER_DESCRIPTION}"/></p>
+			
+			<div class="field">
+				
+				<apex:outputLabel value="{!$Label.SITE_MOD_LOGIN_FIELD_USERNAME_LABEL}" for="username"/>
+				<apex:inputText id="username" value="{!username}" styleClass="form-control input-lg username-field" html-placeholder="{!$Label.SITE_MOD_LOGIN_FIELD_USERNAME_PLACEHOLDER}"/>
+				
+			</div> <!-- /field -->
+			
+			<div class="field-password">					
+				<apex:outputLabel value="{!$Label.SITE_MOD_LOGIN_FIELD_PASSWORD_LABEL}" for="password"/>
+				<apex:inputSecret id="password" value="{!password}" styleClass="form-control input-lg password-field" html-placeholder="{!$Label.SITE_MOD_LOGIN_FIELD_PASSWORD_PLACEHOLDER}"/>
+				
+			</div> <!-- /password -->
+			<apex:outputLink value="{!$Page.mployee__SiteForgotPassword}">
+            	<apex:outputText value="{!$Label.SITE_MOD_LOGIN_FORGOT_PASSWORD}"/>
+            </apex:outputLink>
+			
+		</div> <!-- /login-fields -->
+		 
+		<div class="login-actions">
+		
+			<apex:commandButton action="{!login}" value="{!$Label.SITE_MOD_LOGIN_BUTTON_LOGIN}" id="loginButton" styleClass="login-action btn btn-primary"/>
+			
+		</div> <!-- .actions -->
+		
+		<div class="login-social">
+			<p><apex:outputText value="{!$Label.SITE_MOD_LOGIN_SOCIAL_DESCRIPTION}"/></p>
+			
+			<apex:commandLink rendered="{!IF(config.params['linkedInEnabled'] == 'true',true,false)}" styleClass="btn"  action="{!SiteAuth}">
+               	<apex:param name="serviceName" value="LinkedIn" assignTo="{!serviceName}"/>
+               	<i class="fa fa-linkedin"></i>&nbsp;&nbsp;
+               	<apex:outputText value="{!$Label.SITE_MOD_LOGIN_SOCIAL_WITH}">
+               		<apex:param value="LinkedIn" />
+               	</apex:outputText>
+			</apex:commandLink>
+			 &nbsp;
+			<apex:commandLink rendered="{!IF(config.params['xingEnabled'] == 'true',true,false)}" styleClass="btn"  action="{!SiteAuth}">
+               	<apex:param name="serviceName" value="Xing" assignTo="{!serviceName}"/>
+               	<i class="fa fa-xing"></i>&nbsp;&nbsp;
+               	<apex:outputText value="{!$Label.SITE_MOD_LOGIN_SOCIAL_WITH}">
+               		<apex:param value="XING" />
+               	</apex:outputText>
+			</apex:commandLink>		
+			
+		</div>
+		
+		<div class="login-account">
+			<p><apex:outputText value="{!$Label.SITE_MOD_LOGIN_NEW_USER_DESCRIPTION}"/></p>
+			
+			<apex:outputLink styleClass="btn" value="{!$Page.mployee__SiteProfileRegister}">
+				<i class="fa fa-user"></i>&nbsp;&nbsp;
+            	<apex:outputText value="{!$Label.SITE_MOD_LOGIN_NEW_USER}"/>
+            </apex:outputLink>
+		
+		</div>
+		
+		
+		
+	</apex:form>
+
+</apex:component>

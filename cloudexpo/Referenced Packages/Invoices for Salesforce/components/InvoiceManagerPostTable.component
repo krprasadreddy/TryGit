@@ -1,0 +1,1815 @@
+<apex:component controller="kognoz1.InvoiceManagerPostTableController" allowDML="true">
+<apex:attribute name="cont" type="kognoz1.InvoiceManagerController" description="controller" required="true"  AssignTo="{!cont}" />
+    <style type="text/css">
+    #imTableHeadersContainer
+    {
+        /*min-width:1340px;*/
+        overflow-x:hidden;
+        overflow-y:hidden;
+    }
+    
+    table#imTableHeaders td
+    {
+        overflow:hidden;
+        text-align:left;
+        white-space:nowrap;
+        height:25px;
+        border:1px dotted lightgrey;
+        border-collapse:collapse;
+        vertical-align:middle;
+    }
+    </style>
+  
+    <script type="text/javascript" >
+
+        $(function(){
+            var selectedOppsJsonObjStr = $("input[id*=selectedOppsJSONContField]").val();
+            selectedOpps = new Array();
+            if(selectedOppsJsonObjStr)
+            {
+                var selectedOppsJsonObj = JSON.parse(selectedOppsJsonObjStr);   
+                for(var idx=0;idx < selectedOppsJsonObj.length;idx++)
+                {
+                    var opportunities = selectedOppsJsonObj[idx].objects;
+                    if(opportunities)
+                    {
+                        for(var i=0; i< opportunities.length; i++)
+                        {
+                            var opp = opportunities[i];
+                            var selOpp = new SelOppClass();
+                            selOpp.oppId = opp.id;
+                            selOpp.createonly = opp.createonly;
+                            selOpp.print = opp.print;
+                            selOpp.email = opp.email;
+                            selOpp.post = opp.post;
+
+                            selOpp.templateId = opp.templateid;
+                            selOpp.invoiceId = opp.invoiceid;
+                            selOpp.invoiceNum = opp.invoicenum;
+                            selOpp.invoiceEmailed = opp.invoiceemailed;
+                            selOpp.invoicePrinted = opp.invoiceprinted;
+                            selOpp.emailContactId = opp.emailcontactid;
+                            selOpp.ccemails = opp.ccemails;
+                            selOpp.owneremail = opp.owneremail;
+                            selOpp.contactName = opp.contactName;
+                            selOpp.invStatus = opp.invstatus;
+                            selOpp.externalId = opp.externalid;
+                            
+                            selectedOpps.push(selOpp);
+                        }
+                    }
+                }
+            }
+            updateSelectedOpps();
+            if(!selectedOppsJsonObjStr)
+                updateSelectedCounter(0);
+        
+            $("#invoiceProcessingErrorsPanel").dialog({
+                    modal: true, 
+                    autoOpen: false,
+                    width: 550,
+                    height:'auto',
+                    title:'Invoice processing errors'
+            });
+        
+            $("#invoicePostingErrorsPanel").dialog({
+                    modal: true, 
+                    autoOpen: false,
+                    width: 550,
+                    height:'auto',
+                    title:'Invoice posting errors'
+            });
+        
+            $("#invoiceMissingDataFieldsPanel").dialog({
+                    modal: true, 
+                    autoOpen: false,
+                    width: 550,
+                    height:'auto',
+                    title:'Invoice missing data fields'
+            });
+        
+            $("#invoiceOutOfSyncPanel").dialog({
+                    modal: true, 
+                    autoOpen: false,
+                    width: 550,
+                    height:'auto',
+                    title:'Invoice out-of-sync'
+            });
+        tblWidth = parseInt($("#imTableHeadersContainer").css("width").replace("px",""))-20;
+        tblWidthPlus = tblWidth+18;
+        $("#imTableHeadersContainer").css("width",tblWidthPlus+"px");
+        $("#imTableHeaders").css("width",tblWidth+"px");
+        $("#imTableContainer").css("width",tblWidth+"px");
+        $("table[id$=apxTable]").css("width",tblWidth+"px"); 
+        
+        });
+    
+        var maxNoOfSelections = 50;
+        var tblWidth;
+        var tblWidthPlus;
+        /*
+            functions to deal with controls on the table
+        */
+        function checkAllCreateOnly(cntl)
+        {
+            // new ifs done
+            var noOfOpportunities = {!cont.noOfOpps};
+            if(noOfOpportunities==0 && !isFetched)
+            {
+                $(cntl).attr("checked",false);
+                alert("The list is empty. Please fetch opportunities first");
+            }
+            else
+            {
+                if($(cntl).attr("checked")==true)
+                {
+                    $("input[id$=printHeader]").attr("checked",false);
+                    $("input[id$=print]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(isSelected(id,"print") && !disabledOpp)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            if(!isSelected(id,"mail"))
+                            {
+                                selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                                updateSelectedCounter(-1);
+                            }
+                        }
+                    });
+                    $("input[id$=mailHeader]").attr("checked",false);
+                    $("input[id$=mail]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(isSelected(id,"mail") && !disabledOpp)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            updateSelectedCounter(-1);
+                        }
+                    });
+// post start
+                    $("input[id$=postHeader]").attr("checked",false);
+                    $("input[id$=post]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        var disabledPost = $(this).attr("disabled");
+                        if(isSelected(id,"post") && !disabledOpp && !disabledPost)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            updateSelectedCounter(-1);
+                        }
+                    });
+// post end
+                    $("input[id$=onlycreate]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(!isSelected(id,"onlycreate") && !disabledOpp)
+                        {
+                            if(selectedOpps.length < maxNoOfSelections)
+                            {
+                                $(this).attr("checked",true);
+                                $(this).parent().parent().addClass("trSelected");
+                                var selOpp = new SelOppClass();
+                                selOpp.createonly = "true";
+                                selOpp.email = "false";
+                                selOpp.print = "false";
+                                selOpp.post = "false";
+                                selOpp.oppId = id;
+                                
+                                var oppDataSelector = $(this).parent("td").siblings().children("span[id$=oppData]");
+                                selOpp.templateId = $(oppDataSelector).attr("templateid");
+                                selOpp.invoiceId = $(oppDataSelector).attr("invoiceid");
+                                selOpp.invoiceNum = $(oppDataSelector).attr("invoicenum");
+                                selOpp.invoiceEmailed = $(oppDataSelector).attr("emailed");
+                                selOpp.invoicePrinted = $(oppDataSelector).attr("printed");
+                                selOpp.emailContactId = $(oppDataSelector).attr("emailcontactid");
+                                selOpp.ccemails = $(oppDataSelector).attr("ccemails");
+                                selOpp.owneremail = $(oppDataSelector).attr("owneremail");
+                                selOpp.contactName = $(oppDataSelector).attr("contactName");
+                                selOpp.invStatus = $(oppDataSelector).attr("invstatus");
+                                selOpp.externalId = $(oppDataSelector).attr("externalid");
+    
+                                selectedOpps.push(selOpp);              
+                                updateSelectedCounter(1);
+                            }
+                            else
+                            {
+                                alert("You have reached the maximum number of selections allowed for a processing batch (50).");
+                                updateCheckboxHeaders();
+                                return false;
+                            }
+                        }
+                    });
+                }
+                else
+                {
+                    $("input[id$=onlycreate]").each(function(){
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        var id = $(this).siblings("span").attr("oppId");
+                        if(isSelected(id,"onlycreate") && !disabledOpp)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            updateSelectedCounter(-1);
+                        }
+                    });
+                
+                }
+            }
+        }
+
+
+        function checkAllEmail(cntl)
+        {
+            // new ifs done
+            var noOfOpportunities = {!cont.noOfOpps};
+            if(noOfOpportunities==0 && !isFetched)
+            {
+                $(cntl).attr("checked",false);
+                alert("The list is empty. Please fetch opportunities first");
+            }
+            else
+            {
+                if($(cntl).attr("checked")==true)
+                {
+                    $("input[id$=onlyCreateHeader]").attr("checked",false);
+                    $("input[id$=onlycreate]").each(function(){
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        var id = $(this).siblings("span").attr("oppId");
+                        if(isSelected(id,"onlycreate") && !disabledOpp)
+                        {
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            $(this).parent().parent().removeClass("trSelected");
+                            $(this).attr("checked",false);
+                            updateSelectedCounter(-1);
+                        }
+                    });
+// post start
+                    $("input[id$=postHeader]").attr("checked",false);
+                    $("input[id$=post]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        var disabledPost = $(this).attr("disabled");
+                        if(isSelected(id,"post") && !disabledOpp && !disabledPost)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            updateSelectedCounter(-1);
+                        }
+                    });
+// post end
+                    $("input[id$=mail]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(isSelected(id,"print") && !disabledOpp)
+                        {
+                            $(this).attr("checked",true);
+                            var selOppArray = $.grep(selectedOpps,function(o){return o.oppId==id;});
+                            if(selOppArray.length > 0)
+                            {
+                                var selOpp = selOppArray[0];
+                                selOpp.email="true";                            
+                            }
+                        }
+                        else
+                        {
+                            if(!isSelected(id,"mail") && !disabledOpp)
+                            {
+                                if(selectedOpps.length < maxNoOfSelections)
+                                {
+                                    $(this).attr("checked",true);
+                                    $(this).parent().parent().addClass("trSelected");
+                                    var selOpp = new SelOppClass();
+                                    selOpp.createonly = "false";
+                                    selOpp.email = "true";
+                                    selOpp.print = "false";
+                                    selOpp.post = "false";
+                                    selOpp.oppId = id;
+    
+                                    var oppDataSelector = $(this).parent("td").siblings().children("span[id$=oppData]");
+                                    selOpp.templateId = $(oppDataSelector).attr("templateid");
+                                    selOpp.invoiceId = $(oppDataSelector).attr("invoiceid");
+                                    selOpp.invoiceNum = $(oppDataSelector).attr("invoicenum");
+                                    selOpp.invoiceEmailed = $(oppDataSelector).attr("emailed");
+                                    selOpp.invoicePrinted = $(oppDataSelector).attr("printed");
+                                    selOpp.emailContactId = $(oppDataSelector).attr("emailcontactid");
+	                                selOpp.ccemails = $(oppDataSelector).attr("ccemails");
+	                                selOpp.owneremail = $(oppDataSelector).attr("owneremail");
+	                                selOpp.contactName = $(oppDataSelector).attr("contactName");
+                                    selOpp.invStatus = $(oppDataSelector).attr("invstatus");
+	                                selOpp.externalId = $(oppDataSelector).attr("externalid");
+    
+                                    selectedOpps.push(selOpp);              
+                                    updateSelectedCounter(1);
+                            
+                                }
+                                else
+                                {
+                                    alert("You have reached the maximum number of selections allowed for a processing batch (50).");
+                                    updateCheckboxHeaders();
+                                    return false;
+                                }
+                            }
+                        }
+                    });
+                }
+                else
+                {
+                    $("input[id$=mail]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        $(this).attr("checked",false);
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(!disabledOpp)
+                        {
+                            if(isSelected(id,"print"))
+                            {
+                                var selOppArray = $.grep(selectedOpps,function(o){return o.oppId==id;});
+                                if(selOppArray.length > 0)
+                                {
+                                    var selOpp = selOppArray[0];
+                                    selOpp.email="false";                           
+                                }
+                            }
+                            else
+                            {
+                                $(this).parent().parent().removeClass("trSelected");
+                                selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                                updateSelectedCounter(-1);
+                            
+                            }
+                        }
+                    });
+                
+                }
+            }
+        }
+
+        function checkAllPrint(cntl)
+        {
+            // new ifs done
+            var noOfOpportunities = {!cont.noOfOpps};
+            if(noOfOpportunities==0 && !isFetched)
+            {
+                $(cntl).attr("checked",false);
+                alert("The list is empty. Please fetch opportunities first");
+            }
+            else
+            {
+                if($(cntl).attr("checked")==true)
+                {
+                    $("input[id$=onlyCreateHeader]").attr("checked",false);
+                    $("input[id$=onlycreate]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(isSelected(id,"onlycreate") && !disabledOpp)
+                        {
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            $(this).parent().parent().removeClass("trSelected");
+                            $(this).attr("checked",false);
+                            updateSelectedCounter(-1);
+                        }
+                    });
+// post start
+                    $("input[id$=postHeader]").attr("checked",false);
+                    $("input[id$=post]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        var disabledPost = $(this).attr("disabled");
+                        if(isSelected(id,"post") && !disabledOpp && !disabledPost)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            updateSelectedCounter(-1);
+                        }
+                    });
+// post end
+                    $("input[id$=print]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(isSelected(id,"mail") && !disabledOpp)
+                        {
+                            $(this).attr("checked",true);
+                            var selOppArray = $.grep(selectedOpps,function(o){return o.oppId==id;});
+                            if(selOppArray.length > 0)
+                            {
+                                var selOpp = selOppArray[0];
+                                selOpp.print="true";                            
+                            }
+                        }
+                        else
+                        {
+                            if(!isSelected(id,"print") && !disabledOpp)
+                            {
+                                if(selectedOpps.length < maxNoOfSelections)
+                                {
+                                    $(this).attr("checked",true);
+                                    $(this).parent().parent().addClass("trSelected");
+                                    var selOpp = new SelOppClass();
+                                    selOpp.createonly = "false";
+                                    selOpp.email = "false";
+                                    selOpp.print = "true";
+                                    selOpp.post = "false";
+                                    selOpp.oppId = id;
+    
+                                    var oppDataSelector = $(this).parent("td").siblings().children("span[id$=oppData]");
+                                    selOpp.templateId = $(oppDataSelector).attr("templateid");
+                                    selOpp.invoiceId = $(oppDataSelector).attr("invoiceid");
+                                    selOpp.invoiceNum = $(oppDataSelector).attr("invoicenum");
+                                    selOpp.invoiceEmailed = $(oppDataSelector).attr("emailed");
+                                    selOpp.invoicePrinted = $(oppDataSelector).attr("printed");
+                                    selOpp.emailContactId = $(oppDataSelector).attr("emailcontactid");
+	                                selOpp.ccemails = $(oppDataSelector).attr("ccemails");
+	                                selOpp.owneremail = $(oppDataSelector).attr("owneremail");
+	                                selOpp.contactName = $(oppDataSelector).attr("contactName");
+                                    selOpp.invStatus = $(oppDataSelector).attr("invstatus");
+ 	                                selOpp.externalId = $(oppDataSelector).attr("externalid");
+    
+                                    selectedOpps.push(selOpp);              
+                                    updateSelectedCounter(1);
+                                }
+                                else
+                                {
+                                    alert("You have reached the maximum number of selections allowed for a processing batch (50).");
+                                    updateCheckboxHeaders();
+                                    return false;
+                                }
+                            }
+                        }
+                    });
+                }
+                else
+                {
+                    $("input[id$=print]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        $(this).attr("checked",false);
+                        if(!disabledOpp)
+                        {
+                            if(isSelected(id,"mail"))
+                            {
+                                var selOppArray = $.grep(selectedOpps,function(o){return o.oppId==id;});
+                                if(selOppArray.length > 0)
+                                {
+                                    var selOpp = selOppArray[0];
+                                    selOpp.print="false";                           
+                                }
+                            }
+                            else
+                            {
+                                $(this).parent().parent().removeClass("trSelected");
+                                selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                                updateSelectedCounter(-1);
+                            
+                            }
+                        }
+                    });
+                
+                }
+            }
+        }
+
+        function checkAllPost(cntl)
+        {
+            var noOfOpportunities = {!cont.noOfOpps};
+            if(noOfOpportunities==0 && !isFetched)
+            {
+                $(cntl).attr("checked",false);
+                alert("The list is empty. Please fetch opportunities first");
+            }
+            else
+            {
+                if($(cntl).attr("checked")==true)
+                {
+                    $("input[id$=printHeader]").attr("checked",false);
+                    $("input[id$=print]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(isSelected(id,"print") && !disabledOpp)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            if(!isSelected(id,"mail"))
+                            {
+                                selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                                updateSelectedCounter(-1);
+                            }
+                        }
+                    });
+                    $("input[id$=mailHeader]").attr("checked",false);
+                    $("input[id$=mail]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(isSelected(id,"mail") && !disabledOpp)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            updateSelectedCounter(-1);
+                        }
+                    });
+                    $("input[id$=onlyCreateHeader]").attr("checked",false);
+                    $("input[id$=onlycreate]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        if(isSelected(id,"onlycreate") && !disabledOpp)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            updateSelectedCounter(-1);
+                        }
+                    });
+                    $("input[id$=post]").each(function(){
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        var disabledPost = $(this).attr("disabled");
+                        if(!isSelected(id,"post") && !disabledOpp && !disabledPost)
+                        {
+                            if(selectedOpps.length < maxNoOfSelections)
+                            {
+                                $(this).attr("checked",true);
+                                $(this).parent().parent().addClass("trSelected");
+                                var selOpp = new SelOppClass();
+                                selOpp.createonly = "false";
+                                selOpp.email = "false";
+                                selOpp.print = "false";
+                                selOpp.post = "true";
+                                selOpp.oppId = id;
+                                
+                                var oppDataSelector = $(this).parent("td").siblings().children("span[id$=oppData]");
+                                selOpp.templateId = $(oppDataSelector).attr("templateid");
+                                selOpp.invoiceId = $(oppDataSelector).attr("invoiceid");
+                                selOpp.invoiceNum = $(oppDataSelector).attr("invoicenum");
+                                selOpp.invoiceEmailed = $(oppDataSelector).attr("emailed");
+                                selOpp.invoicePrinted = $(oppDataSelector).attr("printed");
+                                selOpp.emailContactId = $(oppDataSelector).attr("emailcontactid");
+                                selOpp.ccemails = $(oppDataSelector).attr("ccemails");
+                                selOpp.owneremail = $(oppDataSelector).attr("owneremail");
+                                selOpp.contactName = $(oppDataSelector).attr("contactName");
+                                selOpp.invStatus = $(oppDataSelector).attr("invstatus");
+                                selOpp.externalId = $(oppDataSelector).attr("externalid");
+    
+                                selectedOpps.push(selOpp);              
+                                updateSelectedCounter(1);
+                            }
+                            else
+                            {
+                                alert("You have reached the maximum number of selections allowed for a processing batch (50).");
+                                updateCheckboxHeaders();
+                                return false;
+                            }
+                        }
+                    });
+                }
+                else
+                {
+                    $("input[id$=post]").each(function(){
+                        var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                        var id = $(this).siblings("span").attr("oppId");
+                        var disabledPost = $(this).attr("disabled");
+                        if(isSelected(id,"post") && !disabledOpp && !disabledPost)
+                        {
+                            $(this).attr("checked",false);
+                            $(this).parent().parent().removeClass("trSelected");
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            updateSelectedCounter(-1);
+                        }
+                    });
+                
+                }
+            }
+
+        }
+
+        function checkEmail(cb)
+        {
+            // new ifs done
+            var oppId = $(cb).siblings("span").attr("oppId");
+            if($(cb).attr("checked")==true)
+            {
+                if(isCreateOnlySelected(oppId))
+                {
+                    var createOnlyParentSelector = $.grep($("input[id$=onlycreate]"),function(o){
+                        return $(o).siblings("span").attr("oppId")==oppId;
+                    });
+                    $(createOnlyParentSelector).attr("checked",false);
+                }
+// post start
+                 $("input[id$=postHeader]").attr("checked",false);
+                 $("input[id$=post]").each(function(){
+                     var id = $(this).siblings("span").attr("oppId");
+                     var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                     var disabledPost = $(this).attr("disabled");
+                     if(isSelected(id,"post") && !disabledOpp && !disabledPost)
+                     {
+                         $(this).attr("checked",false);
+                         $(this).parent().parent().removeClass("trSelected");
+                         selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                         updateSelectedCounter(-1);
+                     }
+                 });
+// post end
+                var selOppArray = $.grep(selectedOpps,function(o){return o.oppId==oppId;});
+                if(selOppArray.length >0)
+                {
+                    var selOpp = selOppArray[0];
+                    selOpp.email="true";
+                    selOpp.createonly="false";
+                    selOpp.post = "false";
+                }
+                else
+                {
+                   if(selectedOpps.length < maxNoOfSelections)
+                   {
+                        var selOpp = new SelOppClass();
+                        selOpp.createonly = "false";
+                        if(isPrintSelected(oppId))
+                            selOpp.print = "true";
+                        else
+                            selOpp.print = "false";
+                        selOpp.email = "true";
+                        selOpp.oppId = oppId;
+    
+                        var oppDataSelector = $(cb).parent("td").siblings().children("span[id$=oppData]");
+                        selOpp.templateId = $(oppDataSelector).attr("templateid");
+                        selOpp.invoiceId = $(oppDataSelector).attr("invoiceid");
+                        selOpp.invoiceNum = $(oppDataSelector).attr("invoicenum");
+                        selOpp.invoiceEmailed = $(oppDataSelector).attr("emailed");
+                        selOpp.invoicePrinted = $(oppDataSelector).attr("printed");
+                        selOpp.emailContactId = $(oppDataSelector).attr("emailcontactid");
+                        selOpp.ccemails = $(oppDataSelector).attr("ccemails");
+                        selOpp.owneremail = $(oppDataSelector).attr("owneremail");
+                        selOpp.contactName = $(oppDataSelector).attr("contactName");
+                        selOpp.invStatus = $(oppDataSelector).attr("invstatus");
+                        selOpp.externalId = $(oppDataSelector).attr("externalid");
+    
+                        selectedOpps.push(selOpp);              
+                        updateSelectedCounter(1);
+                   }
+                   else
+                   {
+                        alert("You have reached the maximum number of selections allowed for a processing batch (50).");
+                        $(cb).attr("checked",false);
+                   }
+                }
+
+                if(selectedOpps.length < maxNoOfSelections)
+                    $(cb).parent().parent().addClass("trSelected");
+            }
+            else
+            {
+                if(!isPrintSelected(oppId))
+                {
+                    selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=oppId;});
+                    $(cb).parent().parent().removeClass("trSelected");
+                    updateSelectedCounter(-1);
+                }
+                else
+                {
+                    var selOppArray = $.grep(selectedOpps,function(o){return o.oppId==oppId;});
+                    if(selOppArray.length >0)
+                    {
+                        var selOpp = selOppArray[0];
+                        selOpp.email="false";
+                    }
+                }
+            }
+            updateCheckboxHeaders();
+        }
+
+        function checkPrint(cb)
+        {
+            // new ifs done
+            var oppId = $(cb).siblings("span").attr("oppId");
+            if($(cb).attr("checked")==true)
+            {
+                if(isCreateOnlySelected(oppId))
+                {
+                    var createOnlyParentSelector = $.grep($("input[id$=onlycreate]"),function(o){
+                        return $(o).siblings("span").attr("oppId")==oppId;
+                    });
+                    $(createOnlyParentSelector).attr("checked",false);
+                }
+// post start
+                 $("input[id$=postHeader]").attr("checked",false);
+                 $("input[id$=post]").each(function(){
+                     var id = $(this).siblings("span").attr("oppId");
+                     var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                     var disabledPost = $(this).attr("disabled");
+                     if(isSelected(id,"post") && !disabledOpp && !disabledPost)
+                     {
+                         $(this).attr("checked",false);
+                         $(this).parent().parent().removeClass("trSelected");
+                         selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                         updateSelectedCounter(-1);
+                     }
+                 });
+// post end
+                var selOppArray = $.grep(selectedOpps,function(o){return o.oppId==oppId;});
+                if(selOppArray.length >0)
+                {
+                    var selOpp = selOppArray[0];
+                    selOpp.print="true";
+                    selOpp.createonly="false";
+                    selOpp.post = "false";
+                }
+                else
+                {
+                   if(selectedOpps.length < maxNoOfSelections)
+                   {
+                        var selOpp = new SelOppClass();
+                        selOpp.createonly = "false";
+                        if(isEmailSelected(oppId))
+                            selOpp.email = "true";
+                        else
+                            selOpp.email = "false";
+                        selOpp.print = "true";
+                        selOpp.oppId = oppId;
+    
+                        var oppDataSelector = $(cb).parent("td").siblings().children("span[id$=oppData]");
+                        
+                        selOpp.templateId = $(oppDataSelector).attr("templateid");
+                        selOpp.invoiceId = $(oppDataSelector).attr("invoiceid");
+                        selOpp.invoiceNum = $(oppDataSelector).attr("invoicenum");
+                        selOpp.invoiceEmailed = $(oppDataSelector).attr("emailed");
+                        selOpp.invoicePrinted = $(oppDataSelector).attr("printed");
+                        selOpp.emailContactId = $(oppDataSelector).attr("emailcontactid");
+                        selOpp.ccemails = $(oppDataSelector).attr("ccemails");
+                        selOpp.owneremail = $(oppDataSelector).attr("owneremail");
+                        selOpp.contactName = $(oppDataSelector).attr("contactName");
+                        selOpp.invStatus = $(oppDataSelector).attr("invstatus");
+                        selOpp.externalId = $(oppDataSelector).attr("externalid");
+    
+                        selectedOpps.push(selOpp);              
+                        updateSelectedCounter(1);
+                   }
+                   else
+                   {
+                        alert("You have reached the maximum number of selections allowed for a processing batch (50).");
+                        $(cb).attr("checked",false);
+                    }
+                }
+                if(selectedOpps.length < maxNoOfSelections)
+                    $(cb).parent().parent().addClass("trSelected");
+            }
+            else
+            {
+                if(!isEmailSelected(oppId))
+                {
+                    selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=oppId;});
+                    $(cb).parent().parent().removeClass("trSelected");
+                    updateSelectedCounter(-1);
+                }
+                else
+                {
+                    var selOppArray = $.grep(selectedOpps,function(o){return o.oppId==oppId;});
+                    if(selOppArray.length >0)
+                    {
+                        var selOpp = selOppArray[0];
+                        selOpp.print="false";
+                    }
+                }
+            }
+            updateCheckboxHeaders();
+        }
+
+        function checkCreateOnly(cb)
+        {
+            // new ifs done
+            var oppId = $(cb).siblings("span").attr("oppId");
+            if($(cb).attr("checked")==true)
+            {
+
+                var printOremailSelected = false;
+                var postSelected = false;
+                if(isPrintSelected(oppId))
+                {
+                    printOremailSelected = true;
+                    var printParentSelector = $.grep($("input[id$=print]"),function(o){
+                        return $(o).siblings("span").attr("oppId")==oppId;
+                    });
+                    $(printParentSelector).attr("checked",false);
+                }
+                if(isEmailSelected(oppId))
+                {
+                    printOremailSelected = true;
+                    var emailParentSelector = $.grep($("input[id$=mail]"),function(o){
+                        return $(o).siblings("span").attr("oppId")==oppId;
+                    });
+                    $(emailParentSelector).attr("checked",false);
+                }
+// post start
+                 $("input[id$=postHeader]").attr("checked",false);
+                 $("input[id$=post]").each(function(){
+                     var id = $(this).siblings("span").attr("oppId");
+                     var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                     var disabledPost = $(this).attr("disabled");
+                     if(isSelected(id,"post") && !disabledOpp && !disabledPost)
+                     {
+                         $(this).attr("checked",false);
+                         $(this).parent().parent().removeClass("trSelected");
+                         selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                         updateSelectedCounter(-1);
+                     }
+                 });
+// post end
+                if(printOremailSelected || postSelected)
+                {
+                    selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=oppId;});
+                    updateSelectedCounter(-1);
+                }
+               
+                if(selectedOpps.length < maxNoOfSelections)
+                {
+                    var selOpp = new SelOppClass();
+                    selOpp.createonly = "true";
+                    selOpp.email = "false";
+                    selOpp.print = "false";
+                    selOpp.post = "false";
+                    selOpp.oppId = oppId;
+    
+                    var oppDataSelector = $(cb).parent("td").siblings().children("span[id$=oppData]");
+                    selOpp.templateId = $(oppDataSelector).attr("templateid");
+                    selOpp.invoiceId = $(oppDataSelector).attr("invoiceid");
+                    selOpp.invoiceNum = $(oppDataSelector).attr("invoicenum");
+                    selOpp.invoiceEmailed = $(oppDataSelector).attr("emailed");
+                    selOpp.invoicePrinted = $(oppDataSelector).attr("printed");
+                    selOpp.emailContactId = $(oppDataSelector).attr("emailcontactid");
+                    selOpp.ccemails = $(oppDataSelector).attr("ccemails");
+                    selOpp.owneremail = $(oppDataSelector).attr("owneremail");
+                    selOpp.contactName = $(oppDataSelector).attr("contactName");
+                    selOpp.invStatus = $(oppDataSelector).attr("invstatus");
+                    selOpp.externalId = $(oppDataSelector).attr("externalid");
+    
+                    selectedOpps.push(selOpp);              
+                    updateSelectedCounter(1);
+                    
+                    $(cb).parent().parent().addClass("trSelected");
+                
+                }
+                else
+                {
+                    alert("You have reached the maximum number of selections allowed for a processing batch (50).");
+                    $(cb).attr("checked",false);
+                 }
+            }
+            else
+            {
+                selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=oppId;});
+                $(cb).parent().parent().removeClass("trSelected");
+                updateSelectedCounter(-1);
+            }
+            updateCheckboxHeaders();
+        }
+
+        function checkPost(cb)
+        {
+            var oppId = $(cb).siblings("span").attr("oppId");
+            if($(cb).attr("checked")==true)
+            {
+
+                $("input[id$=printHeader]").attr("checked",false);
+                $("input[id$=print]").each(function(){
+                    var id = $(this).siblings("span").attr("oppId");
+                    var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                    if(isSelected(id,"print") && !disabledOpp)
+                    {
+                        $(this).attr("checked",false);
+                        $(this).parent().parent().removeClass("trSelected");
+                        if(!isSelected(id,"mail"))
+                        {
+                            selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                            updateSelectedCounter(-1);
+                        }
+                    }
+                });
+                $("input[id$=mailHeader]").attr("checked",false);
+                $("input[id$=mail]").each(function(){
+                    var id = $(this).siblings("span").attr("oppId");
+                    var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                    if(isSelected(id,"mail") && !disabledOpp)
+                    {
+                        $(this).attr("checked",false);
+                        $(this).parent().parent().removeClass("trSelected");
+                        selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                        updateSelectedCounter(-1);
+                    }
+                });
+
+                 $("input[id$=onlyCreateHeader]").attr("checked",false);
+                 $("input[id$=onlycreate]").each(function(){
+                     var id = $(this).siblings("span").attr("oppId");
+                     var disabledOpp = $(this).parent("td").parent("tr").hasClass("trUnable");
+                     if(isSelected(id,"onlycreate") && !disabledOpp)
+                     {
+                         selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                      $(this).parent().parent().removeClass("trSelected");
+                         $(this).attr("checked",false);
+                         updateSelectedCounter(-1);
+                     }
+                 });
+
+                if(selectedOpps.length < maxNoOfSelections)
+                {
+                    var selOpp = new SelOppClass();
+                    selOpp.createonly = "false";
+                    selOpp.email = "false";
+                    selOpp.print = "false";
+                    selOpp.post = "true";
+                    selOpp.oppId = oppId;
+    
+                    var oppDataSelector = $(cb).parent("td").siblings().children("span[id$=oppData]");
+                    selOpp.templateId = $(oppDataSelector).attr("templateid");
+                    selOpp.invoiceId = $(oppDataSelector).attr("invoiceid");
+                    selOpp.invoiceNum = $(oppDataSelector).attr("invoicenum");
+                    selOpp.invoiceEmailed = $(oppDataSelector).attr("emailed");
+                    selOpp.invoicePrinted = $(oppDataSelector).attr("printed");
+                    selOpp.emailContactId = $(oppDataSelector).attr("emailcontactid");
+                    selOpp.ccemails = $(oppDataSelector).attr("ccemails");
+                    selOpp.owneremail = $(oppDataSelector).attr("owneremail");
+                    selOpp.contactName = $(oppDataSelector).attr("contactName");
+                    selOpp.invStatus = $(oppDataSelector).attr("invstatus");
+                    selOpp.externalId = $(oppDataSelector).attr("externalid");
+    
+                    selectedOpps.push(selOpp);              
+                    updateSelectedCounter(1);
+                    
+                    $(cb).parent().parent().addClass("trSelected");
+                
+                }
+                else
+                {
+                    alert("You have reached the maximum number of selections allowed for a processing batch (50).");
+                    $(cb).attr("checked",false);
+                 }
+            }
+            else
+            {
+                selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=oppId;});
+                $(cb).parent().parent().removeClass("trSelected");
+                updateSelectedCounter(-1);
+            }
+            updateCheckboxHeaders();
+        }   
+        
+        function isCreateOnlySelected(oppId)
+        {
+            // new ifs done
+            var isCreateOnlySel = false;
+            $("input[id$=onlycreate]").each(function(){
+                if($(this).siblings("span").attr("oppId")==oppId)
+                {
+                    if($(this).attr("checked")==true)
+                        isCreateOnlySel = true;
+                }
+            });
+            return isCreateOnlySel;
+        }
+        
+        function isPrintSelected(oppId)
+        {
+            // new ifs done
+            var isPrintSel = false;
+            $("input[id$=print]").each(function(){
+                if($(this).siblings("span").attr("oppId")==oppId)
+                {
+                    if($(this).attr("checked")==true)
+                        isPrintSel = true;
+                }
+            });
+            return isPrintSel;
+        }
+
+        function isEmailSelected(oppId)
+        {
+            // new ifs done
+            var isEmailSel = false;
+            $("input[id$=mail]").each(function(){
+                if($(this).siblings("span").attr("oppId")==oppId)
+                {
+                    if($(this).attr("checked")==true)
+                    isEmailSel = true;
+                }
+            });
+            return isEmailSel;
+        }
+
+        function isPostSelected(oppId)
+        {
+            // new ifs done
+            var isPostSel = false;
+            $("input[id$=post]").each(function(){
+                if($(this).siblings("span").attr("oppId")==oppId)
+                {
+                    if($(this).attr("checked")==true)
+                        isPostSel = true;
+                }
+            });
+            return isPostSel;
+        }
+
+
+        function isAllCreateOnlySelected()
+        {
+            // new ifs done
+            var isAllCreateOnlySel = true;
+            if($("input[id$=onlycreate]").length == 0)
+                isAllCreateOnlySel = false;
+            else
+            {
+                $("input[id$=onlycreate]").each(function(){
+                    if($(this).attr("checked")==false)
+                        isAllCreateOnlySel = false;
+                });
+            }
+            return isAllCreateOnlySel;
+        }
+
+        function isAllPrintSelected()
+        {
+            // new ifs done
+            var isAllPrintSel = true;
+            if($("input[id$=print]").length == 0)
+                isAllPrintSel = false;
+            else
+            {
+                $("input[id$=print]").each(function(){
+                    if($(this).attr("checked")==false)
+                        isAllPrintSel = false;
+                });
+            }
+            return isAllPrintSel;
+        }
+
+
+        function isAllEmailSelected()
+        {
+            // new ifs done
+            var isAllEmailSel = true;
+            if($("input[id$=mail]").length == 0)
+                isAllEmailSel = false;
+            else
+            {
+                $("input[id$=mail]").each(function(){
+                    if($(this).attr("checked")==false)
+                        isAllEmailSel = false;
+                });
+            }
+            return isAllEmailSel;
+        }
+
+        function isAllPostSelected()
+        {
+            // new ifs done
+            var isAllPostSel = true;
+            if($("input[id$=post]").length == 0)
+                isAllPostSel = false;
+            else
+            {
+                $("input[id$=post]").each(function(){
+                    if($(this).attr("checked")==false)
+                        isAllPostSel = false;
+                });
+            }
+            return isAllPostSel;
+        }
+
+        function updateSelectedOpps()
+        {
+            // new ifs done
+            $("input[id$=print]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"print"))
+                {
+                    $(this).attr("checked",true);
+                    $(this).parent().parent().addClass("trSelected");
+                }
+            });
+            $("input[id$=mail]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"mail"))
+                {
+                    $(this).attr("checked",true);
+                    $(this).parent().parent().addClass("trSelected");
+                }
+            });
+            $("input[id$=onlycreate]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"onlycreate"))
+                {
+                    $(this).attr("checked",true);
+                    $(this).parent().parent().addClass("trSelected");
+                }
+            });
+            $("input[id$=post]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"post"))
+                {
+                    $(this).attr("checked",true);
+                    $(this).parent().parent().addClass("trSelected");
+                }
+            });
+            updateCheckboxHeaders();
+        }
+        
+        function updateCheckboxHeaders()
+        {
+            if(isAllCreateOnlySelected())
+                $("input[id$=onlyCreateHeader]").attr("checked",true);
+            else
+                $("input[id$=onlyCreateHeader]").attr("checked",false);
+            if(isAllPrintSelected())
+                $("input[id$=printHeader]").attr("checked",true);
+            else
+                $("input[id$=printHeader]").attr("checked",false);
+            if(isAllEmailSelected())
+                $("input[id$=mailHeader]").attr("checked",true);
+            else
+                $("input[id$=mailHeader]").attr("checked",false);
+            if(isAllPostSelected())
+                $("input[id$=postHeader]").attr("checked",true);
+            else
+                $("input[id$=postHeader]").attr("checked",false);
+        }
+        
+
+        function clearSelectedOpps()
+        {
+            // new ifs done
+            $("input[id$=print]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"print"))
+                {
+                    $(this).attr("checked",false);
+                    $(this).parent().parent().removeClass("trSelected");
+                }
+            });
+            $("input[id$=mail]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"mail"))
+                {
+                    $(this).attr("checked",false);
+                    $(this).parent().parent().removeClass("trSelected");
+                }
+            });
+            $("input[id$=onlycreate]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"onlycreate"))
+                {
+                    $(this).attr("checked",false);
+                    $(this).parent().parent().removeClass("trSelected");
+                }
+            });
+            $("input[id$=post]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"post"))
+                {
+                    $(this).attr("checked",false);
+                    $(this).parent().parent().removeClass("trSelected");
+                }
+            });
+            $("input[id$=onlyCreateHeader]").attr("checked",false);
+            $("input[id$=printHeader]").attr("checked",false);
+            $("input[id$=mailHeader]").attr("checked",false);
+            $("input[id$=postHeader]").attr("checked",false);
+            selectedOpps = [];
+            
+        }
+
+
+        function isSelected(oppId,selType)
+        {
+            var isSel = false;
+            if(selType=="onlycreate")
+            {
+                var selOppArray = $.grep(selectedOpps,function(o){return (o.oppId==oppId && o.createonly=="true");});
+                if(selOppArray.length > 0)
+                    isSel = true;
+            }
+            if(selType=="print")
+            {
+                var selOppArray = $.grep(selectedOpps,function(o){return (o.oppId==oppId && o.print=="true");});
+                if(selOppArray.length > 0)
+                    isSel = true;
+            }
+            if(selType=="mail")
+            {
+                var selOppArray = $.grep(selectedOpps,function(o){return (o.oppId==oppId && o.email=="true");});
+                if(selOppArray.length > 0)
+                    isSel = true;
+            }
+// post start
+            if(selType=="post")
+            {
+                var selOppArray = $.grep(selectedOpps,function(o){return (o.oppId==oppId && o.post=="true");});
+                if(selOppArray.length > 0)
+                    isSel = true;
+            }
+
+// post end
+
+            return isSel;
+        }
+
+        function cleanProcessingErrorsPanel()
+        {
+            $("span[id$=procErrorsPanel]").empty();
+        }
+
+        function displayProcessingErrors(oppNameCtl)
+        {
+            $("#invoiceProcessingErrorsPanel").dialog({title:"Processing errors invoice/opportunity: "+$(oppNameCtl).val()});
+            $("#invoiceProcessingErrorsPanel").dialog("open");      
+        }
+
+        function cleanPostingErrorsPanel()
+        {
+            $("span[id$=postErrorsPanel]").empty();
+        }
+
+        function displayPostingErrors(oppNameCtl)
+        {
+            $("#invoicePostingErrorsPanel").dialog({title:"Posting errors invoice/opportunity: "+$(oppNameCtl).val()});
+            $("#invoicePostingErrorsPanel").dialog("open");      
+        }
+
+        function cleanMissingFieldsPanel()
+        {
+            $("span[id$=missingFieldsPanel]").empty();
+        }
+
+        function displayMissingFields(oppNameCtl)
+        {
+            $("#invoiceMissingDataFieldsPanel").dialog({title:"Missing data invoice/opportunity: "+$(oppNameCtl).val()});
+            $("#invoiceMissingDataFieldsPanel").dialog("open");     
+        }
+
+        function cleanOutOfSyncPanel()
+        {
+            $("span[id$=outOfSyncPanel]").empty();
+        }
+
+        function displayOutOfSync(oppNameCtl)
+        {   
+            $("#invoiceOutOfSyncPanel").dialog({title:"Out-of-Sync invoice/opportunity: "+$(oppNameCtl).val()});
+            $("#invoiceOutOfSyncPanel").dialog("open");     
+        }
+
+        function displayOppProcResults()
+        {
+          $("span[id=oppStatusMsg]").html("Loading ...");
+          $("#oppStatusMsgContainer").css("display","block");
+        }
+        function hideOppProcResults()
+        {
+          $("#oppStatusMsgContainer").css("display","none");
+        }
+
+        function rowHoverIn(row)
+        {
+            $(row).addClass("trHoover");
+        }
+        
+        function rowHoverOut(row)
+        {
+            $(row).removeClass("trHoover");
+        }
+
+    </script>
+
+    <apex:form >
+     <!-- START OF THE OPPORTUNITIES/INVOICES TABLE AUTOMATIC QUICKBOOKS POSTING -->     
+        <apex:outputPanel styleClass="ifslistViewport" id="InvoiceManagerTblAutomatic" layout="block" rendered="{!cont.qbPostingMode=='Automatic'}">
+
+     <!-- START OF THE OPPORTUNITIES/INVOICES TABLE HEADERS AND ROWS -->        
+            <div style="height: 100%; position: relative;" class="ifslistBody" id="00BA0000003wBaZ_listBody">
+
+                <div style="width: 100%;" id="00BA0000003wBaZ_grid">
+                    <div id="ext-gen3">
+                        <div style="width: 100%; height: 100%;" id="ext-gen4" >
+                            <div style="width: 100%; height: 100%;" id="ext-gen5" hidefocus="true">
+                                <apex:outputPanel id="imHeadersAndTableAutomatic" layout="block" style="background-color:#FFFFFF;min-height: 263px;border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;">
+                                <!-- START OF THE OPPORTUNITIES/INVOICES TABLE HEADERS-->       
+ 
+                                <div id="imTableHeadersContainer" class="ifsthBack" style="width:100%;">
+                                    <table id="imTableHeaders" style="table-layout:fixed;border-collapse:collapse;" cellspacing="0" cellpadding="0" width="100%">
+                                        <colgroup span="13">
+                                            <col width="200px" />
+                                            <col width="200px" />
+                                            <col width="110px" />
+
+                                            <col width="100px" />
+
+                                            <col width="45px" />
+                                            <col width="50px" />
+                                            <col width="50px" />
+                                            
+                                            
+                                            <col width="20px" />
+                                            <col width="40px" />
+                                            <col width="20px" />
+                                            <col width="40px" />
+                                            <col width="20px" />
+                                            <col width="60px" />
+                                        </colgroup>
+                                        <tbody>
+                                            <tr>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Opportunity Name</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Account Name</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Invoice Status</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Post Status</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Invoice</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Emailed</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Printed</td>
+
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;"><input type="checkbox" id="mailHeader" onclick="checkAllEmail(this)"/></td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Email</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;"><input type="checkbox" id="printHeader" onclick="checkAllPrint(this)"/></td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Print</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;"><input type="checkbox" id="onlyCreateHeader" onclick="checkAllCreateOnly(this)"/></td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Create Only</td> 
+                                            </tr>
+                                        </tbody>    
+                                    </table>
+                                </div>
+
+                                <!-- END OF THE OPPORTUNITIES/INVOICES TABLE HEADERS-->     
+                                <!-- START OF THE OPPORTUNITIES/INVOICES TABLE ROWS-->      
+                                     <div id="imTableContainer" style="width: 100%; height: 235px; min-height:235px;overflow-y:auto;background-color:white;"> 
+    
+                                    <apex:outputPanel id="invoiceManagerTableAutomatic" > 
+                                            <apex:outputText rendered="{!cont.noOfOpps == 0}" id="emptyTableMsgAutomatic" style="font: 11px Arial,Helvetica,sans-serif; color:gray; padding: 10px;" value="No records to display" />
+                                            <apex:dataTable id="apxTableAutomatic" value="{!billingScenarioOpps}" var="billingScenarioOpp" cellspacing="0" cellpadding="0"  width="100%"   columnsWidth="200px,200px,110px,100px,45px,50px,50px,20px,40px,20px,40px,20px,60px"  styleClass="ifsIMTable"  style="table-layout:fixed;border-collapse:collapse;" rowClasses="ifsTableRows" onRowMouseOver="rowHoverIn(this);" onRowMouseOut="rowHoverOut(this)"> <!-- headerClass="ifsthBack" -->
+                                                <apex:column >
+                                                    <!-- <apex:facet name="header">Opportunity Name</apex:facet>  --> 
+                                                    <apex:outputLink target="_blank" value="/{!billingScenarioOpp.oppId}">{!billingScenarioOpp.oppName}</apex:outputLink>
+                                                    <span id="{!billingScenarioOpp.oppId}oppData" style="display:none;"
+                                                        oppId="{!billingScenarioOpp.oppId}" 
+                                                        templateId="{!billingScenarioOpp.templateId}" 
+                                                        invoiceId="{!billingScenarioOpp.invoiceId}"  
+                                                        invoiceNum="{!billingScenarioOpp.invNumber}" 
+                                                        emailContactId="{!billingScenarioOpp.emailContactId}" 
+                                                        ccemails="{!billingScenarioOpp.ccemails}" 
+                                                        owneremail="{!billingScenarioOpp.ownerEmail}" 
+                                                        contactName="{!billingScenarioOpp.contactName}" 
+                                                        emailed="{!billingScenarioOpp.isEmailed}" 
+                                                        printed="{!billingScenarioOpp.isPrinted}" 
+                                                        invstatus="{!billingScenarioOpp.invStatus}" 
+                                                        externalId="{!billingScenarioOpp.externalId}" 
+                                                    />
+                                                </apex:column>
+                                                <apex:column >
+                                                    <!-- <apex:facet name="header">Account Name</apex:facet> -->
+                                                    <apex:outputLink target="_blank" value="/{!billingScenarioOpp.accId}">{!billingScenarioOpp.accName}</apex:outputLink></apex:column>
+                                                <apex:column >
+                                                    <!-- <apex:facet name="header">Invoice Status</apex:facet>  -->
+                                                    <apex:inputText id="oppNameContainer" value="{!billingScenarioOpp.oppName}" style="display:none;" />
+                                                    <apex:actionStatus onstart="displayOppProcResults();" onstop="hideOppProcResults();" id="loadingOppProcResults"/>  
+                                                    
+                                                    <apex:outputPanel rendered="{!billingScenarioOpp.invStatus=='Not Done'}">{!billingScenarioOpp.invStatus}</apex:outputPanel>
+													<apex:outputLink target="_blank" value="/{!billingScenarioOpp.invoiceId}" rendered="{!OR(billingScenarioOpp.invStatus=='Created Only',billingScenarioOpp.invStatus=='Processed')}">{!billingScenarioOpp.invStatus}</apex:outputLink>                                                    
+                                                    
+                                                    <apex:commandLink style="color:#D74C3B;" action="{!calculateProcessingErrors}" value="{!billingScenarioOpp.invStatus}" reRender="procErrorsPanel" onclick="cleanProcessingErrorsPanel();" oncomplete="displayProcessingErrors(document.getElementById('{!$Component.oppNameContainer}'));" rendered="{!billingScenarioOpp.invStatus=='Processing Error'}" status="loadingOppProcResults">
+                                                        <apex:param value="{!billingScenarioOpp.oppId}" name="procErrorsOppId"/> 
+                                                    </apex:commandLink>
+                                                    <apex:commandLink style="color:#D74C3B;" action="{!calculateMissingFields}" value="{!billingScenarioOpp.invStatus}" reRender="missingFieldsPanel"  onclick="cleanMissingFieldsPanel();" oncomplete="displayMissingFields(document.getElementById('{!$Component.oppNameContainer}'));" rendered="{!billingScenarioOpp.invStatus=='Missing Data'}" status="loadingOppProcResults">
+                                                        <apex:param value="{!billingScenarioOpp.oppId}" name="missingFieldsOppId"/> 
+                                                    </apex:commandLink>
+                                                    <apex:commandLink style="color:#D74C3B;" action="{!calculateOutOfSync}" value="{!billingScenarioOpp.invStatus}" reRender="outOfSyncPanel"  onclick="cleanOutOfSyncPanel();" oncomplete="displayOutOfSync(document.getElementById('{!$Component.oppNameContainer}'));" rendered="{!billingScenarioOpp.invStatus=='Out-of-Sync'}" status="loadingOppProcResults">
+                                                        <apex:param value="{!billingScenarioOpp.oppId}" name="outOfSyncOppId"/> 
+                                                    </apex:commandLink>
+                                                </apex:column>
+                                                <apex:column >
+                                                	<apex:outputText value="{!billingScenarioOpp.postStatus}" rendered="{!billingScenarioOpp.postStatus !='Posting Error'}"/>
+                                                    <apex:commandLink style="color:#D74C3B;" action="{!calculatePostingErrors}" value="{!billingScenarioOpp.postStatus}" reRender="postErrorPanel"  onclick="cleanPostingErrorsPanel();" oncomplete="displayPostingErrors(document.getElementById('{!$Component.oppNameContainer}'));" rendered="{!billingScenarioOpp.postStatus=='Posting Error'}" status="loadingOppProcResults">
+                                                        <apex:param value="{!billingScenarioOpp.oppId}" name="postErrorsOppId"/> 
+                                                    </apex:commandLink>
+                                                </apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <!-- <apex:facet name="header">Invoice</apex:facet>  --> 
+                                                    <apex:outputPanel >
+                                                        <apex:outputLink rendered="{!billingScenarioOpp.invAttachmentId != null}" target="_blank" value="/servlet/servlet.FileDownload?file={!billingScenarioOpp.invAttachmentId}" title="Download Invoice PDF">
+                                                            <apex:image rendered="{!billingScenarioOpp.invAttachmentId != null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/pdf.png')}" />
+                                                        </apex:outputLink>
+                                                        <apex:image rendered="{!billingScenarioOpp.invAttachmentId == null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/noinvoice.png')}" />
+                                                    </apex:outputPanel>
+                                                </apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <!-- <apex:facet name="header">Emailed</apex:facet>  --> 
+                                                    <apex:outputPanel rendered="{!billingScenarioOpp.isEmailed == true}">
+                                                        <img alt="" height="16" width="21" title="Checked" class="checkImg"  src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" /> 
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!billingScenarioOpp.isEmailed == false}">
+                                                        <img alt="" height="16" width="21" title="Not Checked" class="checkImg"  src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                                    </apex:outputPanel>
+                                                </apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <!-- <apex:facet name="header">Printed</apex:facet> --> 
+                                                    <apex:outputPanel rendered="{!billingScenarioOpp.isPrinted == true}">
+                                                        <img alt="" height="16" width="21" title="Checked" class="checkImg"  src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" />
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!billingScenarioOpp.isPrinted == false}">
+                                                        <img alt="" height="16" width="21" title="Not Checked" class="checkImg"  src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                                    </apex:outputPanel>
+                                                </apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <apex:inputcheckBox id="mail" disabled="{!billingScenarioOpp.isDisabled == true}" onclick="checkEmail(this)"  /><span oppId="{!billingScenarioOpp.oppId}" style="display:none;"/>
+                                                </apex:column>
+                                                <apex:column >&nbsp;</apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <apex:inputcheckBox id="print" disabled="{!billingScenarioOpp.isDisabled == true}" onclick="checkPrint(this)"  /><span oppId="{!billingScenarioOpp.oppId}" style="display:none;"/>
+                                                </apex:column>
+                                                <apex:column >&nbsp;</apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <apex:inputcheckBox id="onlycreate" disabled="{!billingScenarioOpp.isDisabled == true}" onclick="checkCreateOnly(this)"  /><span oppId="{!billingScenarioOpp.oppId}" style="display:none;"/>
+                                                </apex:column>
+                                                <apex:column >&nbsp;</apex:column>
+                                            </apex:dataTable>                                       
+                                    </apex:outputPanel>
+                                </div>  
+                                <!-- END OF THE OPPORTUNITIES/INVOICES TABLE ROWS-->        
+                                
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+     <!-- END OF THE OPPORTUNITIES/INVOICES TABLE HEADERS AND ROWS -->      
+    </apex:outputPanel> <!-- end of all table div -->
+
+     <!-- START OF THE OPPORTUNITIES/INVOICES TABLE MANUAL QUICKBOOKS POSTING -->     
+        <apex:outputPanel styleClass="ifslistViewport" id="InvoiceManagerTblManual" layout="block" rendered="{!cont.qbPostingMode=='Manual'}">
+
+     <!-- START OF THE OPPORTUNITIES/INVOICES TABLE HEADERS AND ROWS -->        
+            <div style="height: 100%; position: relative;" class="ifslistBody" id="00BA0000003wBaZ_listBody">
+
+                <div style="width: 100%;" id="00BA0000003wBaZ_grid">
+                    <div id="ext-gen3">
+                        <div style="width: 100%; height: 100%;" id="ext-gen4" >
+                            <div style="width: 100%; height: 100%;" id="ext-gen5" hidefocus="true">
+                                <apex:outputPanel id="imHeadersAndTableManual" layout="block" style="background-color:#FFFFFF;min-height: 263px;border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;">
+                                <!-- START OF THE OPPORTUNITIES/INVOICES TABLE HEADERS-->       
+ 
+                                <div id="imTableHeadersContainer" class="ifsthBack" style="width:100%;">
+                                    <table id="imTableHeaders" style="table-layout:fixed;border-collapse:collapse;" cellspacing="0" cellpadding="0" width="100%">
+                                        <colgroup span="15">
+                                            <col width="185px" />
+                                            <col width="185px" />
+                                            <col width="90px" />
+                                            <col width="90px" />
+                                            <col width="45px" />
+                                            <col width="50px" />
+                                            <col width="50px" />
+                                            <col width="20px" />
+                                            <col width="40px" />
+                                            <col width="20px" />
+                                            <col width="40px" />
+                                            <col width="20px" />
+                                            <col width="60px" />
+                                            <col width="20px" />
+                                            <col width="40px" />
+                                        </colgroup>
+                                        <tbody>
+                                            <tr>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Opportunity Name</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Account Name</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Invoice Status</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Post Status</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Invoice</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Emailed</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Printed</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;"><input type="checkbox" id="mailHeader" onclick="checkAllEmail(this)"/></td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Email</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;"><input type="checkbox" id="printHeader" onclick="checkAllPrint(this)"/></td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Print</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;"><input type="checkbox" id="onlyCreateHeader" onclick="checkAllCreateOnly(this)"/></td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Create Only</td> 
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;"><input type="checkbox" id="postHeader" onclick="checkAllPost(this)"/></td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Post</td>
+                                            </tr>
+                                        </tbody>    
+                                    </table>
+                                </div>
+
+                                <!-- END OF THE OPPORTUNITIES/INVOICES TABLE HEADERS-->     
+                                <!-- START OF THE OPPORTUNITIES/INVOICES TABLE ROWS-->      
+                                     <div id="imTableContainer" style="width: 100%; height: 235px; min-height:235px;overflow-y:auto;background-color:white;"> 
+    
+                                    <apex:outputPanel id="invoiceManagerTableManual" > 
+                                            <apex:outputText rendered="{!cont.noOfOpps == 0}" id="emptyTableMsgManual" style="font: 11px Arial,Helvetica,sans-serif; color:gray; padding: 10px;" value="No records to display" />
+                                            <apex:dataTable id="apxTableManual" value="{!billingScenarioOpps}" var="billingScenarioOpp" cellspacing="0" cellpadding="0"  width="100%"   columnsWidth="185px,185px,90px,90px,45px,50px,50px,20px,40px,20px,40px,20px,60px,20px,40px"  styleClass="ifsIMTable"  style="table-layout:fixed;border-collapse:collapse;" rowClasses="ifsTableRows" onRowMouseOver="rowHoverIn(this);" onRowMouseOut="rowHoverOut(this)"> <!-- headerClass="ifsthBack" -->
+                                                <apex:column >
+                                                    <!-- <apex:facet name="header">Opportunity Name</apex:facet>  --> 
+                                                    <apex:outputLink target="_blank" value="/{!billingScenarioOpp.oppId}">{!billingScenarioOpp.oppName}</apex:outputLink>
+                                                    <span id="{!billingScenarioOpp.oppId}oppData" style="display:none;"
+                                                        oppId="{!billingScenarioOpp.oppId}" 
+                                                        templateId="{!billingScenarioOpp.templateId}" 
+                                                        invoiceId="{!billingScenarioOpp.invoiceId}"  
+                                                        invoiceNum="{!billingScenarioOpp.invNumber}" 
+                                                        emailContactId="{!billingScenarioOpp.emailContactId}" 
+                                                        emailed="{!billingScenarioOpp.isEmailed}" 
+                                                        printed="{!billingScenarioOpp.isPrinted}" 
+                                                        invstatus="{!billingScenarioOpp.invStatus}" 
+                                                        externalId="{!billingScenarioOpp.externalId}" 
+                                                    />
+                                                </apex:column>
+                                                <apex:column >
+                                                    <!-- <apex:facet name="header">Account Name</apex:facet> -->
+                                                    <apex:outputLink target="_blank" value="/{!billingScenarioOpp.accId}">{!billingScenarioOpp.accName}</apex:outputLink></apex:column>
+                                                <apex:column >
+                                                    <!-- <apex:facet name="header">Invoice Status</apex:facet>  -->
+                                                    <apex:inputText id="oppNameContainer" value="{!billingScenarioOpp.oppName}" style="display:none;" />
+                                                    <apex:actionStatus onstart="displayOppProcResults();" onstop="hideOppProcResults();" id="loadingOppProcResults"/>  
+                                                    <apex:outputPanel rendered="{!OR(billingScenarioOpp.invStatus=='Not Done',billingScenarioOpp.invStatus=='Created Only',billingScenarioOpp.invStatus=='Processed')}">{!billingScenarioOpp.invStatus}</apex:outputPanel>
+                                                    <apex:commandLink style="color:#D74C3B;" action="{!calculateProcessingErrors}" value="{!billingScenarioOpp.invStatus}" reRender="procErrorsPanel" onclick="cleanProcessingErrorsPanel();" oncomplete="displayProcessingErrors(document.getElementById('{!$Component.oppNameContainer}'));" rendered="{!billingScenarioOpp.invStatus=='Processing Error'}" status="loadingOppProcResults">
+                                                        <apex:param value="{!billingScenarioOpp.oppId}" name="procErrorsOppId"/> 
+                                                    </apex:commandLink>
+                                                    <apex:commandLink style="color:#D74C3B;" action="{!calculateMissingFields}" value="{!billingScenarioOpp.invStatus}" reRender="missingFieldsPanel"  onclick="cleanMissingFieldsPanel();" oncomplete="displayMissingFields(document.getElementById('{!$Component.oppNameContainer}'));" rendered="{!billingScenarioOpp.invStatus=='Missing Data'}" status="loadingOppProcResults">
+                                                        <apex:param value="{!billingScenarioOpp.oppId}" name="missingFieldsOppId"/> 
+                                                    </apex:commandLink>
+                                                    <apex:commandLink style="color:#D74C3B;" action="{!calculateOutOfSync}" value="{!billingScenarioOpp.invStatus}" reRender="outOfSyncPanel"  onclick="cleanOutOfSyncPanel();" oncomplete="displayOutOfSync(document.getElementById('{!$Component.oppNameContainer}'));" rendered="{!billingScenarioOpp.invStatus=='Out-of-Sync'}" status="loadingOppProcResults">
+                                                        <apex:param value="{!billingScenarioOpp.oppId}" name="outOfSyncOppId"/> 
+                                                    </apex:commandLink>
+                                                </apex:column>
+                                                <apex:column >
+                                                	<apex:outputText value="{!billingScenarioOpp.postStatus}" rendered="{!billingScenarioOpp.postStatus !='Posting Error'}" />
+                                                    <apex:commandLink style="color:#D74C3B;" action="{!calculatePostingErrors}" value="{!billingScenarioOpp.postStatus}" reRender="postErrorPanel"  onclick="cleanPostingErrorsPanel();" oncomplete="displayPostingErrors(document.getElementById('{!$Component.oppNameContainer}'));" rendered="{!billingScenarioOpp.postStatus=='Posting Error'}" status="loadingOppProcResults">
+                                                        <apex:param value="{!billingScenarioOpp.oppId}" name="postErrorsOppId"/> 
+                                                    </apex:commandLink>
+                                                </apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <!-- <apex:facet name="header">Invoice</apex:facet>  --> 
+                                                    <apex:outputPanel >
+                                                        <apex:outputLink rendered="{!billingScenarioOpp.invAttachmentId != null}" target="_blank" value="/servlet/servlet.FileDownload?file={!billingScenarioOpp.invAttachmentId}" title="Download Invoice PDF">
+                                                            <apex:image rendered="{!billingScenarioOpp.invAttachmentId != null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/pdf.png')}" />
+                                                        </apex:outputLink>
+                                                        <apex:image rendered="{!billingScenarioOpp.invAttachmentId == null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/noinvoice.png')}" />
+                                                    </apex:outputPanel>
+                                                </apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <!-- <apex:facet name="header">Emailed</apex:facet>  --> 
+                                                    <apex:outputPanel rendered="{!billingScenarioOpp.isEmailed == true}">
+                                                        <img alt="" height="16" width="21" title="Checked" class="checkImg"  src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" /> 
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!billingScenarioOpp.isEmailed == false}">
+                                                        <img alt="" height="16" width="21" title="Not Checked" class="checkImg"  src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                                    </apex:outputPanel>
+                                                </apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <!-- <apex:facet name="header">Printed</apex:facet> --> 
+                                                    <apex:outputPanel rendered="{!billingScenarioOpp.isPrinted == true}">
+                                                        <img alt="" height="16" width="21" title="Checked" class="checkImg"  src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" />
+                                                    </apex:outputPanel>
+                                                    <apex:outputPanel rendered="{!billingScenarioOpp.isPrinted == false}">
+                                                        <img alt="" height="16" width="21" title="Not Checked" class="checkImg"  src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                                    </apex:outputPanel>
+                                                </apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <apex:inputcheckBox id="mail" disabled="{!billingScenarioOpp.isDisabled == true}" onclick="checkEmail(this)"  /><span oppId="{!billingScenarioOpp.oppId}" style="display:none;"/>
+                                                </apex:column>
+                                                <apex:column >&nbsp;</apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <apex:inputcheckBox id="print" disabled="{!billingScenarioOpp.isDisabled == true}" onclick="checkPrint(this)"  /><span oppId="{!billingScenarioOpp.oppId}" style="display:none;"/>
+                                                </apex:column>
+                                                <apex:column >&nbsp;</apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <apex:inputcheckBox id="onlycreate" disabled="{!billingScenarioOpp.isDisabled == true}" onclick="checkCreateOnly(this)"  /><span oppId="{!billingScenarioOpp.oppId}" style="display:none;"/>
+                                                </apex:column>
+                                                <apex:column >&nbsp;</apex:column>
+                                                <apex:column style="text-align:center;">
+                                                    <apex:inputcheckBox id="post" disabled="{!OR(billingScenarioOpp.isDisabled==true,billingScenarioOpp.isPostable==false)}" onclick="checkPost(this)"  /><span oppId="{!billingScenarioOpp.oppId}" style="display:none;"/>
+                                                </apex:column>
+                                                <apex:column >&nbsp;</apex:column>
+                                            </apex:dataTable>                                       
+                                    </apex:outputPanel>
+                                </div>  
+                                <!-- END OF THE OPPORTUNITIES/INVOICES TABLE ROWS-->        
+                                
+                            </apex:outputPanel>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+     <!-- END OF THE OPPORTUNITIES/INVOICES TABLE HEADERS AND ROWS -->      
+    </apex:outputPanel> <!-- end of all table div -->
+
+
+     <!-- END OF THE OPPORTUNITIES/INVOICES TABLE -->       
+
+        <!-- ###########################################
+        
+                PROCESSING ERRORS MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="invoiceProcessingErrorsPanel" style="display:none;">
+            <apex:outputPanel id="procErrorsPanel">
+                <apex:repeat value="{!processingErrors}" var="processingError">
+                    <p>{!processingError}</p>
+                </apex:repeat>   
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                POSTING ERRORS MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="invoicePostingErrorsPanel" style="display:none;">
+            <apex:outputPanel id="postErrorPanel">
+                <apex:repeat value="{!postingErrors}" var="postingError">
+                    <p>{!postingError}</p>
+                </apex:repeat>   
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                MISSING DATA FIELDS MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="invoiceMissingDataFieldsPanel" style="display:none;">
+            <apex:outputPanel id="missingFieldsPanel">
+                <apex:outputPanel rendered="{!noOfMissingMFs > 0}" >
+                    <apex:outputText value="The following merge fields or roll-up summary fields used in the invoice template are missing data" style="font-weight:normal;font-style:normal;"/>
+                    <apex:dataTable value="{!missingMergeFields}" var="missingMergeField" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:column > 
+                            <apex:facet name="header">Merge field</apex:facet>
+                            <apex:outputText value="{!missingMergeField.fieldName}" />
+                        </apex:column>
+                    </apex:dataTable>               
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!noOfMissingLICols > 0}" >
+                    <apex:outputPanel rendered="{!IF(AND(noOfMissingMFs > 0,noOfMissingLICols > 0),true,false)}" ><hr/></apex:outputPanel>
+                    <apex:outputText value="The following merge fields used in the invoice items table columns are missing data" style="font-weight:normal;font-style:normal;"/>
+                    <apex:dataTable value="{!missingLineItemCols}" var="missingLineItemCol" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:column >
+                            <apex:facet name="header">Merge field</apex:facet>
+                            <apex:outputText value="{!missingLineItemCol.fieldName}" />
+                        </apex:column>
+                    </apex:dataTable>               
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                OUT OF SYNC MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="invoiceOutOfSyncPanel" style="display:none;">
+            <apex:outputPanel id="outOfSyncPanel">
+                <!-- Out of sync fields -->
+                <apex:outputPanel rendered="{!noOfOutOfSyncFields > 0}">
+                    <apex:outputText value="The following merge fields values in the opportunity are out-of-sync with the values in the existing invoice" style="font-weight:normal;font-style:normal;"/>
+                    <apex:dataTable value="{!outOfSyncFields}" var="outOfSyncField" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:column >
+                            <apex:facet name="header">Merge field</apex:facet>
+                            <apex:outputText value="{!outOfSyncField.oppFieldValuePair.fieldName}" />
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Opportunity side merge field value</apex:facet>
+                            <apex:outputText value="{!outOfSyncField.oppFieldValuePair.fieldValue}" rendered="{!outOfSyncField.oppFieldValuePair.fieldValue!=null}"/>
+                            <apex:outputText value="missing data" rendered="{!outOfSyncField.oppFieldValuePair.fieldValue==null}" style="color:#D74C3B;"/>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Invoice side merge field value</apex:facet>
+                            <apex:outputText value="{!outOfSyncField.invFieldValuePair.fieldValue}" rendered="{!outOfSyncField.invFieldValuePair.fieldValue!=null}"/>
+                            <apex:outputText value="missing data" rendered="{!outOfSyncField.invFieldValuePair.fieldValue==null}" style="color:#D74C3B"/>
+                        </apex:column>
+                    </apex:dataTable>
+                </apex:outputPanel>
+                <!-- Out of sync opp line items -->
+                <apex:outputPanel rendered="{!noOfOutOfSyncOppLineItems > 0}" >
+                <apex:outputPanel rendered="{!IF(AND(noOfOutOfSyncFields > 0,noOfOutOfSyncOppLineItems > 0),true,false)}" ><hr/></apex:outputPanel>
+                <apex:outputText value="The following opportunity line items do not have a corresponding invoice line item in the existing invoice"  style="font-weight:normal;font-style:normal;"/>
+                    <table cellspacing="0" cellpadding="1" border="1" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:repeat value="{!outOfSyncOppLineItems}" var="outOfSyncLineItem">
+                        <tr style="vertical-align:top;">                
+                            <apex:repeat value="{!outOfSyncLineItem.fieldValuePairs}" var="fieldValuePair">
+                            <td style="vertical-align:top;">
+                                <apex:outputPanel >
+                                    <apex:outputText value="{!fieldValuePair.fieldValue}" />
+                                    <apex:outputText value="missing data" rendered="{!fieldValuePair.fieldValue==null}" style="color:#D74C3B"/>
+                                </apex:outputPanel>
+                            </td>
+                            </apex:repeat>
+                        </tr>
+                        </apex:repeat>
+                    </table>
+                </apex:outputPanel>
+                <!-- Out of sync inv line items -->
+                <apex:outputPanel rendered="{!noOfOutOfSyncInvLineItems > 0}">
+                <apex:outputPanel rendered="{!OR(noOfOutOfSyncFields > 0,noOfOutOfSyncOppLineItems > 0)}" ><hr/></apex:outputPanel>
+                <apex:outputText value="The following invoice line items in the existing invoice do not have a corresponding opporuntity line item"  style="font-weight:normal;font-style:normal;"/>
+                    <table cellspacing="0" cellpadding="1" border="1" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:repeat value="{!outOfSyncInvLineItems}" var="outOfSyncLineItem">
+                        <tr style="vertical-align:top;">                
+                            <apex:repeat value="{!outOfSyncLineItem.fieldValuePairs}" var="fieldValuePair">
+                            <td style="vertical-align:top;">
+                                <apex:outputPanel >
+                                    <apex:outputText value="{!fieldValuePair.fieldValue}" />
+                                    <apex:outputText value="missing data" rendered="{!fieldValuePair.fieldValue==null}" style="color:#D74C3B"/>
+                                </apex:outputPanel>
+                            </td>
+                            </apex:repeat>
+                        </tr>
+                        </apex:repeat>
+                    </table>
+                </apex:outputPanel>
+
+                <!-- Additional template items -->
+                <apex:outputPanel rendered="{!OR(noOfAdditionalMergeFields > 0,noOfAdditionalTableColumns >0)}">
+                    <apex:outputPanel rendered="{!OR(noOfOutOfSyncFields > 0,noOfOutOfSyncOppLineItems > 0,noOfOutOfSyncInvLineItems > 0)}" ><hr/></apex:outputPanel>
+                    <apex:outputText value="The following merge fields and invoice table columns have been added to the invoice template after the existing invoice was created, or the invoice was created using a different billing scenario."  style="font-weight:normal;font-style:normal;"/>
+                        <table cellspacing="0" cellpadding="1" border="0" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                            <tr style="vertical-align:top;">
+                                <td vertical-align="top">
+                                    <apex:outputPanel >
+                                        <apex:dataTable value="{!templateAdditionalMergeFields}" var="additionalMergeField" rendered="{!noOfAdditionalMergeFields > 0}" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                                            <apex:column >
+                                                <apex:facet name="header">Merge field</apex:facet>
+                                                <apex:outputText value="{!additionalMergeField}" />
+                                            </apex:column>
+                                        </apex:dataTable>
+                                    </apex:outputPanel>
+                                </td>
+                                <td vertical-align="top">
+                                    <apex:outputPanel >
+                                        <apex:dataTable value="{!templateAdditionalTableColumns}" var="additionalTableColumn" rendered="{!noOfAdditionalTableColumns > 0}" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                                            <apex:column >
+                                                <apex:facet name="header">Invoice items table column</apex:facet>
+                                                <apex:outputText value="{!additionalTableColumn}" />
+                                            </apex:column>
+                                        </apex:dataTable>
+                                    </apex:outputPanel>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                <!-- Removed template items -->
+                <apex:outputPanel rendered="{!OR(noOfRemovedMergeFields > 0,noOfRemovedTableColumns >0)}">
+                    <apex:outputPanel rendered="{!OR(noOfOutOfSyncFields > 0,noOfOutOfSyncOppLineItems > 0,noOfOutOfSyncInvLineItems > 0,noOfAdditionalMergeFields > 0,noOfAdditionalTableColumns >0)}" ><hr/></apex:outputPanel>
+                    <apex:outputText value="The following merge fields and invoice table columns have been removed from the invoice template after the existing invoice was created, or the invoice was created using a different billing scenario."  style="font-weight:normal;font-style:normal;"/>
+                        <table cellspacing="0" cellpadding="1" border="0" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                            <tr style="vertical-align:top;">
+                                <td vertical-align="top">
+                                    <apex:outputPanel >
+                                        <apex:dataTable value="{!templateRemovedMergeFields}" var="removedMergeField" rendered="{!noOfRemovedMergeFields > 0}" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                                            <apex:column >
+                                                <apex:facet name="header">Merge field</apex:facet>
+                                                <apex:outputText value="{!removedMergeField}" />
+                                            </apex:column>
+                                        </apex:dataTable>
+                                    </apex:outputPanel>
+                                </td>
+                                <td vertical-align="top">
+                                    <apex:outputPanel >
+                                        <apex:dataTable value="{!templateRemovedTableColumns}" var="removedTableColumn" rendered="{!noOfRemovedTableColumns > 0}" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                                            <apex:column >
+                                                <apex:facet name="header">Invoice items table column</apex:facet>
+                                                <apex:outputText value="{!removedTableColumn}" />
+                                            </apex:column>
+                                        </apex:dataTable>
+                                    </apex:outputPanel>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                ACTION STATUS
+        
+         ###############################################-->
+        <div id="oppStatusMsgContainer"  class="statusPopup" >
+            <div  class="popupStatus1" >
+            </div>
+            <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+                <div style="text-align:center;margin-top:15px;" > 
+                    <table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+                        <tr>
+                            <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+                            <td><span id="oppStatusMsg" style="z-index:153;"></span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+   </apex:form>
+    
+
+</apex:component>

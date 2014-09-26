@@ -1,0 +1,51 @@
+<apex:page id="MFEmployeeHelperSetProfilePicture" 
+			standardController="mployee__MF_EmployeeFile__c" 
+			extensions="mployee.MF_EmployeeHelperSetProfilePicture" 
+			>  
+
+	<apex:sectionHeader title="{!mployee__MF_EmployeeFile__c.Name}" subtitle="Set picture for {!mployee__MF_EmployeeFile__c.Name}"/>
+	
+	<apex:form id="adminform">
+	    <apex:actionFunction name="setSelectedImage" action="{!doStuff}" reRender="selectedimage">
+			<apex:param name="x" value="x" assignTo="{!selectedImage}" />	
+		</apex:actionFunction>
+    
+    	<apex:pageBlock id="pb" title="Employee" tabStyle="Contact">  
+  
+	        <apex:pageBlockButtons >  
+	            <apex:commandButton disabled="{!IF(images.size > 0 ,false,true)}" action="{!SaveImage}" value="Save" />  
+	            <apex:commandButton value="Cancel" action="{!cancel}"/>  
+	        </apex:pageBlockButtons>
+	        
+	        <apex:pageBlockSection id="employeedatail" title="Employee">
+	        	<apex:outputField value="{!employee.Name}"/>
+	        </apex:pageBlockSection>
+	        
+	        <apex:pageBlockSection id="images" title="Availeble Images">
+	        
+		        <apex:pageBlockTable value="{!images}" var="image" rendered="{!IF(images.size > 0 ,true,false)}">
+	            	<apex:column headerValue="Selected">
+	            		<apex:inputCheckbox onclick="setSelectedImage('{!image.id}');" />
+	            	</apex:column>
+	            	<apex:column value="{!image.name}"/>
+	            	<apex:column headerValue="Short name">
+	            		<apex:outputText value="{!LEFT(image.name, 5) }"/>            	
+	            	</apex:column>            	
+	            	<apex:column >            		
+	            		<apex:image value="{!URLFOR($Action.Attachment.Download, image.id)}" style="max-height: 150px;" />
+	            	</apex:column>
+	            	<apex:column value="{!image.ContentType}"/>
+	            	<apex:column value="{!image.CreatedDate}"/>
+	            </apex:pageBlockTable>
+	            <!--  -->
+	            <apex:outputpanel rendered="{!IF(images.size > 0 , false , true)}">  
+		            <apex:outputLabel value="No attachments to display or there is no valid image in attachments."/>  
+		        </apex:outputpanel>
+		        <apex:outputpanel id="selectedimage">
+	            	{!selectedImage}
+	            </apex:outputpanel> 
+	            
+			</apex:pageBlockSection>
+    </apex:pageBlock>  
+</apex:form>  
+</apex:page>

@@ -1,0 +1,34 @@
+<apex:page controller="newOpportunityController" tabStyle="Opportunity">
+
+<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"/> 
+
+<script>
+	$j = jQuery.noConflict();
+	
+	$j(document).ready(function() {
+		$j("[id*=cancel]").click(function() {
+			confirm("Do you want to cancel");
+		});
+	});
+		
+</script>	
+	 
+	<apex:sectionHeader title="New Customer Opportunity" subtitle="Step 2 of 3"/>
+		<apex:form >
+			<apex:pageBlock title="Opportunity Inforamtion" mode="edit">
+				<apex:pageBlockSection title="Opportunity Information">
+					<apex:inputField value="{!opportunity.Name}"/>
+					<apex:inputField value="{!Opportunity.Amount}"/>
+					<apex:inputField value="{!Opportunity.CloseDate}"/>
+					<apex:inputField value="{!Opportunity.stageName}"/> 
+					<apex:inputField value="{!role.Role}"/>
+				</apex:pageBlockSection>
+				
+				<apex:pageBlockButtons >
+					<apex:commandButton action="{!step1}" value="Previous"/>
+					<apex:commandButton action="{!step3}" value="Next"/>
+					<apex:commandButton action="{!cancel}" value="cancel" id="cancel" immediate="true"/>
+				</apex:pageBlockButtons>
+			</apex:pageBlock>		
+		</apex:form>
+</apex:page>

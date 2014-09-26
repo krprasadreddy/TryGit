@@ -1,0 +1,139 @@
+<apex:page id="Candidate"
+	standardController="mployee__MF_Recruitment_Candidate__c"	
+	docType="html-5.0"
+	applyHtmlTag="false"
+	applyBodyTag="false"
+	standardStylesheets="false"
+	showHeader="false"
+	cache="false"
+>
+	<apex:variable value="{!mployee__MF_Recruitment_Candidate__c}" var="candidate"/>
+	<apex:composition template="mployee__AdminTemplateBootstrap">
+	
+		<apex:define name="css">
+			<apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeSite,'assets/css/plugins/fileinput/bootstrap.css')}"/>
+			<style>
+	 			.section {
+					padding: 70px 0 0 0;
+					min-height: 300px;
+				}
+	 		</style>
+		</apex:define>
+		
+		
+        
+        <apex:define name="javascript">
+        	<apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite,'assets/js/plugins/fileinput/bootstrap.js')}"  />
+        	<script type="text/javascript">
+				$(document).ready( function() {
+					
+					$('a[href="#map"]').on('shown.bs.tab', function (e) {
+						initialize();
+						getMarker();	
+					});
+					
+					$( ".detailList" ).addClass( "table" );
+					$( ".hide" ).hide();
+					
+				});
+			</script>
+        </apex:define>
+        
+        <apex:define name="body">
+        <ul class="nav nav-tabs">
+		  <li class="active"><a href="#profile" data-toggle="tab">Profile</a></li>
+		  <li><a href="#map" data-toggle="tab">Map</a></li>
+		  <li><a href="#contact" data-toggle="tab">Contact</a></li>		  
+		</ul>
+		
+		
+		<div class="tab-content">
+		<section class="tab-pane active section profile" id="profile">
+			<div class="container">				
+				<div class="row">
+					<div class="col-sm-4">
+						<apex:image styleClass="img-thumbnail" rendered="{!ISNULL(candidate.mployee__ProfilePhotoId__c)}" style="height:100px" url="{!URLFOR($Resource.mployee__templateBootstrap, 'assets/img/avatar_'+candidate.mployee__Gender__c+'_dark_200x200.png' )}"/>
+			            <apex:image styleClass="img-thumbnail" rendered="{!!ISNULL(candidate.mployee__ProfilePhotoId__c)}" style="height:100px" url="{!URLFOR($Action.Attachment.Download, candidate.mployee__ProfilePhotoId__c)}"  />
+								        
+					</div>
+					<div class="col-sm-8">
+						<h3 class="sub-heading"><apex:outputField value="{!candidate.mployee__NameFirst__c}"/>&nbsp;<apex:outputField value="{!candidate.mployee__NameLast__c}"/></h3>
+						
+						<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModalV3">
+							<apex:outputText value="Upload"/>
+						</button>
+					</div>
+				</div>
+			</div>
+		</section>
+		
+		<section class="tab-pane section address" id="map">
+			<div class="container">				
+				<div class="row">
+					<div class="col-sm-4">
+						<address>
+							<apex:pageBlock id="addressBlock" mode="maindetail">
+								<apex:pageBlockSection columns="1">
+	                				<apex:outputField value="{!candidate.mployee__AddressStreet__c}"/>
+									<apex:outputField value="{!candidate.mployee__AddressZip__c}"/>
+									<apex:outputField value="{!candidate.mployee__AddressCity__c}"/>
+									<apex:outputField value="{!candidate.mployee__AddressCountry__c}"/>
+								</apex:pageBlockSection>
+								
+								
+							</apex:pageBlock>
+						</address>	
+					</div>
+					<div class="col-sm-8">
+						<c:adminMod_GoogleMap />
+						
+					</div>
+				</div>
+
+			</div>
+		</section>
+		
+		<section class="tab-pane section contact" id="contact">
+			<div class="container">
+				<div class="row">
+					<div class="col-sm-12">
+						<apex:pageBlock mode="maindetail">
+							<apex:pageBlockSection columns="1">
+                				<apex:outputField value="{!candidate.mployee__PhoneHome__c}"/>
+								<apex:outputField value="{!candidate.mployee__PhoneMobile__c}"/>
+								
+								<apex:outputField value="{!candidate.mployee__Email__c}"/>
+							</apex:pageBlockSection>
+						</apex:pageBlock>						
+					</div>
+				</div>				
+			</div>	
+		</section>		
+		</div>
+    
+	    
+	    <!-- Modal -->
+		<div class="modal fade" id="myModalV3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		  <div class="modal-dialog">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        <h4 class="modal-title" id="myModalLabel">Upload picture</h4>
+		      </div>
+		      <div class="modal-body">
+		      	<c:adminMod_AttachmentUploader candidateId="{!candidate.Id}"/>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-default" data-dismiss="modal"><apex:outputText value="{!$Label.GLOBAL_ACTION_CLOSE}"/></button>
+		        
+		      </div>
+		    </div><!-- /.modal-content -->
+		  </div><!-- /.modal-dialog -->
+		</div><!-- /.modal -->
+        	
+        	
+               
+        </apex:define>
+	</apex:composition>
+
+</apex:page>

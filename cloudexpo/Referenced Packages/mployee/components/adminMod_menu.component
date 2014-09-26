@@ -1,0 +1,41 @@
+<apex:component layout="none" id="adminMod_menu" controller="mployee.com_AdminMod_menuController">
+
+
+	
+	<apex:outputPanel rendered="true" layout="none">
+		<ul class="nav nav-tabs nav-stacked main-menu">
+		<apex:repeat value="{!AdminMenu.current.children}" var="child">
+			
+			<apex:outputpanel layout="none" rendered="{!child.children.size =0}">
+			
+				<li class="{!IF(child.active == true,'active','')}" >			
+					<apex:outputLink value="{!child.link}" >
+						<i class="icon {!child.styleClass}"></i><span class="hidden-sm"> {!child.title}</span>
+					</apex:outputLink>
+				</li>	
+			
+				
+			</apex:outputpanel>
+			
+			<apex:outputpanel layout="none" rendered="{!child.children.size >0}">
+				
+				<li>
+					
+					<a class="dropmenu" href="#"><i class="fa {!child.styleClass}"></i><span class="hidden-sm"> {!child.title}</span> <span class="badge badge-success">{!child.children.size}</span></a>
+					<ul>
+					<apex:repeat value="{!child.children}" var="sub">
+						<li class="{!IF(sub.active == true,'active','')}"><a href="{!sub.link}"><i class="fa {!sub.styleClass}"></i><span class="hidden-sm"> {!sub.title}</span></a></li>
+					
+						
+					</apex:repeat>
+					</ul>			
+				</li>			
+			</apex:outputpanel>
+		</apex:repeat>	
+		</ul>
+	
+	</apex:outputPanel>
+	
+	
+	
+</apex:component>

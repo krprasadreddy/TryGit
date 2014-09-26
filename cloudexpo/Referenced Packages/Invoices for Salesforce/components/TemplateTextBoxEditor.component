@@ -1,0 +1,846 @@
+<apex:component controller="kognoz1.InvoiceTemplateComponentController">
+	 <apex:attribute name="pageController" type="kognoz1.InvoiceTemplateEditorController" description="Invoice template controller" assignTo="{!cont}" required="true"/>
+		
+	<script type="text/javascript" >
+		$(function(){
+			
+			$("#dynDataTabs").tabs({
+				select:  function(event, ui) {/*$("input[id$=selectedPredefinedTabContField]").val(ui.panel.id);*/}
+			});
+			
+			$("#textEditorCancelBtn").click(function(event) {
+				// clean up the editor elements
+				initNewTxtBoxProperties();
+				var selectorId = $("#textBoxEditor").dialog("option","selectorId");
+/*
+				if(typeof(selectorId)=="string")
+				{
+					var txtBoxContainerSelector = "#"+selectorId;
+					//$(txtBoxContainerSelector).removeClass('ui-selected');
+					//$(txtBoxContainerSelector).children('.imgsDiv').children('img').addClass('hideEditBt');
+					//$(txtBoxContainerSelector).children('.imgsDiv').children('img').removeClass('showEditBt');
+				}
+*/
+				cleanupmfui();
+				// close the dialog
+				$("#textBoxEditor").dialog("close");
+			});
+
+			$("#textEditorDoneBtn").click(function(event) {
+				var editorMode = $("#textBoxEditor").dialog("option","dialogMode");
+				if(editorMode=="createNewItem")
+				{
+					if($("textarea[id$=toEditText]").val()!=null && $.trim($("textarea[id$=toEditText]").val()).length!=0)
+					{
+						if(validateSyntax() && validateChars() && validateRollupSyntax())
+						{
+							var invalidMfs = validateMfs();
+							var invalidRollups = validateRollups();
+							if((invalidMfs.length>0) || (invalidRollups.length>0))
+							{
+							    var invMfList = '';
+								if(invalidMfs.length>0)
+								{
+							        $(invalidMfs).each(function(){
+							            invMfList+= this+"\n";
+							        });
+								}
+							    var invRuList = '';
+								if(invalidRollups.length>0)
+								{
+							        $(invalidRollups).each(function(){
+							            invRuList+= this+"\n";
+							        });
+								}
+								if((invalidMfs.length>0) && (invalidRollups.length>0)) 
+							    	window.alert("The following merge field formulas are invalid:\n "+invMfList+"\n The following roll-up fields are invalid:\n "+invRuList);
+							    else if(invalidMfs.length>0)
+							    	window.alert("The following merge field formulas are invalid:\n "+invMfList);
+							    else if(invalidRollups.length>0)
+							    	window.alert("The following roll-up fields are invalid:\n "+invRuList);
+							}
+							else
+							{
+	
+								textBoxItemsCounter+=1;
+								var topMargin = parseInt($("#mainContainer").css("margin-top").replace("px",""));
+								var leftMargin = parseInt($("#mainContainer").css("margin-left").replace("px",""));
+								var topPos = $("#mainContainer").position().top + topMargin;
+								var leftPos = $("#mainContainer").position().left + leftMargin;
+								var txboxContainerStyle = "font-style: normal; font-weight: normal; text-align: left; cursor:pointer;height:80px;width:80px;";  
+								txboxContainerStyle = 'position: absolute; top: '+topPos+'px; left:'+leftPos+'px;'+txboxContainerStyle+';';
+								var texto = $("textarea[id$=toEditText]").val().replace(/\n/g,"<br>");
+								$("#mainContainer").append('<div id="box'+textBoxItemsCounter+'"  style="'+txboxContainerStyle+'" ></div>'); 
+								var textBoxContainerId = 'box'+textBoxItemsCounter;
+								var textBoxContainerSelector = ("#"+textBoxContainerId);
+								$(textBoxContainerSelector).css("font-family",$("textarea[id$=toEditText]").css("font-family"));
+								$(textBoxContainerSelector).css("font-size",$("textarea[id$=toEditText]").css("font-size"));
+								$(textBoxContainerSelector).css("font-weight",$("textarea[id$=toEditText]").css("font-weight"));
+								$(textBoxContainerSelector).css("font-style",$("textarea[id$=toEditText]").css("font-style"));
+								$(textBoxContainerSelector).css("text-align",$("textarea[id$=toEditText]").css("text-align"));
+								$(textBoxContainerSelector).css("color",$("textarea[id$=toEditText]").css("color"));
+								$(textBoxContainerSelector).css("background-color",$("textarea[id$=toEditText]").css("background-color"));
+								$(textBoxContainerSelector).css("border-color",$("textarea[id$=toEditText]").css("border-top-color"));
+								$(textBoxContainerSelector).css("border-style",$("textarea[id$=toEditText]").css("border-top-style"));
+								$(textBoxContainerSelector).css("border-width",$("textarea[id$=toEditText]").css("border-top-width"));
+								var isTextWrap = $("#textWrapEnable").attr("checked");
+								if(isTextWrap)
+									$(textBoxContainerSelector).css("white-space","normal");
+								else
+									$(textBoxContainerSelector).css("white-space","nowrap");
+								$(textBoxContainerSelector).append('<div id="txt'+textBoxContainerId+'txt" '+
+								'style="border-style:none; position:absolute; width: 100%; height:100%; padding:2px;overflow:hidden;">'+texto+'</div>');//white-space:nowrap;  
+
+								var imgsrc = $("#deleteEditorItemImg").attr("src");
+								var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+								var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+								$(textBoxContainerSelector).append(imgNode);
+								
+								var sizeNode = '<div id="sizeDiv" style="position:absolute;top:-16px;left:0px;width:70px; height:15px;background-color:#FFFFFF;color:red;font-size:9px;font-weight:bold;display:none" />';
+								var resizeNode = '<div id="resizeDiv" style="position:absolute;top:-16px;left:0px;width:130px; height:15px;background-color:#DBDBDB;color:red;font-size:9px;font-weight:bold;display:none" > W:<input id="width"type"text" size="3" style="font-size:0.85em;color:red;"/>&nbsp;H:<input id="height" type="text" size="3" style="font-size:0.85em;color:red"/>&nbsp;<a id="doneResize" style="color:red;">Done</a></div>';
+								$(textBoxContainerSelector).append(sizeNode);
+								$(textBoxContainerSelector).append(resizeNode);
+								$(textBoxContainerSelector).children("div[id=sizeDiv]").click(function(){
+									$(this).css("display","none");
+									var w = $(this).parent("div").width().toFixed();
+									var h = $(this).parent("div").height().toFixed();
+									$(this).siblings("div[id=resizeDiv]").children("input[id=width]").val(w);
+									$(this).siblings("div[id=resizeDiv]").children("input[id=height]").val(h);
+									$(this).siblings("div[id=resizeDiv]").css("display","block");									
+								});
+								$(textBoxContainerSelector).children("div[id=resizeDiv]").children("a[id=doneResize]").click(function(){
+									$(this).parent("div[id=resizeDiv]").css("display","none");
+									var w = $(this).siblings("input[id=width]").val();
+									var h = $(this).siblings("input[id=height]").val();
+									$(this).parent("div[id=resizeDiv]").parent().width(w);
+									$(this).parent("div[id=resizeDiv]").parent().height(h);
+									$(this).parent("div[id=resizeDiv]").siblings("div[id=sizeDiv]").css("display","block");									
+								});
+								$(textBoxContainerSelector).click(function() {
+									$('.ui-selected').each(function(index){
+										$(this).removeClass('ui-selected');
+										$(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+										$(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+										$(this).children("div[id=sizeDiv]").css("display","none");
+									});
+									$(this).addClass('ui-selected');
+									$(this).children('.imgsDiv').children('img').addClass('showEditBt');
+									$(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+									var w = parseInt($(this).css("width").replace("px","")).toFixed();
+									var h = parseInt($(this).css("height").replace("px","")).toFixed();
+									$(this).children("div[id=sizeDiv]").html("W:"+w+" H:"+h);
+									$(this).children("div[id=sizeDiv]").css("display","block");
+									var zindex = calculateMaxZIndex();
+									$(this).css("z-index",zindex);
+								});
+								
+								var zindex = calculateMaxZIndex();
+								$(textBoxContainerSelector).css("z-index",zindex);
+
+								$(textBoxContainerSelector).draggable({
+									containment: 'parent',
+									grid: [1, 1],
+									stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable],div[id^=lineElement]" 
+								});
+								$(textBoxContainerSelector).resizable({
+									grid: [1,1], 
+									autoHide:true,
+									resize:function(event,ui){
+										$(this).children("div[id=sizeDiv]").html("W:"+ui.size.width.toFixed()+" H:"+ui.size.height.toFixed());
+										$(this).children("div[id=sizeDiv]").css("display","block");
+									}
+								});
+
+								var textContent = $("textarea[id$=toEditText]").val().replace(/\n/g,"<br>");
+								var textContentFontFamily = $("textarea[id$=toEditText]").css("font-family");
+								var textContentFontSize = $("textarea[id$=toEditText]").css("font-size");
+								var textContentFontWeight = $("textarea[id$=toEditText]").css("font-weight");
+								var textContentFontStyle = $("textarea[id$=toEditText]").css("font-style");
+								var textContentFontColor = $("textarea[id$=toEditText]").css("color");
+								var textContentAlign = $("textarea[id$=toEditText]").css("text-align");
+								var textContentBackColor = $("textarea[id$=toEditText]").css("background-color");
+								var textContentBorderColor = $("textarea[id$=toEditText]").css("border-top-color");
+								var textContentBorderColorStyle = $("textarea[id$=toEditText]").css("border-top-style");
+								var textContentBorderColorWidth = $("textarea[id$=toEditText]").css("border-top-width");
+								$(textBoxContainerSelector).dblclick(function() {
+									$("textarea[id$=toEditText]").val(textContent.replace(/<br>/g,'\n'));
+									$("textarea[id$=toEditText]").css("font-family",textContentFontFamily);
+									$("textarea[id$=toEditText]").css("font-size",textContentFontSize);
+									$("textarea[id$=toEditText]").css("font-weight",textContentFontWeight);
+									$("textarea[id$=toEditText]").css("font-style",textContentFontStyle);
+									$("textarea[id$=toEditText]").css("color",textContentFontColor);
+									$("textarea[id$=toEditText]").css("text-align",textContentAlign);
+									$("textarea[id$=toEditText]").css("background-color",textContentBackColor);
+									$("textarea[id$=toEditText]").css("border-color",textContentBorderColor);
+									$("textarea[id$=toEditText]").css("border-style",textContentBorderColorStyle);
+									$("textarea[id$=toEditText]").css("border-width",textContentBorderColorWidth);
+									if(isTextWrap)
+										$("#textWrapEnable").attr("checked", true);
+									else
+										$("#textWrapEnable").attr("checked", false);
+									$("textarea[id$=toEditText]").css("white-space","");
+									$("#dynDataTabs").tabs("select",0);
+									initTxtProperties();
+									$("#textBoxEditor").dialog("option","dialogMode","editExistingItem");
+									$("#textBoxEditor").dialog("option","selectorId",$(this).attr("id"));
+									$("#textBoxEditor").dialog("open");
+								});
+								
+								
+								$("textarea[id$=toEditText]").val("");
+								$("textarea[id$=toEditText]").css("font-family","Arial, Helvetica, sans-serif");
+								$("textarea[id$=toEditText]").css("font-size","10px");
+								$("textarea[id$=toEditText]").css("font-weight","normal");
+								$("textarea[id$=toEditText]").css("font-style","normal");
+								$("textarea[id$=toEditText]").css("text-align","left");
+								$("textarea[id$=toEditText]").css("color","#000000");
+								$("textarea[id$=toEditText]").css("background-color","#FFFFFF");
+								$("textarea[id$=toEditText]").css("border","1px dashed #222222");
+								$("span[id='FontWeight']").html('normal');
+								$("span[id='FontStyle']").html('normal');
+								$("#txtBold").css('border-width', '0px');
+								$("#txtItalic").css('border-width', '0px');
+								$("#borderColorEnable").attr('checked',false);
+								$("#txtBoxBorderColor").val("");
+	
+								$(textBoxContainerSelector).addClass("ui-selected");
+								$(textBoxContainerSelector).children('.imgsDiv').children('img').addClass('showEditBt');
+								$(textBoxContainerSelector).children('.imgsDiv').children('img').removeClass('hideEditBt');
+								cleanupmfui();
+								// close the dialog
+								$("#textBoxEditor").dialog("close");
+							}
+						
+						}
+						else
+						    window.alert("There is a syntax error. Please check the merge fields and roll-up summary formulas included in the text. Note that charcters \"<\", \">\", \"\"\" (double quotes), and \"\'\" (single quotes) are not allowed in the content.");
+					}
+					else
+						    window.alert("The text area is empty. Enter text or cancel");
+				}
+				else
+				{
+					var selectorId = $("#textBoxEditor").dialog("option","selectorId");
+					if($("textarea[id$=toEditText]").val()!=null && $.trim($("textarea[id$=toEditText]").val()).length!=0)
+					{
+						if(validateSyntax()&& validateChars() && validateRollupSyntax())
+						{
+							var invalidMfs = validateMfs();
+							var invalidRollups = validateRollups();
+							if((invalidMfs.length>0) || (invalidRollups.length>0))
+							{
+							    var invMfList = '';
+								if(invalidMfs.length>0)
+								{
+							        $(invalidMfs).each(function(){
+							            invMfList+= this+"\n";
+							        });
+								}
+							    var invRuList = '';
+								if(invalidRollups.length>0)
+								{
+							        $(invalidRollups).each(function(){
+							            invRuList+= this+"\n";
+							        });
+								}
+								if((invalidMfs.length>0) && (invalidRollups.length>0)) 
+							    	window.alert("The following merge field formulas are invalid:\n "+invMfList+"\n The following roll-up fields are invalid:\n "+invRuList);
+							    else if(invalidMfs.length>0)
+							    	window.alert("The following merge field formulas are invalid:\n "+invMfList);
+							    else if(invalidRollups.length>0)
+							    	window.alert("The following roll-up fields are invalid:\n "+invRuList);
+							}
+							else
+							{
+								$("#"+selectorId+" > div#txt"+selectorId+"txt").html($("textarea[id$=toEditText]").val().replace(/\n/g,"<br>"));
+								$("#"+selectorId).css("font-family",$("textarea[id$=toEditText]").css("font-family"));
+								$("#"+selectorId).css("font-size",$("textarea[id$=toEditText]").css("font-size"));
+								$("#"+selectorId).css("font-weight",$("textarea[id$=toEditText]").css("font-weight"));
+								$("#"+selectorId).css("font-style",$("textarea[id$=toEditText]").css("font-style"));
+								$("#"+selectorId).css("text-align",$("textarea[id$=toEditText]").css("text-align"));
+								$("#"+selectorId).css("color",$("textarea[id$=toEditText]").css("color"));
+								$("#"+selectorId).css("background-color",$("textarea[id$=toEditText]").css("background-color"));
+								$("#"+selectorId).css("border-color",$("textarea[id$=toEditText]").css("border-top-color"));
+								$("#"+selectorId).css("border-style",$("textarea[id$=toEditText]").css("border-top-style"));
+								$("#"+selectorId).css("border-width",$("textarea[id$=toEditText]").css("border-top-width"));
+								var isTextWrap = $("#textWrapEnable").attr("checked");
+								if(isTextWrap)
+									$("#"+selectorId).css("white-space","normal");
+								else
+									$("#"+selectorId).css("white-space","nowrap");
+								
+								$("#"+selectorId).unbind("dblclick");					
+								var textBoxContent = $("textarea[id$=toEditText]").val().replace(/\n/g,"<br>");
+								var textContentFontFamily = $("textarea[id$=toEditText]").css("font-family");
+								var textContentFontSize = $("textarea[id$=toEditText]").css("font-size");
+								var textContentFontWeight = $("textarea[id$=toEditText]").css("font-weight");
+								var textContentFontStyle = $("textarea[id$=toEditText]").css("font-style");
+								var textContentFontColor = $("textarea[id$=toEditText]").css("color");
+								var textContentAlign = $("textarea[id$=toEditText]").css("text-align");
+								var textContentBackColor = $("textarea[id$=toEditText]").css("background-color");
+								var textContentBorderColor = $("textarea[id$=toEditText]").css("border-top-color");
+								var textContentBorderColorStyle = $("textarea[id$=toEditText]").css("border-top-style");
+								var textContentBorderColorWidth = $("textarea[id$=toEditText]").css("border-top-width");
+								$("#"+selectorId).dblclick(function() {
+									$("textarea[id$=toEditText]").val(textBoxContent.replace(/<br>/g,'\n'));
+									$("textarea[id$=toEditText]").css("font-family",textContentFontFamily);
+									$("textarea[id$=toEditText]").css("font-size",textContentFontSize);
+									$("textarea[id$=toEditText]").css("font-weight",textContentFontWeight);
+									$("textarea[id$=toEditText]").css("font-style",textContentFontStyle);
+									$("textarea[id$=toEditText]").css("color",textContentFontColor);
+									$("textarea[id$=toEditText]").css("text-align",textContentAlign);
+									$("textarea[id$=toEditText]").css("background-color",textContentBackColor);
+									$("textarea[id$=toEditText]").css("border-color",textContentBorderColor);
+									$("textarea[id$=toEditText]").css("border-style",textContentBorderColorStyle);
+									$("textarea[id$=toEditText]").css("border-width",textContentBorderColorWidth);
+									if(isTextWrap)
+										$("#textWrapEnable").attr("checked", true);
+									else
+										$("#textWrapEnable").attr("checked", false);
+									$("textarea[id$=toEditText]").css("white-space","");
+									$("#dynDataTabs").tabs("select",0);
+									initTxtProperties();
+									$("#textBoxEditor").dialog("option","dialogMode","editExistingItem");
+									$("#textBoxEditor").dialog("option","selectorId",$(this).attr("id"));
+									$("#textBoxEditor").dialog("open");
+								});
+								$("textarea[id$=toEditText]").val("");
+								$("textarea[id$=toEditText]").css("font-family","Arial, Helvetica, sans-serif");
+								$("textarea[id$=toEditText]").css("font-size","10px");
+								$("textarea[id$=toEditText]").css("font-weight","normal");
+								$("textarea[id$=toEditText]").css("font-style","normal");
+								$("textarea[id$=toEditText]").css("text-align","left");
+								$("textarea[id$=toEditText]").css("color","#000000");
+								$("textarea[id$=toEditText]").css("background-color","#FFFFFF");
+								$("textarea[id$=toEditText]").css("border","1px dashed #222222");
+								$("span[id='FontWeight']").html('normal');
+								$("span[id='FontStyle']").html('normal');
+								$("#txtBold").css('border-width', '0px');
+								$("#txtItalic").css('border-width', '0px');
+								$("#borderColorEnable").attr('checked',false);
+								$("#txtBoxBorderColor").val("");
+								//$("#"+selectorId).removeClass('ui-selected');
+								//$("#"+selectorId).children('.imgsDiv').children('img').addClass('hideEditBt');
+								//$("#"+selectorId).children('.imgsDiv').children('img').removeClass('showEditBt');
+
+								cleanupmfui();
+								// close the dialog
+								$("#textBoxEditor").dialog("close");
+							}
+						
+						}
+						else
+						    window.alert("There is a syntax error. Please check the merge fields and roll-up summary formulas included in the text. Note that charcters \"<\", \">\", \"\"\" (double quotes), and \"\'\" (single quotes) are not allowed in the content.");
+					}
+					else
+						    window.alert("The text area is empty. Enter text or cancel");
+				}
+
+			});
+
+			 $("#insertInvoiceNumberBtn").click(function(event) {
+				
+				var infoSelection = $("textarea[id$=toEditText]").getSelection();
+				var toInsert = '{'+'!'+'InvoiceNumber'+'}';
+				if (infoSelection.length == 0)
+					$("textarea[id$=toEditText]").insertAtCaretPos(toInsert);
+				else
+					$("textarea[id$=toEditText]").replaceSelection(toInsert);
+			});
+
+			 $("#insertCustomMessageBtn").click(function(event) {
+				
+				var infoSelection = $("textarea[id$=toEditText]").getSelection();
+				var toInsert = '{'+'!'+'CustomMessage'+'}';
+				if (infoSelection.length == 0)
+					$("textarea[id$=toEditText]").insertAtCaretPos(toInsert);
+				else
+					$("textarea[id$=toEditText]").replaceSelection(toInsert);
+			});
+
+			 $("#insertContactNameBtn").click(function(event) {
+				
+				var infoSelection = $("textarea[id$=toEditText]").getSelection();
+				var toInsert = '{'+'!'+'ContactName'+'}';
+				if (infoSelection.length == 0)
+					$("textarea[id$=toEditText]").insertAtCaretPos(toInsert);
+				else
+					$("textarea[id$=toEditText]").replaceSelection(toInsert);
+			});
+
+			 $("#insertInvoiceDateBtn").click(function(event) {
+				
+				var infoSelection = $("textarea[id$=toEditText]").getSelection();
+				var toInsert = '{'+'!'+'InvoiceDate'+'}';
+				if (infoSelection.length == 0)
+					$("textarea[id$=toEditText]").insertAtCaretPos(toInsert);
+				else
+					$("textarea[id$=toEditText]").replaceSelection(toInsert);
+			});
+
+			 $("#insertInvoiceDueDateBtn").click(function(event) {
+				
+				var infoSelection = $("textarea[id$=toEditText]").getSelection();
+				var toInsert = '{'+'!'+'InvoiceDueDate'+'}';
+				if (infoSelection.length == 0)
+					$("textarea[id$=toEditText]").insertAtCaretPos(toInsert);
+				else
+					$("textarea[id$=toEditText]").replaceSelection(toInsert);
+			});
+
+
+			// font-family
+			$("#fontFamilyList").click(function() {
+				$("textarea[id$='toEditText']").css("font-family", $("#fontFamilyList").val());
+				$("#fontFamilyList").css('display', 'none');
+			});
+
+			// font-size
+			$("#fontSizeList").click(function() {
+				var selectSize = $("#fontSizeList").val();
+				$("textarea[id$='toEditText']").css("font-size", selectSize);
+				$("#fontSizeList").css('display', 'none');
+			}); 
+
+
+			$("div[id=textBoxEditor]").click(function(e){
+				if(e.target.id=="txtFamily")
+				{
+					if($("#fontFamilyList").css('display')=='none')
+						$("#fontFamilyList").css('display', 'block');
+					else
+						$("#fontFamilyList").css('display', 'none');
+					$("#fontFamilyList").css('position', 'absolute');
+				}
+				else if(e.target.id=="txtSize")
+				{
+					if($("#fontSizeList").css('display')=='none')
+						$("#fontSizeList").css('display', 'block');
+					else
+						$("#fontSizeList").css('display', 'none');
+					$("#fontSizeList").css('position', 'absolute');
+				}
+				else
+				{
+					$("#fontFamilyList").css('display', 'none');
+					$("#fontSizeList").css('display', 'none');
+				}
+			});
+
+
+			// font-weight
+			$("#txtBold").click(function() {
+			
+				if ($("span[id='FontWeight']").html() == 'normal'){
+					$("textarea[id$='toEditText']").css("font-weight", 'bold');
+					$("span[id='FontWeight']").html('bold');
+					$("#txtBold").css('border-width', '1px');
+				}
+				else{
+					$("textarea[id$='toEditText']").css("font-weight", 'normal');
+					$("span[id='FontWeight']").html('normal');
+					$("#txtBold").css('border-width', '0px');
+				}
+			});
+			// font-style
+			$("#txtItalic").click(function() {
+				if ($("span[id='FontStyle']").html() == 'normal'){
+					$("textarea[id$='toEditText']").css("font-style", 'italic');
+					$("span[id='FontStyle']").html('italic');
+					$("#txtItalic").css('border-width', '1px');
+				}
+				else{
+					$("textarea[id$='toEditText']").css("font-style", 'normal');
+					$("span[id='FontStyle']").html('normal');
+					$("#txtItalic").css('border-width', '0px');
+				}
+			});
+
+			// color
+			$('#fontColorPicker').ColorPicker({
+				onSubmit: function(hsb, hex, rgb, el) {
+					var hexColor = '#'+hex+'';
+					$(el).css("background-color", hexColor);
+					$(el).ColorPickerHide();
+					$("textarea[id$='toEditText']").css("color", hexColor);
+				},
+				onBeforeShow: function () {
+					var txtBoxFontColor = $("textarea[id$='toEditText']").css("color");
+					if(txtBoxFontColor.charAt(0)=="#")
+						txtBoxFontColor = $.trim(txtBoxFontColor.replace("#",""));
+					else
+						txtBoxFontColor = $.trim(RGBtoHEX(txtBoxFontColor).replace("#",""));
+					$(this).ColorPickerSetColor(txtBoxFontColor);
+				}
+			});
+			// background-color
+			$('#backColorPicker').ColorPicker({
+			onSubmit: function(hsb, hex, rgb, el) {
+				var hexColor = '#'+hex+'';
+				$(el).css("background-color", hexColor);
+				$(el).ColorPickerHide();
+				$("textarea[id$='toEditText']").css("background-color", hexColor);
+			},
+			
+				onBeforeShow: function () {
+					var txtBoxBackColor = $("textarea[id$='toEditText']").css("background-color");
+					if(txtBoxBackColor.charAt(0)=="#")
+						txtBoxBackColor = $.trim(txtBoxBackColor.replace("#",""));
+					else
+						txtBoxBackColor = $.trim(RGBtoHEX(txtBoxBackColor).replace("#",""));
+					$(this).ColorPickerSetColor(txtBoxBackColor);
+			}
+		
+			});
+
+			$('#borderColorPicker').ColorPicker({
+				onSubmit: function(hsb, hex, rgb, el) {
+					var hexColor = '#'+hex+'';
+					$("#txtBoxBorderColor").val(hexColor);
+					if($("#borderColorEnable").attr('checked')==true)
+					{
+						$("textarea[id$='toEditText']").css("border-color", hexColor);
+						$("textarea[id$='toEditText']").css("border-style", 'solid');
+						$("textarea[id$='toEditText']").css("border-width", '1px');
+						
+					}
+					$(el).ColorPickerHide();
+				},
+				onBeforeShow: function () {
+					var bordercolor = $("#txtBoxBorderColor").val();
+					if(bordercolor.charAt(0)=="#")
+						bordercolor = $.trim(bordercolor.replace("#",""));
+					else
+						bordercolor = $.trim(RGBtoHEX(bordercolor).replace("#",""));
+					$(this).ColorPickerSetColor(bordercolor);
+				}	
+			});
+			
+			$("#borderColorEnable").click(function(){
+					if($("#borderColorEnable").attr('checked')==true)
+					{
+						borderColor = $("#txtBoxBorderColor").val();
+						if(!borderColor)
+							borderColor = "#000000";
+						$("textarea[id$='toEditText']").css("border-color", borderColor);
+						$("textarea[id$='toEditText']").css("border-style", 'solid');
+						$("textarea[id$='toEditText']").css("border-width", '1px');
+							
+					}
+					else
+					{
+						$("textarea[id$='toEditText']").css("border-color", '#222222');
+						$("textarea[id$='toEditText']").css("border-style", 'dashed');
+						$("textarea[id$='toEditText']").css("border-width", '1px');
+					}
+			
+			});	
+			$("#textWrapEnable").click(function(){
+				if($("#textWrapEnable").attr("checked")==true)
+					window.alert("Enabling this feature causes the text lines to wrap when the lines are longer that the available width of the content-rectangle on the canvas. Its use is recommended for long pieces of static text -i.e. no merge field expressions, only. When the text mainly contains merge field expressions, keep this feature disabled.");
+			});
+		}); // ready function
+
+		function initTxtProperties()
+		{
+			if($.trim($("textarea[id$='toEditText']").css("font-weight"))=="bold" || $.trim($("textarea[id$='toEditText']").css("font-weight"))=="700")
+			{
+				$("span[id='FontWeight']").html('bold');
+				$("#txtBold").css('border-width', '1px');
+			
+			}
+			else
+			{
+				$("span[id='FontWeight']").html('normal');
+				$("#txtBold").css('border-width', '0px');
+			}
+	
+			if($.trim($("textarea[id$='toEditText']").css("font-style"))=="italic")
+			{
+				$("span[id='FontStyle']").html('italic')			
+				$("#txtItalic").css('border-width', '1px');
+			}
+			else
+			{
+				$("span[id='FontStyle']").html('normal')			
+				$("#txtItalic").css('border-width', '0px');
+			}
+
+			var txtAlign = $("textarea[id$=toEditText]").css("text-align");
+			changeTextAlignIcon(txtAlign);
+
+			var fontSize = $.trim($("textarea[id$='toEditText']").css("font-size"));
+			$("#fontSizeList").val(fontSize);
+			var fontFamily = $.trim($("textarea[id$='toEditText']").css("font-family"));
+			var calcFontFamily = getFontFamilyValue($.trim(fontFamily));
+			$("#fontFamilyList").val(calcFontFamily);
+			var borderColor = $.trim($("textarea[id$='toEditText']").css("border-top-color"));
+			var borderStyle = $.trim($("textarea[id$='toEditText']").css("border-top-style"));
+			if(borderStyle=="solid")
+			{
+				$("#txtBoxBorderColor").val(borderColor);
+				$("#borderColorEnable").attr('checked',true);
+			}
+			else
+			{
+				$("#txtBoxBorderColor").val('#000000');
+				$("#borderColorEnable").attr('checked',false);
+			}
+		}
+		
+
+		function initNewTxtBoxProperties()
+		{
+			$("textarea[id$=toEditText]").val("");
+			$("textarea[id$=toEditText]").css("font-family","Arial, Helvetica, sans-serif");
+			$("textarea[id$=toEditText]").css("font-size","10px");
+			$("#fontSizeList option[value=10px]").attr("selected","true");
+			$("#fontFamilyList").val("Arial, Helvetica, sans-serif");
+			$("textarea[id$=toEditText]").css("font-weight","normal");
+			$("textarea[id$=toEditText]").css("font-style","normal");
+			changeTextAlignIcon('left');
+			$("textarea[id$=toEditText]").css("color","#000000");
+			$("textarea[id$=toEditText]").css("background-color","#FFFFFF");
+			$("textarea[id$=toEditText]").css("border","1px dashed #222222");
+			$("span[id='FontWeight']").html('normal');
+			$("span[id='FontStyle']").html('normal');
+			$("#txtBold").css('border-width', '0px');
+			$("#txtItalic").css('border-width', '0px');
+			$("#borderColorEnable").attr('checked',false);
+			$("#txtBoxBorderColor").val("");
+		}
+
+
+		function changeTextAlignIcon(align)
+		{
+			$("textarea[id$=toEditText]").css("text-align", align);
+			$(".TextAlignImage").removeClass('imageButtonSelected');
+			$(".TextAlignImage").css('border-width', '0px');
+			var idAlign = '#txtAlign'+align;
+			$(idAlign).addClass('imageButtonSelected');
+			$(idAlign).css('border-width', '1px');
+		}
+		
+		function validateChars()
+		{
+			var isValidChars = true;
+			var contentTxt = $("textarea[id$=toEditText]").val();			
+			var naCharsMatcher = contentTxt.match(/[<>\"\']/g);
+			if(naCharsMatcher!=null)
+				isValidChars = false;
+			else
+				 $("textarea[id$=toEditText]").val(contentTxt);
+			return isValidChars;
+		}
+
+
+		
+	</script>
+
+<apex:form >
+	<div id="textBoxEditor" style="background-color:white; width: 600px; display: none;">
+		<div style="float:right;padding-bottom:5px">
+			<input id="textEditorCancelBtn" type="button" value="Cancel"/>
+			<input id="textEditorDoneBtn" type="button" value="Done"/>
+		</div>
+		
+		
+			<apex:outputPanel id="textAreaPan">
+			<span style="font-size:0.93em;font-weight: normal;display:block;clear:both;border-top:solid thin;padding-top:5px">1. Use the text box to enter text</span>
+			
+			<center>
+				<table>
+					<tr>
+				  		<td style="vertical-align:bottom;">
+					  		<input type="image" id="txtBold" title="Bold" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/bold_icon.gif')}"  
+					  		style="background-color: transparent; background-repeat: no-repeat; 
+					  		width: 20px; height: 20px; border-style:solid;border-width: 0px; border-color: #1797C0" />
+					  		<span id="FontWeight" style="display: none">normal</span>
+					  	</td>	
+						<td style="vertical-align:bottom;">
+					  		<input type="image" id="txtItalic" title="Italic" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/italics_icon.gif')}" 
+					  		style="background-color: transparent; background-repeat: no-repeat; 
+					  		width: 20px; height: 20px; border-style:solid;border-width: 0px; border-color: #1797C0" />
+					  		<span id="FontStyle" style="display: none">normal</span>					
+				  		</td>
+					  	<td style="vertical-align:bottom;">
+					  		<!-- <span id="TextAlign" style="display: none"></span> -->
+					  		<table cellspacing="0" cellpadding="0">
+					  			<tr>
+					  				<td><input type="image" id="txtAlignleft" title="Left Align" onclick="changeTextAlignIcon('left')" class="TextAlignImage" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/left_align.gif')}" style="background-color: transparent; background-repeat: no-repeat; width: 20px; height: 20px; border-width: 0px; " /></td>
+					  				<td><input type="image" id="txtAligncenter" title="Center Align" onclick="changeTextAlignIcon('center')" class="TextAlignImage" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/align_center_icon.gif')}" style="background-color: transparent; background-repeat: no-repeat; width: 20px; height: 20px; border-width: 0px; " /></td>
+					  				<td><input type="image" id="txtAlignright" title="Right Align" onclick="changeTextAlignIcon('right')" class="TextAlignImage" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/align_right.gif')}" style="background-color: transparent; background-repeat: no-repeat; width: 20px; height: 20px; border-width: 0px; " /></td>
+					  			</tr>
+					  		</table>
+					  	</td>	
+						<td style="vertical-align:bottom;">
+							<input type="image" id="txtSize" title="Font Size" 
+						  		src="{!URLFOR($Resource.invoicesforsalesforce, 'images/font_size_icon.gif')}" style="background-color: transparent; background-repeat: no-repeat; 
+						  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0" />
+							<select id="fontSizeList" size="11" style="display: none;z-index:1800;" >
+					  			<option value="6px">6px</option>
+					  			<option value="7px">7px</option>
+					  			<option value="8px">8px</option>
+					  			<option value="9px">9px</option>
+								<option value="10px">10px</option>
+								<option value="11px">11px</option>
+								<option value="12px">12px</option>
+								<option value="13px">13px</option>
+								<option value="15px">15px</option>
+								<option value="19px">19px</option>
+								<option value="22px">22px</option>
+								<option value="24px">24px</option>
+								<option value="26px">26px</option>
+							</select>
+						</td>
+						<td style="vertical-align:bottom;">
+							<input type="image" id="txtFamily" title="Font Type"  
+						  		src="{!URLFOR($Resource.invoicesforsalesforce, 'images/font_icon.gif')}" style="background-color: transparent; background-repeat: no-repeat; 
+						  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0" />
+							<select id="fontFamilyList"  size="10" style="display: none;z-index:1800">
+					  			<option value="Arial, Helvetica, sans-serif" style="font-family:Arial, Helvetica, sans-serif;">Arial</option>
+					  			<option value="Arial Narrow, Helvetica, sans-serif" style="font-family:Arial Narrow, Helvetica, sans-serif;">Arial Narrow</option>
+					  			<option value="Book Antiqua, serif" style="font-family:Book Antiqua, serif;">Book Antiqua</option>
+					  			<option value="Bookman Old Style, serif" style="font-family:Bookman Old Style, serif;">Bookman Old Style</option>
+					  			<option value="Calibri, sans-serif" style="font-family:Calibri, serif;">Calibri</option>
+					  			<option value="Comic Sans MS,cursive" style="font-family:Comic Sans MS, cursive;">Comic Sans MS</option>
+					  			<option value="Consolas,monospace" style="font-family:Consolas, monospace;">Consolas</option>
+					  			<option value="Courier New, Courier, monospace" style="font-family:Courier New, Courier, monospace;">Courier New</option>
+					  			<option value="Georgia, serif" style="font-family:Georgia, serif;">Georgia</option>
+					  			<option value="Helvetica, Arial, sans-serif" style="font-family:Helvetica, Arial, sans-serif;">Helvetica</option>
+					  			<option value="Lucida Sans, sans-serif" style="font-family:Lucida Sans, sans-serif;">Lucida Sans</option>
+					  			<option value="Palatino Linotype, serif" style="font-family:Palatino Linotype, serif;">Palatino Linotype</option>
+					  			<option value="Tahoma, serif" style="font-family:Tahoma, serif;">Tahoma</option>
+					  			<option value="Times New Roman, serif" style="font-family:Times New Roman, serif;">Times New Roman</option>
+					  			<option value="Trebuchet MS, sans-serif" style="font-family:Trebuchet MS, sans-serif;">Trebuchet MS</option>
+					  			<option value="Verdana, Arial, Helvetica, sans-serif" style="font-family:Verdana, Arial, Helvetica, sans-serif;">Verdana</option>
+								<option value="MS Gothic, monospace" style="font-family:MS Gothic, monospace;">MS Gothic</option>
+							</select>
+						</td>
+					  	<td style="vertical-align:bottom;">
+					  		<div id="backColorPicker" style="width:20px; height:20px; ">
+								<img alt="" title="Bacground Color" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/background_color_icon.gif')}" /> 
+							</div>	
+					  	</td>	
+					  	<td style="vertical-align:bottom;">
+					  	<div id="fontColorPicker" style="width:20px; height:20px;">
+							<img alt="" title="Font Color" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/color_icon.gif')}" />
+						</div>
+					  	</td>
+
+						<td>
+						   <div style="margin-bottom:-7px;">
+							<fieldset style="padding:2pt;">
+								<legend style="font-weight:normal;font-size:0.84em">Border</legend>
+							  	<div id="borderColorEnableDiv" style="width:20px; height:20px;display:inline;">
+									<input type="checkbox" id="borderColorEnable"/> 
+								</div>
+							  	<div id="borderColorPicker" style="width:20px; height:20px;display:inline;">
+									<img alt="" title="Border Color" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/color_icon.gif')}" />
+								</div>
+							</fieldset>
+						  </div>
+						</td>
+						<td>
+						   <div style="margin-bottom:-10px;">
+							<fieldset style="padding:2pt;">
+								<legend style="font-weight:normal;font-size:0.84em">Wrap</legend>
+							  	<div id="textWrapEnableDiv" style="width:20px; height:20px;display:inline;">
+									<input type="checkbox" id="textWrapEnable" title="Wrap text lines when they are longer than the available width of the content-rectangle on the canvas"/> 
+								</div>
+							</fieldset>
+						  </div>
+						</td>
+			  		</tr>
+		  		</table>
+		  		<table>
+		  			<tr>	
+		  				<td>
+							<apex:inputTextarea style="min-width: 350px; min-height: 60px;max-width:351px;max-height:61px;border:1px dashed #222222;overflow-y:auto;" id="toEditText"/>
+						</td>	
+					</tr>	
+				</table>
+				</center>	
+				<br />
+				<script type="text/javascript">
+					/*
+						Note: the var edittext is used in combination with the MergeField component
+						and in the later is referenced by this name. Since the component is generic and used
+						in a number of places, I define it here for the benefit of the component.
+					*/
+					var edittext = document.getElementById("{!$Component.toEditText}");
+				</script>
+				
+				<hr />
+				
+				<!-- IFS2 start -->
+				<span style="font-size:0.93em;font-weight: normal">2. Use merge fields or roll-up summaries to add live and invoice summmary data content to the text box</span>
+				<div id="dynDataTabs" class="ui-tabs ui-widget ui-widget-content ui-corner-all" style="margin-top:5px;">
+					<ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all" style="background:none;">
+						<li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#mergeFieldsTab">Merge Fields</a></li>
+						<li class="ui-state-default ui-corner-top "><a href="#rollupsTab">Roll-Up Summaries</a></li>
+					</ul>
+					<div id="mergeFieldsTab">
+						<ul style="font-size:0.93em;font-weight: normal">
+						  <li>Put the cursor in the text box where the live data is required.</li>
+						  <li>Select one of the available fields.</li>
+						  <li>Click the Insert button to add to merge field expression for the field at the cursor position.</li>
+						</ul>
+				 		
+				 		<c:MergeFields20 mainController="{!cont}"	/>
+				 	</div> 
+					<div id="rollupsTab">
+						<ul style="font-size:0.93em;font-weight: normal">
+						  <li>Put the cursor in the text box where the roll-up summary is required.</li>
+						  <li>Select the field to add up over all the invoice line items.</li>
+						  <li>Click the Insert button to add the roll-up summary at the cursor position.</li>
+						</ul>
+						
+						<c:RollupSummaryEditor />
+
+					</div>	
+				</div>	 		
+				<!-- IFS2 end -->
+		 		
+		 		
+		 		<hr />
+		 		<div>
+			 		<span style="font-size:0.93em;font-weight: normal">3. Use the buttons below to insert a place holder into the text content for the following quantities:</span>
+			 		<ul>
+			 			<li><u>Invoice Number</u>. The invoice number will be calculated automatically and displayed according to the display format defined in the billing scenario.</li>
+			 			<li><u>Custom Message</u>. You will enter the actual message content at the time of billing.</li>
+			 			<li><u>Contact Name</u>. The name of the contact role assigned and with the role type defined in the billing scenario.</li>
+			 			<li><u>Invoice Date</u>. You will enter the actual date at the time of billing.</li>
+			 			<li><u>Invoice Due Date</u>. Automatically calculated based on the Invoice Date and account&#39;s Payment Term value.</li>
+			 		</ul>
+					<table cellspacing="0" cellpadding="0" width="100%">
+						<tr>
+							<td align="center">
+								<input id="insertInvoiceNumberBtn" type="button" value="Insert Invoice Number" style="font-size: 1em; margin-bottom: 1%; margin-top: 1%" />
+							</td>
+							<td align="center">
+						        <input id="insertCustomMessageBtn" type="button" value="Insert Custom Message" style="font-size: 1em; margin-bottom: 1%; margin-top: 1%" />
+							</td>
+							<td align="center">
+						        <input id="insertContactNameBtn" type="button" value="Insert Contact Name" style="font-size: 1em; margin-bottom: 1%; margin-top: 1%" />
+							</td>
+							<td align="center">
+						        <input id="insertInvoiceDateBtn" type="button" value="Insert Invoice Date" style="font-size: 1em; margin-bottom: 1%; margin-top: 1%" />
+							</td>
+							<td align="center">
+						        <input id="insertInvoiceDueDateBtn" type="button" value="Insert Invoice Due Date" style="font-size: 1em; margin-bottom: 1%; margin-top: 1%" />
+							</td>
+						</tr>
+					</table>					
+				</div>
+
+			</apex:outputPanel>
+
+	</div>
+	<input id="txtBoxBorderColor" style="display:none" />
+
+</apex:form>
+
+
+
+</apex:component>

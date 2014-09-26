@@ -1,0 +1,123 @@
+<apex:page id="profileSkill" 
+           docType="html-5.0" 
+           controller="mployee.SiteProfileSkillController" 
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+           language="{!language}"            
+>
+	<apex:variable var="config" value="{!siteSettings.modules['mod_candidateSkills']}" />
+	
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+    	
+        
+        <apex:define name="javascript">
+        	<apex:includeScript value="{!URLFOR($Resource.mployeeSite, 'assets/js/plugins/typeahead/typeahead-0.9.3.js')}"  />
+        	<apex:stylesheet value="{!URLFOR($Resource.mployeeSite, 'assets/css/plugins/typeahead/typeahead.css')}"/>
+        	<script type="text/javascript">
+        		var j$ = jQuery.noConflict();      
+        		j$(document).ready(function(){
+					
+					//	Typeahead
+					j$('.skills-typeahead').typeahead({                                
+					  name: 'skills',					                                                  
+					  prefetch: 'services/apexrest/mployee/ta/skill.json',					                                           
+					  limit: 10                                                                   
+					});
+        		});
+        	
+        	</script>
+        
+        </apex:define>
+        
+        <apex:define name="body"> 	
+        	
+        	
+        	
+        	<apex:outputPanel styleClass="container{!IF(siteSettings.template.isFluid,'-fluid','')}" layout="block">	
+        		
+        		
+        		<apex:outputPanel styleClass="row" layout="block" rendered="{!config.showHeader}" >
+        		<div class="col-sm-12">
+        			<apex:dynamicComponent componentValue="{!pageHeader}" />
+        		</div>
+        		</apex:outputPanel>
+        		
+        		
+                <div class="row" >
+                	<apex:form styleClass="form-horizontal" id="adminform">
+	                    
+	                    <apex:outputPanel id="content" styleClass="col-sm-8" layout="{!config.showTitle}" >	
+							
+							<fieldset>
+	                    		<apex:outputPanel layout="none" rendered="true" >
+	                    		<legend>
+	                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id == null,true,false)}">	
+	                    				<apex:outputText value="{!$Label.GLOBAL_ACTION_NEW_OBJECT}">
+	                    					<apex:param value="{!$ObjectType.candidateSkill__c.Label}"/> 
+	                    				</apex:outputText>
+	                    			</apex:outputPanel>
+	                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id != null,true,false)}">
+	                    				<apex:outputText value="{!item.Name}"/>	                    					                   
+	                    			</apex:outputPanel>	                    			 			
+	                    		</legend>
+	                    		</apex:outputPanel>
+	                    		
+	                    		
+	                    		<apex:outputPanel layout="block" styleClass="form-group" rendered="{!config.params['showName']}">	                    										    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidateSkill__c.Fields.Name.label}" for="name"/>
+								    <div class="col-sm-10">
+										<apex:inputField value="{!item.Name}" id="name" html-placeholder="skills" styleClass="form-control required skills-typeahead"/>
+								    </div>							  	
+							  	</apex:outputPanel>
+							  	
+							  	<apex:outputPanel layout="block" styleClass="form-group" rendered="{!config.params['showYears']}">								    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidateSkill__c.Fields.years__c.label}" for="years__c"/>
+								    <div class="col-sm-10">										
+										<apex:inputField value="{!item.years__c}" id="years__c" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputPanel>
+							  	<apex:outputPanel layout="block" styleClass="form-group" rendered="{!config.params['showProficiency']}">								    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidateSkill__c.Fields.proficiency__c.label}" for="proficiency__c"/>
+								    <div class="col-sm-10">										
+										<apex:inputField value="{!item.proficiency__c}" id="proficiency__c" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputPanel>
+							  									
+	                    	</fieldset>
+	                    	
+	                    	
+						</apex:outputPanel>
+						
+						<!-- Side Bar -->						
+						<ul class="nav {!siteSettings.navStyleClass} nav-stacked col-sm-4">
+							<li class="nav-header"><apex:outputText styleClass="hidden-phone" value="{!$Label.GLIB_HTML_SELECT_ACTION}"/></li>
+							<li>
+                        		<apex:commandLink action="{!importItems}">
+                        			<apex:param name="service" assignto="{!service}" value="linkedin" />
+                        			<span class="fa fa-cloud-download"/>&nbsp;
+                        			<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_IMPORT_FROM}"><apex:param value="LinkedIn" /></apex:outputText>  
+                        		</apex:commandLink>
+                        	</li> 
+							<li><apex:commandLink action="{!saveNew}"><span class="fa fa-plus"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_NEW}"/></apex:commandLink></li>
+							<li><apex:commandLink action="{!saveClose}"><span class="fa fa-check"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_CLOSE}"/></apex:commandLink></li>                        
+                        	<li>
+                        		<apex:commandLink action="{!remove}" rendered="{!IF(item.Id != NULL,true,false)}"><span class="fa fa-trash"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_DELETE}"/></apex:commandLink>
+                        	</li>                        
+                        	<li><apex:commandLink action="{!cancel}"><span class="fa fa-remove"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_CANCEL}"/></apex:commandLink></li>
+						</ul>
+						
+						
+					</apex:form>
+				</div>
+				
+				<div class="row">
+					<c:siteMod_CandidateSkills items="{!items}"  rendered="false"/>
+				</div>
+			</apex:outputPanel>
+			
+		</apex:define>
+	</apex:composition>
+</apex:page>

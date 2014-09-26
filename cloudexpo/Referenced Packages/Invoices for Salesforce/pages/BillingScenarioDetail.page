@@ -1,0 +1,131 @@
+<apex:page standardController="kognoz1__Configuration__c" extensions="kognoz1.BillingScenarioDetailController" tabStyle="kognoz1__Configuration__c" title="Billing Scenario:{!billingScenario.Name}">
+    
+    <apex:sectionHeader title="Billing Scenario" subtitle="{!billingScenario.Name}" help="{!ifsHelpUrl}"/>
+    <div style="color: #333435;font-size: 90%;line-height: 1.5em;text-align: center;font-family: Arial,Helvetica,sans-serif;">
+        <a href="#billingRulesRelatedList_target">
+            <span class="listTitle">Billing Rules<span class="count">[<apex:outputText value="{!numberOfBillingRules}" />]</span></span>
+        </a>
+    </div>
+    
+    <br/>
+    <apex:form >
+        <apex:pageBlock title="Billing Scenario Detail" mode="maindetail">
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!edit}" value="Edit"/>
+                <apex:commandButton action="{!delete}" value="Delete"/>
+                <apex:commandButton action="{!cloneBillingScenario}" value="Clone"/>
+            </apex:pageBlockButtons>
+
+            <!--  Main Detail section -->
+            <apex:pageBlockSection columns="2">
+                <apex:outputField value="{!billingScenario.Name}" />
+                <apex:outputField value="{!billingScenario.kognoz1__Active__c}" />
+                <apex:outputField value="{!billingScenario.kognoz1__Configuration_Description__c}" />
+                <apex:outputField value="{!billingScenario.OwnerId}" />
+                <apex:outputField value="{!billingScenario.CreatedById}" />
+                <apex:outputField value="{!billingScenario.LastModifiedDate}" />
+            </apex:pageBlockSection>
+
+            <!--  Invocing Type section -->
+            <apex:pageBlockSection title="Invoicing Type" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__isOpportunityInvoicing__c}" />
+                <apex:outputField value="{!billingScenario.kognoz1__isAccountInvoicing__c}" />
+            </apex:pageBlockSection>
+
+            <!--  Invoice Number section -->
+            <apex:pageBlockSection title="Invoice Number" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Keep_Invoice_Number__c}" />
+                <apex:outputField value="{!billingScenario.kognoz1__Use_Local_Invoice_Number__c}" rendered="{!billingScenario.kognoz1__Use_Local_Invoice_Number__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__InvoiceNumber__c}" rendered="{!billingScenario.kognoz1__Use_Local_Invoice_Number__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__InvoiceStartNumber__c}" rendered="{!billingScenario.kognoz1__Use_Local_Invoice_Number__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Use_Global_Invoice_Number__c}" rendered="{!billingScenario.kognoz1__Use_Global_Invoice_Number__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Global_Invoice_Number_Name__c}" rendered="{!billingScenario.kognoz1__Use_Global_Invoice_Number__c}"/>
+            </apex:pageBlockSection>
+
+            <!--  Emailing Invoices section -->
+            <apex:pageBlockSection title="Emailing Invoices" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Use_Customer_Email__c}" rendered="{!billingScenario.kognoz1__Use_Customer_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Track_email_activity__c}" rendered="{!billingScenario.kognoz1__Use_Customer_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__EmailTemplateName__c}"  rendered="{!billingScenario.kognoz1__Use_Customer_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__ContactRoleName__c}"  rendered="{!billingScenario.kognoz1__Use_Customer_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__CC_Contact_Role_Type__c}"  rendered="{!billingScenario.kognoz1__Use_Customer_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__CC_Sales_Owner__c}"  rendered="{!billingScenario.kognoz1__Use_Customer_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Additional_Email_Addresses__c}"  rendered="{!billingScenario.kognoz1__Use_Customer_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Use_Org_Wide_Email_Address__c}"  rendered="{!billingScenario.kognoz1__Use_Customer_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Org_Wide_Email_Address__c}"  rendered="{!billingScenario.kognoz1__Use_Customer_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Use_Internal_Email__c}" rendered="{!billingScenario.kognoz1__Use_Internal_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Internal_Email_Address__c}"  rendered="{!billingScenario.kognoz1__Use_Internal_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Internal_Email_Subject__c}"  rendered="{!billingScenario.kognoz1__Use_Internal_Email__c}"/>
+                <apex:outputField value="{!billingScenario.kognoz1__Internal_Email_Body__c}"  rendered="{!billingScenario.kognoz1__Use_Internal_Email__c}"/>
+            </apex:pageBlockSection>
+
+            <!-- Contact Name (when emailing internally -->
+            <apex:pageBlockSection title="Contact Name" columns="1" rendered="{!billingScenario.kognoz1__Use_Internal_Email__c}">
+                <apex:outputField value="{!billingScenario.kognoz1__ContactRoleName__c}" />
+            </apex:pageBlockSection>
+
+            <!--  Printing Invoices section -->
+            <apex:pageBlockSection title="Printing Invoices" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Documents_Folder_Name__c}" />
+                <apex:outputField value="{!billingScenario.kognoz1__Printout_File_Name__c}" />
+            </apex:pageBlockSection>
+
+            <!--  Safeguard checks section -->
+            <apex:pageBlockSection title="Invoices Creation Safeguard Checks" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Check_Missing_Data__c}" />
+                <apex:outputField value="{!billingScenario.kognoz1__Check_Out_of_Sync_Invoices__c}" />
+            </apex:pageBlockSection>
+
+            <!--  Invoices History Tracking section -->
+            <apex:pageBlockSection title="Invoices History Tracking" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Invoices_History_Tracking__c}" />
+            </apex:pageBlockSection>
+
+            <!--  Invoice Line Items sorting section -->
+            <apex:pageBlockSection title="Invoice Line Items Sorting" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Group_By_Opportunity__c}" />
+                <apex:outputField value="{!billingScenario.kognoz1__Sort_Items_By__c}" />
+            </apex:pageBlockSection>
+
+            <!--  Default Templates -->
+            <apex:pageBlockSection title="Default Invoice Template" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Use_Default_Invoice_Template__c}" />
+                <apex:pageBlockSectionItem >
+	                <apex:outputLabel value="Default Invoice Template" />
+					<apex:outputLink target="_blank" value="/{!billingScenario.kognoz1__Default_Invoice_Template__c}" >{!defaultTemplateName}</apex:outputLink>	                
+					<!-- <apex:outputText value="{!defaultTemplateName}" /> -->
+	            </apex:pageBlockSectionItem>
+                <apex:outputField value="{!billingScenario.kognoz1__Override_Assigned_Invoice_Template__c}" />
+            </apex:pageBlockSection>
+
+            <!--  Default Sales Terms -->
+            <apex:pageBlockSection title="Default Sales Terms" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Use_Default_Sales_Terms__c}" />
+                <apex:pageBlockSectionItem >
+	                <apex:outputLabel value="Default Sales Terms" />
+	                <apex:outputText value="{!defaultSalesTermsName}" /> 
+                </apex:pageBlockSectionItem>
+                <apex:outputField value="{!billingScenario.kognoz1__Override_Assigned_Sales_Terms__c}" />
+            </apex:pageBlockSection>
+
+            <!--  Invoice Preprocessing section -->
+            <apex:pageBlockSection title="Invoices Preprocessing" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Use_Invoice_Preprocessing__c}" />
+                <apex:outputField value="{!billingScenario.kognoz1__Preprocessing_Apex_Class__c}" />
+            </apex:pageBlockSection>
+
+            <!--  Invoice Posting section -->
+            <apex:pageBlockSection title="Invoices Posting to External System" columns="1">
+                <apex:outputField value="{!billingScenario.kognoz1__Use_Invoice_Posting__c}" />
+                <apex:outputField value="{!billingScenario.kognoz1__Posting_Apex_Class__c}" />
+            </apex:pageBlockSection>
+
+
+
+        </apex:pageBlock>       
+    </apex:form>
+    <apex:relatedList list="Billing_Conditions__r" id="kognozRelatedList">
+        <a id="billingRulesRelatedList_target"></a>
+    </apex:relatedList> 
+
+</apex:page>

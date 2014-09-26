@@ -1,0 +1,444 @@
+<apex:component id="candidate" layout="none" >
+
+	<apex:attribute name="item" description="Desc" type="mployee__MF_Recruitment_Candidate__c" required="false" />
+	<apex:attribute name="config" description="Config settings" type="mployee.SiteModConfig" required="false"/>
+	
+	
+	<a name="profile"/>
+	
+	<!-- Template Default -->	
+	<apex:outputPanel styleClass="{!config.params['moduleclass_sfx']}" layout="block" id="layout-default" rendered="{!IF(config.params['layout'] =='default',true,false)}">
+		
+		
+			<apex:outputPanel layout="block" rendered="{!IF(config.module.mployee__showtitle__c == 1,true,false)}">				
+				<h3>					
+					<span class="fa fa-user"/>&nbsp;<apex:outputField value="{!item.mployee__NameFull__c}"/>
+					<small>
+						<apex:outputLink styleClass="link-add" value="{!$Page.mployee__SiteProfileEdit}?task=edit.candidate&id=item.id">
+		                    <span class="glyphicon glyphicon-edit"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_EDIT}"/>
+		                </apex:outputLink>
+	             	</small>
+				</h3>
+			</apex:outputPanel>
+			
+			
+			
+			<div class="row">
+				<div class="col-sm-4">
+					<apex:image styleClass="img-thumbnail" url="https://x1.xingassets.com/pubimg/users/a/a/0/a51b2f834.18653436,2.57x75.jpg"/>					
+				</div>
+
+				<form class="form-horizontal col-sm-8" role="form">
+					<div class="form-group">
+						<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__NameFull__c.label}"/>  
+				    	<div class="col-sm-8">
+				      		<p class="form-control-static"><apex:outputField value="{!item.mployee__NameFull__c}"/></p>
+				  		</div>
+					</div>
+					<div class="form-group">
+						<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_Title__c.label}"/>  
+				    	<div class="col-sm-8">
+				      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Q_Title__c}"/></p>
+				  		</div>
+					</div>
+					<div class="form-group">
+						<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__BirthDate__c.label}"/>  
+				    	<div class="col-sm-8">
+				      		<p class="form-control-static"><apex:outputField value="{!item.mployee__BirthDate__c}"/></p>
+				  		</div>
+					</div>
+				</form>				
+			</div>
+			
+			
+			
+			<div class="row" style="margin-top:20px;">
+				<ul class="nav nav-tabs">
+					<li title="SITE_PROFILE_CANDIDATE_TAB_CONTACT" class="active"><a data-toggle="tab" href="#viewContactSection"><span class="glyphicon glyphicon-home"/><span class="hidden-phone">&nbsp;SITE_PROFILE_CANDIDATE_TAB_CONTACT</span></a></li>            
+                    <li title="SITE_PROFILE_CANDIDATE_TAB_Available"><a data-toggle="tab" href="#viewAvailabilitySection"><span class="glyphicon glyphicon-calendar"/><span class="hidden-phone">&nbsp;xx</span></a></li>
+                    <li title="SITE_PROFILE_CANDIDATE_TAB_Salary"><a data-toggle="tab" href="#viewSalarySection" ><span class="glyphicon glyphicon-euro"/><span class="hidden-phone">&nbsp;xx</span></a></li>                    
+                    <li title="SITE_PROFILE_CANDIDATE_TAB_AdditionalInfo"><a data-toggle="tab" href="#viewAdditionalSection" ><span class="glyphicon glyphicon-list"/><span class="hidden-phone">&nbsp;xx</span></a></li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane active" id="viewContactSection">						
+						<form class="form-horizontal" role="form">
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__AddressStreet__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__AddressStreet__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__AddressZip__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__AddressZip__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__AddressCountryCode__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__AddressCountryCode__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Email__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Email__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__PhoneMobile__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__PhoneMobile__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__PhoneHome__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__PhoneHome__c}"/></p>
+						  		</div>
+							</div>
+						</form>
+					</div>
+					<div class="tab-pane" id="viewAvailabilitySection">						
+						<form class="form-horizontal" role="form">
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_DateAvailable__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Q_DateAvailable__c}"/></p>
+						  		</div>
+							</div>								
+						</form>
+					</div>
+					<div class="tab-pane" id="viewSalarySection">						
+						<form class="form-horizontal" role="form">
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_SalaryCurrent__c.label}"/>  
+						    	<div class="col-sm-8">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Q_SalaryCurrent__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_SalaryDesired__c.label}"/>  
+						    	<div class="col-sm-8">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Q_SalaryDesired__c}"/></p>
+						  		</div>
+							</div>								
+						</form>
+					</div>
+					<div class="tab-pane" id="viewAdditionalSection">						
+						
+					</div>
+				</div><!-- /tab-content -->
+				
+			</div><!-- /row -->
+	</apex:outputPanel><!-- /Template Default -->
+	
+	<!-- Uinicorn Default -->
+	<apex:outputPanel styleClass="{!config.params['moduleclass_sfx']}" layout="block" id="layout-unicorn" rendered="{!IF(config.params['layout'] =='unicorn',true,false)}">	
+		
+			<apex:outputPanel layout="block" rendered="{!IF(config.module.mployee__showtitle__c == 1,true,false)}" >				
+				
+				<h3>					
+					<i class="linkedin-experience"></i>&nbsp;<apex:outputText value="{!$Label.MOD_CANDIDATE_TITLE}"/>
+					<small>
+						<apex:outputLink styleClass="link-edit" value="{!$Page.mployee__SiteProfileEdit}">
+		                    <apex:param name="action" value="edit" />
+		                    <apex:param name="object" value="profile" />
+		                    <apex:param name="id" value="{!item.id}" />
+		                    <span class="fa fa-edit"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_EDIT}"/>
+		                </apex:outputLink>
+	             	</small>
+				</h3>
+			</apex:outputPanel>
+						
+			<table class="table">
+			    <tbody>
+			        <tr>
+			            <td rowspan="3">
+			                
+			                <apex:image styleClass="img-thumbnail" rendered="{!ISNULL(item.mployee__ProfilePhotoId__c)}" style="height:100px" url="{!URLFOR($Resource.mployee__mployeeSite, 'assets/img/avatar_'+item.mployee__Gender__c+'_dark_200x200.png' )}"/>
+			                <apex:image styleClass="img-thumbnail" rendered="{!!ISNULL(item.mployee__ProfilePhotoId__c)}" style="height:100px" url="{!URLFOR($Action.Attachment.Download, item.mployee__ProfilePhotoId__c)}"  />
+			                <apex:outputLink styleClass="link-edit" value="{!$Page.mployee__SiteProfileUpload}" title="{!$Label.GLOBAL_ACTION_EDIT}">
+			                	<apex:param name="action" value="picture" />
+			                    <apex:param name="object" value="profile" />			                    
+			                	<span class="fa fa-edit"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_EDIT}"/>
+		                	</apex:outputLink>			                
+			                
+			            </td>
+			            <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__NameFull__c.label}"/></td>
+			            <td><apex:outputField value="{!item.mployee__NameFirst__c}"/>&nbsp;<apex:outputField value="{!item.mployee__NameLast__c}"/></td>                        
+			        </tr>
+			        <tr>
+			          	<td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__CurrentEmployer__c.label}"/></td>			          
+			            <td><apex:outputField value="{!item.mployee__CurrentEmployer__c}"/></td>                      
+			        </tr>
+			        <tr>
+			        	<td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Industry__c.label}"/></td>			          
+			            <td><apex:outputField value="{!item.mployee__Industry__c}"/></td>                        
+			        </tr>
+			        <tr>
+			            <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__BirthDate__c.Label}"/></td>
+			            <td colspan="2"><apex:outputField value="{!item.mployee__BirthDate__c}"/></td>
+			        </tr>
+			        <tr>
+			            <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__ProfileMailNewVacancies__c.Label}"/></td>
+			            <td colspan="2"><apex:outputField value="{!item.mployee__ProfileMailNewVacancies__c}"/></td>
+			        </tr>			        
+			    </tbody>
+			</table>
+			
+			<div class="row">
+			<div class="tabbable inline tabs-left">
+				<ul class="nav nav-tabs tab-green" id="myTab3">
+					<li title="{!$Label.MOD_CANDIDATE_TAB_CONTACT}" class="active"><a data-toggle="tab" href="#viewContactSection"><span class="glyphicon glyphicon-home"/><span class="hidden-phone">&nbsp;<apex:outputText value="{!$Label.MOD_CANDIDATE_TAB_CONTACT}"/></span></a></li>					            
+                    <li title="{!$Label.MOD_CANDIDATE_TAB_AVAILABLE}"><a data-toggle="tab" href="#viewAvailabilitySection"><span class="glyphicon glyphicon-calendar"/><span class="hidden-phone">&nbsp;<apex:outputText value="{!$Label.MOD_CANDIDATE_TAB_AVAILABLE}"/></span></a></li>
+                    <li title="{!$Label.MOD_CANDIDATE_TAB_SALARY}"><a data-toggle="tab" href="#viewSalarySection" ><span class="fa fa-euro"/><span class="hidden-phone">&nbsp;<apex:outputText value="{!$Label.MOD_CANDIDATE_TAB_SALARY}"/></span></a></li>                    
+                    <li title="{!$Label.MOD_CANDIDATE_TAB_INFO}"><a data-toggle="tab" href="#viewAdditionalSection" ><span class="glyphicon glyphicon-list"/><span class="hidden-phone">&nbsp;<apex:outputText value="{!$Label.MOD_CANDIDATE_TAB_INFO}"/></span></a></li>
+                    
+					
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane active" id="viewContactSection">
+                        <!-- Contact Information -->
+                        <h3><apex:outputText value="{!$Label.MOD_CANDIDATE_TAB_CONTACT}"/></h3>
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><apex:outputText value="{!$Label.MOD_CANDIDATE_ADDRESS_LABEL}"/></td>
+                                    <td>
+                                        <apex:outputField value="{!item.mployee__AddressStreet__c}" /><br/>
+                                        <apex:outputField value="{!item.mployee__AddressZip__c}" />&nbsp;<apex:outputField value="{!item.mployee__AddressCity__c}" /><br/>
+                                        <apex:outputField value="{!item.mployee__AddressCountryCode__c}" />
+                                    </td>
+                                 </tr>
+                                <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Email__c.Label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__Email__c}"/></td>
+                                 </tr>
+                                <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__PhoneMobile__c.Label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__PhoneMobile__c}"/></td>
+                                 </tr>
+                                <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__PhoneHome__c.Label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__PhoneHome__c}"/></td>
+                                 </tr>
+                            </tbody>
+                        </table>                        
+                    </div>
+					<div class="tab-pane" id="viewAvailabilitySection">
+						<h3><apex:outputText value="{!$Label.MOD_CANDIDATE_TAB_AVAILABLE}"/></h3>
+						<table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__StateAvailability__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__StateAvailability__c}" /></td>
+                                 </tr>
+                                 <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_DateAvailable__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__Q_DateAvailable__c}" /></td>
+                                 </tr>
+                             </tbody>
+                        </table>						
+					</div>
+					<div class="tab-pane" id="viewSalarySection">
+						<h3><apex:outputText value="{!$Label.MOD_CANDIDATE_TAB_SALARY}"/></h3>
+						<table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_SalaryCurrent__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__Q_SalaryCurrent__c}" /></td>
+                                 </tr>
+                                 <tr>                                 
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_SalaryCurrentPeriod__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__Q_SalaryCurrentPeriod__c}" /></td>
+                                 </tr>
+                                 <tr>                                 
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_SalaryCurrentGrossNet__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__Q_SalaryCurrentGrossNet__c}" /></td>
+                                 </tr>
+                             </tbody>
+                        </table>
+					</div>
+					<div class="tab-pane" id="viewAdditionalSection">
+						<h3><apex:outputText value="{!$Label.MOD_CANDIDATE_TAB_INFO}"/></h3>
+						<table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__ProfileSummary__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__ProfileSummary__c}" /></td>
+                                 </tr>
+                                 <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__ProfileInterests__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__ProfileInterests__c}" /></td>
+                                 </tr>
+                                 <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__ProfileAssociations__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__ProfileAssociations__c}" /></td>
+                                 </tr>
+                             </tbody>
+                        </table>
+					</div>
+				</div>
+			</div>
+			</div>			
+			
+	</apex:outputPanel><!-- /Template Unicorn -->
+	
+	
+	<!-- Base Template -->
+	<style>
+		.form-group {
+			margin-bottom: inherit;
+		}
+	</style>
+	
+	<apex:outputPanel styleClass="{!config.params['moduleclass_sfx']}" layout="block" id="layout-base" rendered="{!IF(config.params['layout'] =='base',true,false)}">
+		
+		<apex:outputPanel layout="block" styleClass="widget stacked">
+			<apex:outputPanel layout="block" styleClass="widget-header" rendered="{!IF(config.module.mployee__showtitle__c == 1,true,false)}" >
+				<i class="icon-user"></i>
+				<h3>
+					<apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Label}"/>
+					<apex:outputField value="{!item.mployee__NameFull__c}"/>
+					<small>
+						<apex:outputLink styleClass="link-add" value="{!$Page.mployee__SiteProfileEdit}?task=edit.profile&id={!item.id}">
+		                    <i class="icon-edit"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_EDIT}"/>
+		                </apex:outputLink>
+	             	</small>
+				</h3>
+			</apex:outputPanel> <!-- /widget-header -->
+			<apex:outputPanel layout="block" styleClass="widget-content">
+				<div class="row">
+					<div class="col-sm-4">
+						<apex:image styleClass="img-thumbnail" url="https://x1.xingassets.com/pubimg/users/a/a/0/a51b2f834.18653436,2.57x75.jpg"/>
+						
+					</div>
+	
+					<form class="form-horizontal col-sm-8" role="form">
+						<div class="form-group">
+							<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__NameFull__c.label}"/>  
+					    	<div class="col-sm-8">
+					      		<p class="form-control-static"><apex:outputField value="{!item.mployee__NameFull__c}"/></p>
+					  		</div>
+						</div>
+						<div class="form-group">
+							<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_Title__c.label}"/>  
+					    	<div class="col-sm-8">
+					      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Q_Title__c}"/></p>
+					  		</div>
+						</div>
+						<div class="form-group">
+							<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__BirthDate__c.label}"/>  
+					    	<div class="col-sm-8">
+					      		<p class="form-control-static"><apex:outputField value="{!item.mployee__BirthDate__c}"/></p>
+					  		</div>
+						</div>
+					</form>
+				</div>
+				
+				<ul class="nav nav-tabs">
+					<li title="SITE_PROFILE_CANDIDATE_TAB_CONTACT" class="active"><a data-toggle="tab" href="#viewContactSection"><i class="icon-user"/><span class="hidden-phone">&nbsp;SITE_PROFILE_CANDIDATE_TAB_CONTACT</span></a></li>            
+                    <li title="SITE_PROFILE_CANDIDATE_TAB_Available"><a data-toggle="tab" href="#viewAvailabilitySection"><i class="icon-calendar"/><span class="hidden-phone">&nbsp;xx</span></a></li>
+                    <li title="SITE_PROFILE_CANDIDATE_TAB_Salary"><a data-toggle="tab" href="#viewSalarySection" ><i class="icon-book"/><span class="hidden-phone">&nbsp;xx</span></a></li>                    
+                    <li title="SITE_PROFILE_CANDIDATE_TAB_AdditionalInfo"><a data-toggle="tab" href="#viewAdditionalSection" ><i class="icon-book"/><span class="hidden-phone">&nbsp;xx</span></a></li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane active" id="viewContactSection">
+						<h3>viewContactSection</h3>
+						<form class="form-horizontal" role="form">
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__AddressStreet__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__AddressStreet__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__AddressZip__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__AddressZip__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__AddressCountryCode__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__AddressCountryCode__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Email__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Email__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__PhoneMobile__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__PhoneMobile__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__PhoneHome__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__PhoneHome__c}"/></p>
+						  		</div>
+							</div>
+						</form>
+					</div>
+					<div class="tab-pane" id="viewAvailabilitySection">
+						<h3>viewAvailabilitySection</h3>
+						<form class="form-horizontal" role="form">
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_DateAvailable__c.label}"/>  
+						    	<div class="col-sm-10">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Q_DateAvailable__c}"/></p>
+						  		</div>
+							</div>								
+						</form>
+					</div>
+					<div class="tab-pane" id="viewSalarySection">
+						<h3>viewSalarySection</h3>
+						<form class="form-horizontal" role="form">
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_SalaryCurrent__c.label}"/>  
+						    	<div class="col-sm-8">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Q_SalaryCurrent__c}"/></p>
+						  		</div>
+							</div>
+							<div class="form-group">
+								<apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__Q_SalaryDesired__c.label}"/>  
+						    	<div class="col-sm-8">
+						      		<p class="form-control-static"><apex:outputField value="{!item.mployee__Q_SalaryDesired__c}"/></p>
+						  		</div>
+							</div>								
+						</form>
+					</div>
+					<div class="tab-pane" id="viewAdditionalSection">
+						<h3><apex:outputText value="{!$Label.MOD_CANDIDATE_TAB_INFO}"/></h3>
+						<table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__ProfileSummary__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__ProfileSummary__c}" /></td>
+                                 </tr>
+                                 <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__ProfileInterests__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__ProfileInterests__c}" /></td>
+                                 </tr>
+                                 <tr>
+                                    <td><apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__ProfileAssociations__c.label}"/></td>
+                                    <td><apex:outputField value="{!item.mployee__ProfileAssociations__c}" /></td>
+                                 </tr>
+                             </tbody>
+                        </table>
+					</div>
+				</div>
+				
+				
+				
+			</apex:outputPanel> <!-- /widget-content -->
+		</apex:outputPanel> <!-- /widget-stacked -->	
+	</apex:outputPanel>
+
+</apex:component>

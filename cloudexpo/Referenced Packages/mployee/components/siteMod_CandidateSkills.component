@@ -1,0 +1,121 @@
+<apex:component id="candidate-skills" layout="none" >
+	
+	<apex:attribute name="items" description="Desc" type="mployee__candidateSkill__c[]" required="false"/>
+	<apex:attribute name="config" description="Site Settings" type="mployee.SiteModConfig" required="false"/>	
+	
+	<a name="skills"/>
+	
+	<!-- Template Default -->
+	<apex:outputPanel styleClass="well" layout="block" id="layout-default" rendered="{!IF(config.params['layout'] =='default',true,false)}">		
+		
+		<apex:outputPanel layout="block" >
+			<h3>
+            	<span class="glyphicon glyphicon-bookmark"/>&nbsp;<apex:outputText value="{!$ObjectType.mployee__candidateSkill__c.LabelPlural}" rendered="{!IF(config.module.mployee__showtitle__c == 1,true,false)}"/>
+          		<small>
+            		<apex:outputLink styleClass="link-add" value="{!$Page.mployee__SiteProfileSkill}">            			
+						<apex:param name="action" value="add"/>
+						<apex:param name="object" value="skill"/>
+                		<span class="glyphicon glyphicon-plus"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_ADD}"/>
+              		</apex:outputLink>
+          		</small>
+          	</h3>
+		</apex:outputPanel>
+		
+		<apex:repeat id="default-skills" value="{!items}" var="item">                
+        	<span class="badge skill-pill">
+            	<h4>
+             		<apex:outputText value="{!item.Name}"/>
+             		<small>
+             			<apex:outputLink value="{!$Page.mployee__SiteProfileSkill}" title="{!$Label.GLOBAL_ACTION_EDIT}">
+             				<apex:param name="id" value="{!item.id}"/>
+							<apex:param name="action" value="edit"/>
+							<apex:param name="object" value="skill"/>
+             				<span class="glyphicon glyphicon-edit"/>
+             			</apex:outputLink>
+             		</small>
+            	</h4>                   		
+            </span>
+       </apex:repeat>
+	</apex:outputPanel>
+	
+	<!-- Template Unicorn --> 
+	<apex:outputPanel styleClass="" layout="block" id="layout-unicorn" rendered="{!IF(config.params['layout'] =='unicorn',true,false)}">	
+		
+		<apex:outputPanel layout="block">
+			<h3>
+            	<i class="linkedin-skills"/>&nbsp;<apex:outputText value="{!$Label.MOD_CANDIDATE_SKILLS_TITLE}" rendered="{!IF(config.module.mployee__showtitle__c == 1,true,false)}"/>
+          		<small>
+            		<apex:outputLink styleClass="link-add" value="{!$Page.mployee__SiteProfileSkill}">                		
+						<apex:param name="action" value="add"/>
+						<apex:param name="object" value="skill"/>
+                		<span class="fa fa-plus"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_ADD}"/>
+              		</apex:outputLink>
+          		</small>
+          	</h3>
+		</apex:outputPanel>
+		
+		<apex:outputPanel layout="block" styleClass="alert alert-block alert-warning" rendered="{!OR(ISNULL(items),items.size=0)}">                
+            <a class="close" data-dismiss="alert" href="#">×</a>
+            <h4 class="alert-heading"><apex:outputText value="{!$Label.MOD_CANDIDATE_NO_ITEMS_HEADING}"/></h4>
+            <apex:outputText value="{!$Label.MOD_CANDIDATE_NO_ITEMS_MSG}">
+            	<apex:param value="{!$Label.MOD_CANDIDATE_SKILLS_TITLE}" />
+            </apex:outputText>                
+        </apex:outputPanel>
+		
+		<apex:repeat id="unicorn-skills" value="{!items}" var="item">                
+        	<span class="badge skill-pill">
+            	<h4>
+             		<apex:outputText value="{!item.Name}"/>
+             		<small><apex:outputLink styleClass="link-edit" value="{!$Page.mployee__SiteProfileSkill}" title="{!$Label.GLOBAL_ACTION_EDIT}">
+             			<apex:param name="id" value="{!item.id}"/>
+						<apex:param name="action" value="edit"/>
+						<apex:param name="object" value="skill"/>
+             			<i class="fa fa-edit"/>
+             		</apex:outputLink></small>
+            	</h4>                   		
+            </span>
+       </apex:repeat>
+       <hr/>
+	</apex:outputPanel>
+	
+	<!-- Base Template -->
+	<apex:outputPanel styleClass="" layout="block" id="layout-base" rendered="{!IF(config.params['layout'] =='base',true,false)}">
+	
+		
+		<apex:outputPanel layout="block" styleClass="widget stacked">
+			<apex:outputPanel layout="block" styleClass="widget-header" rendered="{!IF(config.module.mployee__showtitle__c == 1,true,false)}" >
+				<i class="icon-star"></i>				
+				<h3>
+					<apex:outputText styleClass="hidden-phone" value="{!$ObjectType.mployee__candidateSkill__c.LabelPlural}"/>
+					<small>
+	            		<apex:outputLink styleClass="link-add" value="{!$Page.mployee__SiteProfileSkill}">                		
+							<apex:param name="action" value="add"/>
+							<apex:param name="object" value="skill"/>
+	                		<span class="fa fa-plus"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_ADD}"/>
+	              		</apex:outputLink>
+	          		</small>					
+				</h3>				
+			</apex:outputPanel> <!-- /widget-header -->
+			<apex:outputPanel layout="block" styleClass="widget-content">
+				
+				<apex:repeat id="skillBlocks" value="{!items}" var="item">                
+                    <span class="badge skill-pill">
+                    	<h4>
+                    		<apex:outputText value="{!item.Name}"/>                    		
+                    		<small><apex:outputLink styleClass="link-edit" value="{!$Page.mployee__SiteProfileSkill}" title="{!$Label.GLOBAL_ACTION_EDIT}">
+		             			<apex:param name="id" value="{!item.id}"/>
+								<apex:param name="action" value="edit"/>
+								<apex:param name="object" value="skill"/>
+		             			<i class="fa fa-edit"/>
+		             		</apex:outputLink></small>
+                   		</h4>                   		
+                   	</span>
+              </apex:repeat>
+				
+				
+			</apex:outputPanel> <!-- /widget-content -->
+		</apex:outputPanel> <!-- /widget-stacked -->	
+	</apex:outputPanel>
+	
+
+</apex:component>

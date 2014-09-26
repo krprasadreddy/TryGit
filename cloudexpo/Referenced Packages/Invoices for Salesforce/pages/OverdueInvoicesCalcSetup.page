@@ -1,0 +1,145 @@
+<apex:page controller="kognoz1.OverdueInvoicesCalcSetupController" tabStyle="Invoices_Configuration__tab" title="Overdue Invoices Calculation Setup">
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-json-2.2.js')}"></script> 
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+	<style type="text/css">
+		.ifsTableRows td{vertical-align:middle;}
+		.bcol1{width:40%;}
+		.bcol2{width:5%;text-align:right;}
+		.bcol3{width:5%;text-align:left;}
+		.bcol4{width:50%;}
+		.qbcol1{width:80%;}
+		.qbcol2{width:10%;text-align:right;}
+		.qbcol3{width:10%;text-align:left;}
+		body .bPageBlock .pbBody .labelCol
+		{
+			vertical-align:middle;
+		}
+		.data2Col{width:10%;}
+		.noteCol{width:75%;}
+	</style>
+	<script type="text/javascript" >
+		$(function(){
+			updateSetupPanel(true);
+		});
+
+		function updateSetupPanel(init)
+		{
+			if($("input[id$=autoCalc]").attr("checked"))
+			{
+				if(!init)
+				{
+					enableOverdueInvoicesCalc();
+				}
+				$("span[id$=notePanel]").css("color","#222222");
+				$("div[id$=setupPanel]").css("display","block");
+			}
+			else
+			{
+				if(!init)
+				{
+					disableOverdueInvoicesCalc();
+				}
+				$("span[id$=notePanel]").css("color","#F8F8F8");
+				$("div[id$=setupPanel]").css("display","none");
+			}
+						
+		}
+
+		function displayUpdating()
+        {
+          if($("#statusMsgContainer").css("display")=="none")
+          {
+                  $("span[id=statusMsg]").html("Updating ...");
+                  $("#statusMsgContainer").css("display","block");
+          }
+        }
+       
+        function hideUpdating()
+        {
+          $("#statusMsgContainer").css("display","none");
+        }
+
+		function respondToBackLink()
+		{
+			backLinkClicked();
+		}
+		
+	</script>
+
+	<apex:form >
+		<apex:outputPanel layout="block" style="clear:both;">
+			<br/>&nbsp;« &nbsp;
+			<apex:outputLink value="InvoicesConfigurationHome" onclick="respondToBackLink();" style="color:#015BA7;text-decoration:none;">Back to Invoices Configuration page</apex:outputLink>
+		</apex:outputPanel>
+		<apex:sectionHeader subtitle="Overdue Invoices Calculation" title="Overdue Invoices Calculations Setup" help="{!ifsHelpUrl}" />
+
+         <apex:panelGrid columns="4" width="100%" columnClasses="bcol1, bcol2,bcol3,bcol4" style="margin-bottom:10px;margin-top:2px" styleClass="stage2Table">
+			  <apex:outputText value="" />
+			  <apex:commandButton value="Save" action="{!done}"/>
+			  <apex:commandButton value="Cancel" action="{!cancel}"/>
+			  <apex:outputText value="" />
+		 </apex:panelGrid>
+
+		<apex:outputPanel layout="block" style="width:100%;margin-bottom:5px">
+			Use the Overdue Invoices Calculation Setup to enable the automatic daily update of the invoices Payment Status
+			based on the day's date and the Invoice Due Date. 
+		</apex:outputPanel>
+
+		<apex:pageBlock title="Overdue Invoices Calculation" mode="detail">
+		    <apex:panelGrid columns="3" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col, noteCol">
+				<apex:outputText value="Enable Automatic Calculation" />
+				<apex:inputField value="{!invoicesConfiguration.kognoz1__Overdue_Invoices_Automatic_Calc__c}" id="autoCalc" onchange="updateSetupPanel(false);" />
+				<apex:outputPanel id="notePanel" style="width:80%;color:#F8F8F8;" rendered="{!NOT(isMaxCronTriggers)}">
+					Note: The overdue calculations rely on the following invoice Payment Status picklist values: "Not Paid", "Underpaid", "Overpaid", and "Overdue".
+					If these picklist values are modified the overdue calculations may not be accurate.
+				</apex:outputPanel> 
+			</apex:panelGrid>
+		</apex:pageBlock>
+
+		<apex:outputPanel id="setupPanel" layout="block" style="display:none;margin-top:20px;margin-left:22%;width:50%;border: 1px solid #222222;border-radius:10px;">
+			<apex:outputPanel id="enablePanel" layout="block" >
+				<apex:pageBlock mode="maindetail" >
+					<apex:outputPanel layout="block" rendered="{!NOT(isMaxCronTriggers)}" style="padding:15px 10px 0px;color:#222222;">
+						A job to update the invoices Payment Status has been successfully setup.
+						The job runs daily at 10 minutes past midnight and scans all the unpaid invoices to check
+						if they are past their Invoice Due Date. When an unpaid invoice is past its Invoice Due Date,
+						the invoice Payment Status is automatically set to "Overdue".
+					</apex:outputPanel>
+					<apex:outputPanel layout="block" rendered="{!isMaxCronTriggers}" style="padding:15px 10px 0px;color:#222222;">
+						Your organization has reached the maximum number of scheduled jobs. Go to Setup | Administration Setup | Monitoring | Scheduled Jobs
+						and delete any unnecessary scheduled job to proceed, or contact Invoices for Salesforce for assistance.
+					</apex:outputPanel>
+				</apex:pageBlock>
+			</apex:outputPanel>
+		</apex:outputPanel>
+
+        <apex:actionStatus onstart="displayUpdating();" onstop="hideUpdating();" id="updatingStatus"/>
+        <apex:actionFunction action="{!enableOverdueInvoicesCalc}" name="enableOverdueInvoicesCalc" status="updatingStatus" reRender="enablePanel,autoCalc"/> 		
+        <apex:actionFunction action="{!disableOverdueInvoicesCalc}" name="disableOverdueInvoicesCalc" status="updatingStatus" reRender="setupPanel,autoCalc"/> 		
+        <apex:actionFunction action="{!cancel}" name="backLinkClicked"/> 		
+
+       <!-- ###########################################
+       
+               ACTION STATUS
+       
+        ###############################################-->
+       <div id="statusMsgContainer" class="statusPopup" >
+		<div  class="popupStatus1" >
+		</div>
+           <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+           	<div style="text-align:center;margin-top:15px;" > 
+           		<table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+           			<tr>
+		                <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+		                <td><span id="statusMsg" style="z-index:153;"></span></td>
+                	</tr>
+                </table>
+               </div>
+           </div>
+       </div>
+
+	</apex:form>
+</apex:page>

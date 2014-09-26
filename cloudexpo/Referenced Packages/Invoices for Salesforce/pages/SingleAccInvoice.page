@@ -1,0 +1,1689 @@
+<apex:page standardController="Account" extensions="kognoz1.SingleAccInvoiceController" tabStyle="Account" title="Single Account Invoice">
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/ifspagination.js')}"></script>
+
+<style type="text/css">
+.ifsWizardBlock .ifsWizardTitle
+{
+    background-color:#236FBD;
+    border-color:#236FBD;
+}
+
+.ui-widget-header {
+    background: url("images/ui-bg_flat_75_opp_40x100.png") repeat-x scroll 50% 50% #236FBD;
+    border: 1px solid #AAAAAA;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+</style>
+
+<script type="text/javascript">
+    var postingMode = "Automatic";
+    $(function() {
+        var html='{!$Api.Partner_Server_URL_220}';
+        $("input[id$=sfdcServerUrlContField]").val(html);
+
+        $("#errorInfoPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 600,
+                height:'auto',
+                title:'Processing information'
+        });
+
+        $("#invoiceProcessingErrorsPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Invoice processing errors'
+        });
+    
+        $("#invoiceMissingDataFieldsPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Invoice missing data fields'
+        });
+    
+        $("#invoiceOutOfSyncPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Invoice out-of-sync'
+        });
+
+        $("#invoiceInconsistentDataFieldsPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Invoice inconsistent fields'
+        });
+
+        $("#invoicePostingErrorsPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Invoice posting errors'
+        });
+
+        $("#customMessagePanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Invoice Custom Message',
+                buttons:[{text: "Done",
+                            click: function() {
+                                var msg = $("#customMessage").val();
+                                var lineBreaks = $("#customMessage").val().match(/[\\\n]/g);
+                                if(lineBreaks!=null)
+                                    msg = msg.replace(/[\\\n]/g,"#lb#");
+                                $("input[id$=customMessageContField]").val(msg); 
+                                $(this).dialog("close"); 
+                            }
+                        },
+                        {text: "Cancel",
+                            click: function() {
+                                $(this).dialog("close"); 
+                            }
+                        }] 
+        });
+
+    });
+
+    function hideStep2()
+    {
+        $("div[id$=billingRulesPanel]").css("display","none");
+    }
+
+    function hideStep3()
+    {
+        $("div[id$=opportunityPanel]").css("display","none");
+    }
+
+    function hideCurrenciesPanel()
+    {
+        $("div[id$=currenciesPanel]").css("display","none");
+    }
+    
+    function displayAccessCheckResults()
+    {
+        var isError = $("input[id*=errorInController]").val();
+        if(isError=="true")
+        {
+            $("span[id*=errorPanel]").empty();
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+            }
+            $("span[id*=errorPanel]").html(errorHtml);
+            $("#statusMsgContainer").css("display","none");
+            $("#errorInfoPanel").dialog("open");
+        }
+        else
+            redirectToStep2();  
+    }
+
+    function showStep2()
+    {
+        var isError = $("input[id*=errorInController]").val();
+        if(isError=="true")
+        {
+            $("span[id*=errorPanel]").empty();
+            var integrityCheckJsonObjStr = $("input[id*=integrityCheckJSONContField]").val();
+        
+            if(integrityCheckJsonObjStr)
+            {
+                // PE debuggin var isServerEnabled = $("input[id$=isServerEnabledContField]").val();
+                var integrityCheckJsonObj = JSON.parse(integrityCheckJsonObjStr);
+                for(var idx=0; idx< integrityCheckJsonObj.length;idx++)
+                {
+                    var missingObjects = integrityCheckJsonObj[idx].missingObjects;
+                    var missingFields = integrityCheckJsonObj[idx].missingFields;
+                    var missingRelationships = integrityCheckJsonObj[idx].missingRelationships;
+                    
+                    var missingObjectsUl = "<ul>";
+                    if(missingObjects.length>0)
+                    {
+                        for(var i=0; i<missingObjects.length; i++)
+                        {
+                            missingObjectsUl+="<li>"+missingObjects[i].objName+"</li>";
+                        }
+                    }
+                    missingObjectsUl+="</ul>";
+                    
+                    var missingFieldsTableRows = "";
+                    if(missingFields.length>0)
+                    {
+                        for(var j=0; j<missingFields.length;j++)
+                        {
+                            var missingFieldsObj = missingFields[j].objName;
+                            var objFields = missingFields[j].fields;
+                            for(var k=0; k<objFields.length;k++)
+                            {
+                                if(k==0)
+                                    missingFieldsTableRows+="<tr><td>"+missingFieldsObj+"</td><td>"+objFields[k].fieldName+"</td><td>"+objFields[k].fieldType+"</td></tr>";
+                                else
+                                    missingFieldsTableRows+="<tr><td style=\"text-align:center;\">-\"-</td><td>"+objFields[k].fieldName+"</td><td>"+objFields[k].fieldType+"</td></tr>";
+                            
+                            }
+                        }
+                    }
+                    
+                    var missingRelationshipsRows = "";
+                    if(missingRelationships.length>0)
+                    {
+                        for(var k=0; k<missingRelationships.length; k++)
+                        {
+                            var lookup = missingRelationships[k].lookup;
+                            var obj = missingRelationships[k].obj;
+                            missingRelationshipsRows+="<tr><td>"+obj+"</td><td>"+lookup+"</td></tr>"
+                        }
+                    }
+
+                    var processingInfoHtml = "";
+                    if(missingObjects.length>0)
+                    {
+                         processingInfoHtml+="<p>The following objects are missing from your org:</p>"+missingObjectsUl;
+                         processingInfoHtml+="<p>Restore the missing objects to continue.</p>"
+                    }
+                    if(missingRelationships.length>0)
+                    {
+                        if(missingObjects.length>0)
+                            processingInfoHtml+="<hr/>";
+                        var missingRelationshipsTbl = '<table cellpadding="3" cellspacing="0" border="1" >'+
+                                                '<th class="ifsthBack">Object name</th><th class="ifsthBack">Lookup to object</th>'+
+                                                missingRelationshipsRows+'</table>';
+                         processingInfoHtml+="<p>The following object relationships are missing from your org:</p>"+missingRelationshipsTbl;
+                         processingInfoHtml+="<p>Restore the missing relationships to continue.</p>"
+                    }
+                    if(missingFields.length>0)
+                    {
+                        var missingFieldsTbl = '<table cellpadding="3" cellspacing="0" border="1" >'+
+                                                '<th class="ifsthBack">Object name</th><th class="ifsthBack">Field name</th><th class="ifsthBack">Field type</th>'+
+                                                missingFieldsTableRows+'</table>';
+                        if(missingObjects.length>0 || missingRelationships.length>0)
+                            processingInfoHtml+="<hr/>";
+                            processingInfoHtml+="<p>The automatic customization of the <strong>Invoice</strong> and <strong>Invoice Line Item</strong> objects could not be carried out because one of the following reasons:"
+                                                +"</p>"
+                                                 +"<ul>"
+                                                 +"<li>Your Salesforce edition does not allow the use of the required API</li>"
+                                                 +"<li>The automatic customization cannot be applied to your org</li>"
+                                                 +"</ul>"
+                                                +"<p>"
+                                                +" Follow these steps to manually customize the <strong>Invoice</strong> and <strong>Invoice Line Items</strong> objects to proceed:"
+                                                +"</p>"
+                                                +"<p>Customization of <strong>Invoice</strong> object (Invoice2__c)</p>"
+                                                 +"<ol>"
+                                                 +"<li>Click Your Name | Setup</li>"
+                                                 +"<li>Click App Setup | Create | Objects</li>"
+                                                 +"<li>In the Custom Objects page, click <strong>Invoice</strong></li>"
+                                                 +"<li>Scroll down to the Custom Fields and Relationships, and click the New button on that section</li>"
+                                                 +"<li>Create a new custom field for every entry in the table below where <strong>Object name</strong> is Invoice2__c, using the <strong>Field type</strong> and <span style=\"text-decoration:underline;\">exact <strong>Field name</strong></span> for that entry</li>"
+                                                 +"</ol>"
+                                                +"<p>Customization of <strong>Invoice Line Item</strong> object (Line_Item_2__c)</p>"
+                                                 +"<ol>"
+                                                 +"<li>Click App Setup | Create | Objects</li>"
+                                                 +"<li>In the Custom Objects page, click <strong>Invoice Line Item</strong></li>"
+                                                 +"<li>Scroll down to the Custom Fields and Relationships, and click the New button on that section</li>"
+                                                 +"<li>Create a new custom field for every entry in the table below where <strong>Object name</strong> is Line_Item_2__c, using the <strong>Field type</strong> and <span style=\"text-decoration:underline;\">exact <strong>Field name</strong></span> for that entry</li>"
+                                                 +"</ol>";
+                            processingInfoHtml+=missingFieldsTbl+"<br/><br/>";
+                    }
+                    $("span[id*=errorPanel]").append(processingInfoHtml);                   
+                }
+                
+                
+            }
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+
+            $("#statusMsgContainer").css("display","none");
+            $("#errorInfoPanel").dialog("open");
+        }
+        else
+        {
+            if($("input[id$=isMulticurrencyOrgContField]").val()=="true")
+                $("div[id$=currenciesPanel]").css("display","block");
+            else
+                $("div[id$=billingRulesPanel]").css("display","block");
+        }       
+    }
+
+    function displayStep2()
+    {
+        $("#statusMsgContainer").css("display","none");
+        $("div[id$=billingRulesPanel]").css("display","block");
+    }
+
+    function validateBillingRules()
+    {
+        var isValid = true;
+        if(!validateOppBillingRuleInput())
+            isValid = false;
+        if(!validateOppLineItemBillingRuleInput())
+            isValid = false;        
+        if(!validateRevenueScheduleBillingRuleInput())
+            isValid = false;        
+        return isValid;
+    }
+
+    function showStep3()
+    {
+        var isError = $("input[id*=errorInController]").val();
+        if(isError=="true")
+        {
+            $("span[id*=errorPanel]").empty();
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+
+            $("#statusMsgContainer").css("display","none");
+            $("#errorInfoPanel").dialog("open");
+        }
+        else if($(".errorMsg").length == 0)
+        {
+            $("input[id$='mail']").each(function() {
+                if ($(this).attr("disabled") == true)
+                    $(this).parent().parent().addClass("trUnable");
+            });
+            $("div[id$=opportunityPanel]").css("display","block");
+        }       
+
+          var selMode;
+          $("input[id*=postModeSelector]").each(function(){
+            if($(this).attr("checked")==true)
+                selMode=$(this).val();
+          });
+
+
+          $("input[id$='mail']").each(function() {
+                if ($(this).attr("disabled") == true)
+                    $(this).parent().parent().addClass("trUnable");
+          });
+
+          var stepNum;
+          var isMultiCurrency = $("input[id*=isMulticurrencyOrgContField]").val();
+          if(isMultiCurrency=='true')
+            stepNum = "5";
+          else
+            stepNum = "4";
+          
+          var sndStepMsgAuto=stepNum+". Select the required billing action: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and proceed to process the invoice. The successfully processed invoice will be automatically posted to your configured external system.";
+          var sndStepMsgManual=stepNum+". Select the required billing action: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and proceed to process the invoice. Once an invoice was created, select <strong>Post</strong> and click the \"Post Invoice\" button to post it to your configured external system";
+          
+          if(selMode=="Automatic")
+          {
+            $("span[id*=secondStepMsg]").html(sndStepMsgAuto);
+            postingMode="Automatic";
+          }
+          else if(selMode=="Manual")
+          {
+            $("span[id*=secondStepMsg]").html(sndStepMsgManual);
+            postingMode="Manual";
+          }
+
+    }
+
+
+    function displayLoading()
+    {
+      if($("#statusMsgContainer").css("display")=="none")
+      {
+          $("span[id=statusMsg]").html("Loading ...");
+          $("#statusMsgContainer").css("display","block");
+      }
+    }
+
+    function hideLoading()
+    {
+      $("#statusMsgContainer").css("display","none");
+    }
+
+    function displayProcessing()
+    {
+      $("span[id=statusMsg]").html("Processing invoice ...");
+      $("#statusMsgContainer").css("display","block");
+    }
+
+    function hideProcessing()
+    {
+      $("#statusMsgContainer").css("display","none");
+      $("div[id$=opportunityPanel]").css("display","block");
+    }
+
+    function sendProcessInvoice()
+    {
+      var isError = $("input[id*=errorInController]").val();
+      $("#statusMsgContainer").css("display","none");
+      $("div[id$=opportunityPanel]").css("display","block");
+      if(isError=="true")
+      {
+        $("span[id*=errorPanel]").empty();
+           var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+           if(errorsJsonObjStr)
+           {
+             var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+             var errorHtml="";
+             for(var i=0;i<errorsJsonObj.length;i++)
+             {
+               errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+             }
+             $("span[id*=errorPanel]").html(errorHtml);
+           }
+
+        $("#statusMsgContainer").css("display","none");
+           $("#errorInfoPanel").dialog("open");
+      }
+      else if($(".errorMsg").length == 0)
+      {
+        $("input[id$='mail']").each(function() {
+            if ($(this).attr("disabled") == true)
+                $(this).parent().parent().addClass("trUnable");
+        });
+        $("div[id$=opportunityPanel]").css("display","block");
+
+        if(validateInvoiceDate())
+            processInvoice();
+      }       
+    }
+
+    function sendProcessInvoiceAuto()
+    {
+      var isError = $("input[id*=errorInController]").val();
+      $("#statusMsgContainer").css("display","none");
+      $("div[id$=opportunityPanel]").css("display","block");
+      if(isError=="true")
+      {
+        $("span[id*=errorPanel]").empty();
+           var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+           if(errorsJsonObjStr)
+           {
+             var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+             var errorHtml="";
+             for(var i=0;i<errorsJsonObj.length;i++)
+             {
+               errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+             }
+             $("span[id*=errorPanel]").html(errorHtml);
+           }
+
+        $("#statusMsgContainer").css("display","none");
+           $("#errorInfoPanel").dialog("open");
+      }
+      else if($(".errorMsg").length == 0)
+      {
+        $("input[id$='mail']").each(function() {
+            if ($(this).attr("disabled") == true)
+                $(this).parent().parent().addClass("trUnable");
+        });
+        $("div[id$=opportunityPanel]").css("display","block");
+/*
+        if(postingMode=="Automatic")
+            autoPushAccInvoice();
+*/
+        if(validateInvoiceDate())
+            processInvoiceAuto();
+      }       
+    }
+
+
+    function postInvoice()
+    {
+      var isError = $("input[id*=errorInController]").val();
+      $("#statusMsgContainer").css("display","none");
+      $("div[id$=opportunityPanel]").css("display","block");
+      if(isError=="true")
+      {
+        $("span[id*=errorPanel]").empty();
+           var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+           if(errorsJsonObjStr)
+           {
+             var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+             var errorHtml="";
+             for(var i=0;i<errorsJsonObj.length;i++)
+             {
+               errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+             }
+             $("span[id*=errorPanel]").html(errorHtml);
+           }
+
+        $("#statusMsgContainer").css("display","none");
+           $("#errorInfoPanel").dialog("open");
+      }
+      else if($(".errorMsg").length == 0)
+      {
+        $("input[id$='mail']").each(function() {
+            if ($(this).attr("disabled") == true)
+                $(this).parent().parent().addClass("trUnable");
+        });
+        $("div[id$=opportunityPanel]").css("display","block");
+
+        if(postingMode=="Automatic")
+            autoPushAccInvoice();
+      }       
+    }
+
+
+
+    function checkEmail(cb)
+    {
+         if($(cb).attr("checked")==true)
+         {
+            if($("input[id$=onlycreate]").attr("checked"))
+                $("input[id$=onlycreate]").attr("checked",false);
+            if($("input[id$=post]").attr("checked"))
+                $("input[id$=post]").attr("checked",false);
+         }
+    }
+
+    function checkPrint(cb)
+    {
+         if($(cb).attr("checked")==true)
+         {
+            if($("input[id$=onlycreate]").attr("checked"))
+                $("input[id$=onlycreate]").attr("checked",false);
+            if($("input[id$=post]").attr("checked"))
+                $("input[id$=post]").attr("checked",false);
+         }
+    }
+    
+    function checkCreateOnly(cb)
+    {
+         if($(cb).attr("checked")==true)
+         {
+            if($("input[id$=mail]").attr("checked"))
+                $("input[id$=mail]").attr("checked",false);
+            if($("input[id$=print]").attr("checked"))
+                $("input[id$=print]").attr("checked",false);
+            if($("input[id$=post]").attr("checked"))
+                $("input[id$=post]").attr("checked",false);
+         }
+    }
+
+    function checkPost(cb)
+    {
+         if($(cb).attr("checked")==true)
+         {
+            if($("input[id$=mail]").attr("checked"))
+                $("input[id$=mail]").attr("checked",false);
+            if($("input[id$=print]").attr("checked"))
+                $("input[id$=print]").attr("checked",false);
+            if($("input[id$=onlycreate]").attr("checked"))
+                $("input[id$=onlycreate]").attr("checked",false);
+         }
+    }
+
+    
+    function checkSelections()
+    {
+        var isChecked = false;
+        if($("input[id$=mail]").attr("checked") || $("input[id$=print]").attr("checked") || $("input[id$=onlycreate]").attr("checked"))
+            isChecked = true;
+        if(!isChecked)
+            window.alert("No billing action was selected. Select one to proceed.");
+        return isChecked;
+    }   
+
+    function captureBillingActions()
+    {
+        var mail = $("input[id$=mail]").attr("checked");
+        var print = $("input[id$=print]").attr("checked");
+        var onlycreate = $("input[id$=onlycreate]").attr("checked");
+        var billingActionsXML = '<BillingActions mail="'+mail+'"  print="'+print+'" onlycreate="'+onlycreate+'" />';
+        $("input[id$=billingActionsContField]").val(billingActionsXML);
+    }
+
+
+        function cleanProcessingErrorsPanel()
+        {
+            $("span[id$=procErrorsPanel]").empty();
+        }
+
+        function displayProcessingErrors(oppNameCtl)
+        {
+            $("#invoiceProcessingErrorsPanel").dialog({title:"Processing errors invoice/account: "+$(oppNameCtl).val()});
+            $("#invoiceProcessingErrorsPanel").dialog("open");      
+        }
+
+        function cleanPostingErrorsPanel()
+        {
+            $("span[id$=postErrorsPanel]").empty();
+        }
+
+        function displayPostingErrors(oppNameCtl)
+        {
+            $("#invoicePostingErrorsPanel").dialog({title:"Posting errors invoice/account: "+$(oppNameCtl).val()});
+            $("#invoicePostingErrorsPanel").dialog("open");      
+        }
+
+
+        function cleanMissingFieldsPanel()
+        {
+            $("span[id$=missingFieldsPanel]").empty();
+        }
+
+        function cleanInconsistentFieldsPanel()
+        {
+            $("span[id$=inconsistentFieldsPanel]").empty();
+        }
+
+        function displayMissingFields(oppNameCtl)
+        {
+            $("#invoiceMissingDataFieldsPanel").dialog({title:"Missing data invoice/account: "+$(oppNameCtl).val()});
+            $("#invoiceMissingDataFieldsPanel").dialog("open");     
+        }
+
+        function displayInconsistentFields(oppNameCtl)
+        {
+            $("#invoiceInconsistentDataFieldsPanel").dialog({title:"Inconsistent data invoice/account: "+$(oppNameCtl).val()});
+            $("#invoiceInconsistentDataFieldsPanel").dialog("open");     
+        }
+
+        function cleanOutOfSyncPanel()
+        {
+            $("span[id$=outOfSyncPanel]").empty();
+        }
+
+        function displayOutOfSync(oppNameCtl)
+        {   
+            $("#invoiceOutOfSyncPanel").dialog({title:"Out-of-Sync invoice/account: "+$(oppNameCtl).val()});
+            $("#invoiceOutOfSyncPanel").dialog("open");     
+        }
+
+        function openCustomMessagePanel()
+        {
+            var msg = $("input[id$=customMessageContField]").val();
+            var lineBreaks = $("#customMessage").val().match(/[\\\n]/g);
+            if(lineBreaks!=null)
+                msg = msg.replace(/#lb#/g,"\n");
+            $("#customMessage").val(msg);
+            $("#customMessagePanel").dialog("open");
+        }
+
+        function disableEnterKey(e)
+        {
+             var key;     
+             if(window.event)
+                 key = window.event.keyCode; //IE
+             else
+                 key = e.which; //firefox     
+             return (key != 13);
+        }
+
+        function resetInvDateError()
+        {
+            if($("input[id$=invoiceDate]").hasClass("error"))
+            {
+                $("input[id$=invoiceDate]").parent().siblings("div.errorMsg").remove();
+                $("input[id$=invoiceDate]").removeClass("error");
+            }
+        }
+    
+        function validateInvoiceDate()
+        {
+            var isValidInvoiceDate = true;
+            
+            if($("input[id$=invoiceDate]").hasClass("error"))
+                isValidInvoiceDate = false;
+            else if($("input[id$=invoiceDate]").val()=="")
+            {
+                $("input[id$=invoiceDate]").addClass("error");
+                $("input[id$=invoiceDate]").parent().parent().append('<div class="errorMsg" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;"><strong>Error: </strong>You must enter a valid invoice date</div>');
+                isValidInvoiceDate = false;
+            }
+            
+            return isValidInvoiceDate;
+        }
+
+        function displayPreprocessing()
+        {
+          $("span[id=statusMsg]").html("Preprocessing invoice ...");
+          $("#statusMsgContainer").css("display","block");
+        }
+    
+        function sendInternalPreprocessing()
+        {
+            var isError = $("input[id*=errorInController]").val();
+            $("#statusMsgContainer").css("display","none");
+            $("div[id$=opportunityPanel]").css("display","block");
+            if(isError=="true")
+            {
+                $("span[id*=errorPanel]").empty();
+                var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+                if(errorsJsonObjStr)
+                {
+                  var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+                  var errorHtml="";
+                  for(var i=0;i<errorsJsonObj.length;i++)
+                  {
+                    errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+                  }
+                  $("span[id*=errorPanel]").html(errorHtml);
+                }
+    
+                $("#statusMsgContainer").css("display","none");
+                $("#errorInfoPanel").dialog("open");
+            }
+            else if($(".errorMsg").length == 0)
+            {
+                $("input[id$='mail']").each(function() {
+                    if ($(this).attr("disabled") == true)
+                        $(this).parent().parent().addClass("trUnable");
+                });
+                $("div[id$=opportunityPanel]").css("display","block");
+
+                if(validateInvoiceDate())
+                    internalPreprocessInvoice();
+                    //processInvoice();
+            }       
+        }
+
+        function sendInternalPreprocessInvoiceAuto()
+        {
+            var isError = $("input[id*=errorInController]").val();
+            $("#statusMsgContainer").css("display","none");
+            $("div[id$=opportunityPanel]").css("display","block");
+            if(isError=="true")
+            {
+                $("span[id*=errorPanel]").empty();
+                var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+                if(errorsJsonObjStr)
+                {
+                  var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+                  var errorHtml="";
+                  for(var i=0;i<errorsJsonObj.length;i++)
+                  {
+                    errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+                  }
+                  $("span[id*=errorPanel]").html(errorHtml);
+                }
+    
+                $("#statusMsgContainer").css("display","none");
+                $("#errorInfoPanel").dialog("open");
+            }
+            else if($(".errorMsg").length == 0)
+            {
+                $("input[id$='mail']").each(function() {
+                    if ($(this).attr("disabled") == true)
+                        $(this).parent().parent().addClass("trUnable");
+                });
+                $("div[id$=opportunityPanel]").css("display","block");
+
+                if(validateInvoiceDate())
+                    internalPreprocessInvoiceAuto();
+                    //processInvoice();
+            }       
+        }
+
+
+        function displayPostModeStatus()
+        {
+          $("div[id$=oppSelPanel]").empty();
+          
+          var selMode;
+          $("input[id*=postModeSelector]").each(function(){
+            if($(this).attr("checked")==true)
+                selMode=$(this).val();
+          });
+          var msg;
+          if(selMode=="Automatic")
+            msg="Switching to Automatic posting mode ..";
+          else
+            msg="Switching to Manual posting mode ..";
+          
+          $("span[id=statusMsg]").html(msg);
+          $("#statusMsgContainer").css("display","block");
+        }
+
+
+        function hidePostModeStatus()
+        {
+          var selMode;
+          $("input[id*=postModeSelector]").each(function(){
+            if($(this).attr("checked")==true)
+                selMode=$(this).val();
+          });
+          $("input[id$='mail']").each(function() {
+                if ($(this).attr("disabled") == true)
+                    $(this).parent().parent().addClass("trUnable");
+          });
+
+          var stepNum;
+          var isMultiCurrency = $("input[id*=isMulticurrencyOrgContField]").val();
+          if(isMultiCurrency=='true')
+            stepNum = "5";
+          else
+            stepNum = "4";
+          
+          var sndStepMsgAuto=stepNum+". Select the required billing action: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and proceed to process the invoice. The successfully processed invoice will be automatically posted to your configured external system.";
+          var sndStepMsgManual=stepNum+". Select the required billing action: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and proceed to process the invoice. Once an invoice was created, select <strong>Post</strong> and click the \"Post Invoice\" button to post it to your configured external system";
+
+          if(selMode=="Automatic")
+          {
+            $("span[id*=secondStepMsg]").html(sndStepMsgAuto);
+            postingMode="Automatic";
+          }
+          else
+          {
+            $("span[id*=secondStepMsg]").html(sndStepMsgManual);
+            postingMode="Manual";
+          }
+
+          $("span[id=statusMsg]").empty();
+          $("#statusMsgContainer").css("display","none");
+        }
+
+        function captureSelectedOppForPosting()
+        {
+            var isPostingChecked = false;
+            if($("input[id$=post]").attr("checked"))
+                isPostingChecked = true;
+            if(!isPostingChecked)
+                window.alert("Check the \"Post\" checkbox to post the invoice to your configured external system.");
+            return isPostingChecked;
+        }
+
+        function displayQBPush()
+        {
+          $("span[id=statusMsg]").html("Posting invoice  ...");
+          $("#statusMsgContainer").css("display","block");
+        }
+        
+        function hideQBPush()
+        {
+          var isError = $("input[id*=errorInController]").val();
+          $("#statusMsgContainer").css("display","none");
+          $("div[id$=opportunityPanel]").css("display","block");
+          if(isError=="true")
+          {
+            $("span[id*=errorPanel]").empty();
+               var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+               if(errorsJsonObjStr)
+               {
+                 var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+                 var errorHtml="";
+                 for(var i=0;i<errorsJsonObj.length;i++)
+                 {
+                   errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+                 }
+                 $("span[id*=errorPanel]").html(errorHtml);
+               }
+    
+            $("#statusMsgContainer").css("display","none");
+               $("#errorInfoPanel").dialog("open");
+          }
+          else if($(".errorMsg").length == 0)
+          {
+            $("input[id$='mail']").each(function() {
+                if ($(this).attr("disabled") == true)
+                    $(this).parent().parent().addClass("trUnable");
+            });
+            $("div[id$=opportunityPanel]").css("display","block");
+          }       
+          var selMode;
+          $("input[id*=postModeSelector]").each(function(){
+            if($(this).attr("checked")==true)
+                selMode=$(this).val();
+          });
+
+
+          $("input[id$='mail']").each(function() {
+                if ($(this).attr("disabled") == true)
+                    $(this).parent().parent().addClass("trUnable");
+          });
+
+          var stepNum;
+          var isMultiCurrency = $("input[id*=isMulticurrencyOrgContField]").val();
+          if(isMultiCurrency=='true')
+            stepNum = "5";
+          else
+            stepNum = "4";
+          
+          var sndStepMsgAuto=stepNum+". Select the required billing action: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and proceed to process the invoice. The successfully processed invoice will be automatically posted to your configured external system.";
+          var sndStepMsgManual=stepNum+". Select the required billing action: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and proceed to process the invoice. Once an invoice was created, select <strong>Post</strong> and click the \"Post Invoice\" button to post it to your configured external system";
+          
+          if(selMode=="Automatic")
+          {
+            $("span[id*=secondStepMsg]").html(sndStepMsgAuto);
+            postingMode="Automatic";
+          }
+          else if(selMode=="Manual")
+          {
+            $("span[id*=secondStepMsg]").html(sndStepMsgManual);
+            postingMode="Manual";
+          }
+        }
+
+
+</script>
+
+<apex:form >
+    <apex:sectionHeader subtitle="Account: {!accountName}" title="Process Invoice" help="{!ifsHelpUrl}"/>
+    <apex:outputPanel layout="block" style="clear:both;">
+        &nbsp;« &nbsp;
+        <apex:commandLink action="{!backToAccount}" value="Back to account" style="color:#015BA7;text-decoration:none;"/>
+    </apex:outputPanel>
+    <br/>
+    <br/>
+    <p> 1. Select the billing scenario</p>
+     <div class="ifsWizardBlock ifsTertiaryPalette" style="width:100%">
+         <div class="ifsBody" style="border-top: 2px solid #236FBD">
+             <div class="ifsWizardHeader">
+                <div style="white-space: nowrap;margin-top:10px;margin-bottom:10px;margin-left:10px;">
+                    <table cellpadding="1" cellspacing="0" border="0">
+                        <tr>
+                            <td>
+                                <apex:selectList value="{!billingScenarioSelected}" size="1" multiselect="false">
+                                    <apex:selectOptions value="{!billingScenarios}"/>
+                                </apex:selectList>
+                            </td>
+                            <td>
+                                <apex:commandButton value="Next" action="{!checkAccess}"  onclick="hideStep2();hideStep3();" oncomplete="displayAccessCheckResults();" status="checkStatus" reRender="errorInController,errorBagJSONContField,integrityCheckJSONContField,isServerEnabledContField" />
+                                <!-- <apex:commandButton value="Next" action="{!goToStep2}" onclick="hideStep2();hideStep3();" oncomplete="showStep2();" status="loadingStatus" reRender="errorInController,errorBagJSONContField,integrityCheckJSONContField,oppBillingRulesPanel,oppLineItemBillingRulesPanel,isServerEnabledContField"/>  -->
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+             </div>
+         </div>  
+     </div>  
+
+     <apex:outputPanel id="currenciesPanel" layout="block" styleClass="ifsWizardBlock ifsTertiaryPalette" style="width:100%;margin-top:30px;margin-bottom:30px;display:none;">
+     <p> 2. Select the billing currency. The billing currency selected will be used to filter the account opportunities on that currency only.</p>
+         <div class="ifsBody" style="border-top: 2px solid #236FBD">
+             <div class="ifsWizardHeader">
+                <div style="white-space: nowrap;margin-top:10px;margin-bottom:10px;margin-left:10px;">
+                  <table cellpadding="1" cellspacing="0" border="0">
+                      <tr>
+                          <td>
+                              <apex:selectList value="{!selectedCurencyIsoCode}" size="1" multiselect="false">
+                                  <apex:selectOptions value="{!currencyOptionsList}"/>
+                              </apex:selectList>
+                          </td>
+                      </tr>
+                  </table>
+                 </div>                
+                  <table width="100%" style="background-color:#F8F8F8;border-top:1px solid #DBDBDB;">
+                     <tr>
+                        <td style="text-align:right;width:50%;"><apex:commandButton value="Back" onclick="hideCurrenciesPanel(); hideStep2();hideStep3();"/></td>
+                        <td style="text-align:left;width:50%;"><apex:commandButton value="Next" action="{!checkCurrency}"  onclick="hideStep2();hideStep3();" oncomplete="displayStep2();" status="checkStatus" reRender="errorInController,errorBagJSONContField,integrityCheckJSONContField,isServerEnabledContField" /></td>
+                     </tr>
+                  </table> 
+               </div>
+        </div>
+     </apex:outputPanel>
+     
+     
+     <apex:outputPanel id="billingRulesPanel" layout="block" styleClass="ifsWizardBlock ifsTertiaryPalette" style="width:100%;margin-top:30px;margin-bottom:30px;display:none;">
+        <table cellspacing="0" cellpadding="0" width="100%" style="margin-top:10px;margin-bottom:0px;">
+            <tr>
+                <td style="text-align:left">
+                    <apex:outputText value="2" rendered="{!NOT(isMulticurrencyOrg)}"/><apex:outputText value="3" rendered="{!isMulticurrencyOrg}"/>. Set the billing rules values as necessary
+                </td>
+                <td align="right">
+                    <table cellspacing="1" cellpadding="1" width="100%">
+                        <tr>
+                            <td align="right" style="vertical-align:middle;" width="70%">
+                                <apex:outputPanel id="invoiceDatePanel">
+                                <table>
+                                    <tr>
+                                        <td align="right" style="vertical-align:middle;">
+                                            <apex:outputPanel >Invoice Date: </apex:outputPanel>
+                                        </td>
+                                        <td align="right" style="vertical-align:middle;"> 
+                                            <apex:inputField value="{!billingScenarioObjSelected.kognoz1__Session_Invoice_Date__c}" onkeypress="return disableEnterKey(event)" onchange="resetInvDateError();" id="invoiceDate"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                                </apex:outputPanel>
+                            </td>
+                            <td align="right" style="vertical-align:middle;">
+                                <a href="#" onclick="openCustomMessagePanel();" >Add a custom message to your invoices</a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <apex:outputPanel layout="block" style="display:none;">
+            <apex:inputField value="{!myBillingRule.kognoz1__Date__c}" />
+        </apex:outputPanel>
+         <div class="ifsBody" style="border-top: 2px solid #236FBD">
+             <div class="ifsWizardHeader">
+                 <table width="100%" style="background-color:#F8F8F8;border-bottom:1px solid #DBDBDB;">
+                     <tr>
+                         <td>
+                                <apex:outputPanel rendered="{!AND(showOppBillingRules,showOppLineItemBillingRules,showRevenueScheduleBillingRules)}" layout="block">
+                                   <apex:outputPanel layout="block" style="float:left; margin-right:2%; width:30%">
+                                       <c:OpportunityBillingRules cont="{!controller}" id="oppBillingRulesPanel1"/>
+                                   </apex:outputPanel>
+                                   <apex:outputPanel layout="block" style="float:left;margin-right:2%; width:30%">
+                                       <c:OppLineItemBillingRule cont="{!controller}" id="oppLineItemBillingRulesPanel1"/>
+                                   </apex:outputPanel>
+                                   <apex:outputPanel layout="block" style="float:left; margin-right:2%;width:30%">
+                                       <c:RevenueScheduleBillingRules cont="{!controller}" id="revenueScheduleBillingRulesPanel1"/>
+                                   </apex:outputPanel>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!AND(showOppBillingRules,NOT(showOppLineItemBillingRules),showRevenueScheduleBillingRules)}" layout="block">
+                                   <apex:outputPanel layout="block" style="float:left; margin-right:2%; width:45%">
+                                       <c:OpportunityBillingRules cont="{!controller}" id="oppBillingRulesPanel2"/>
+                                   </apex:outputPanel>
+                                   <apex:outputPanel layout="block" style="float:left; width:0%">
+                                       <c:OppLineItemBillingRule cont="{!controller}" id="oppLineItemBillingRulesPanel2"/>
+                                   </apex:outputPanel>
+                                   <apex:outputPanel layout="block" style="float:left; width:45%">
+                                       <c:RevenueScheduleBillingRules cont="{!controller}" id="revenueScheduleBillingRulesPanel2"/>
+                                   </apex:outputPanel>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!AND(showOppBillingRules,showOppLineItemBillingRules,NOT(showRevenueScheduleBillingRules))}" layout="block">
+                                   <apex:outputPanel layout="block" style="float:left; margin-right:2%; width:45%">
+                                       <c:OpportunityBillingRules cont="{!controller}" id="oppBillingRulesPanel3"/>
+                                   </apex:outputPanel>
+                                   <apex:outputPanel layout="block" style="float:left; width:45%">
+                                       <c:OppLineItemBillingRule cont="{!controller}" id="oppLineItemBillingRulesPanel3"/>
+                                   </apex:outputPanel>
+                                   <apex:outputPanel layout="block" style="float:left; width:0%">
+                                       <c:RevenueScheduleBillingRules cont="{!controller}" id="revenueScheduleBillingRulesPanel3"/>
+                                   </apex:outputPanel>
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!AND(showOppBillingRules,NOT(showOppLineItemBillingRules),NOT(showRevenueScheduleBillingRules))}" layout="block">
+                                   <apex:outputPanel layout="block" style="float:left; margin-right:2%; width:45%">
+                                       <c:OpportunityBillingRules cont="{!controller}" id="oppBillingRulesPanel4"/>
+                                   </apex:outputPanel>
+                                   <apex:outputPanel layout="block" style="float:left; width:0%">
+                                       <c:OppLineItemBillingRule cont="{!controller}" id="oppLineItemBillingRulesPanel4"/>
+                                   </apex:outputPanel>
+                                   <apex:outputPanel layout="block" style="float:left; width:0%">
+                                       <c:RevenueScheduleBillingRules cont="{!controller}" id="revenueScheduleBillingRulesPanel4"/>
+                                   </apex:outputPanel>
+                                 </apex:outputPanel>
+                         <!-- 
+                             <apex:outputPanel layout="block" style="float:left; margin-right:2%; width:45%">
+                                 <c:OpportunityBillingRules cont="{!controller}" id="oppBillingRulesPanel"/>
+                             </apex:outputPanel>
+                             <apex:outputPanel layout="block" style="float:left; width:45%">
+                                 <c:OppLineItemBillingRule cont="{!controller}" id="oppLineItemBillingRulesPanel"/>
+                             </apex:outputPanel>
+                           -->
+                         </td>
+                     </tr>
+                 </table>
+                 <table width="100%" style="background-color:#F8F8F8;border-bottom:1px solid #DBDBDB;">
+                     <tr>
+                        <td style="text-align:right;width:50%;"><apex:commandButton value="Back" onclick="hideStep2();hideStep3(); return false;"/></td>
+                        <td style="text-align:left;width:50%;"><apex:commandButton value="Next" action="{!goToStep3}" onclick="hideStep3();if(!validateBillingRules()) return false;" oncomplete="showStep3();" status="loadingStatus" reRender="errorInController,errorBagJSONContField,oppBillingRulesPanel,oppLineItemBillingRulesPanel,opportunityPanel,invoiceDatePanel"/></td>
+                     </tr>
+                 </table>                 
+             </div>
+         </div>  
+     </apex:outputPanel>  
+
+
+     <apex:outputPanel id="opportunityPanel" layout="block" styleClass="ifsWizardBlock ifsTertiaryPalette" style="width:100%;margin-top:30px;margin-bottom:30px;display:none;">
+     
+        <apex:outputPanel id="oppPanelNoPosting" layout="block" rendered="{!NOT(isPosting)}">     
+          <p> <apex:outputText value="3" rendered="{!NOT(isMulticurrencyOrg)}"/><apex:outputText value="4" rendered="{!isMulticurrencyOrg}" />. Select the required billing action: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and proceed to process the invoice</p>
+             <div class="ifsBody" style="border-top: 2px solid #236FBD">
+                 <div class="ifsWizardHeader">
+                    <div id="oppPanelTableHeaderNoPosting" class="ifsthBack" style="width:100%;">
+                        <table id="imTableHeadersNoPosting" style="table-layout:fixed;border-collapse:collapse;" cellspacing="0" cellpadding="0" width="100%">
+                            <colgroup span="8">
+                                <col width="460px" />
+                                <col width="110px" />
+                                <col width="45px" />
+                                <col width="70px" />
+                                <col width="70px" />
+                                <col width="40px" />
+                                <col width="40px" />
+                                <col width="60px" />
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <td class="ifsthBack" style="vertical-align:middle;">Account Name</td>
+                                    <td class="ifsthBack" style="vertical-align:middle;">Invoice Status</td>
+                                    <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Invoice</td>
+                                    <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Emailed</td>
+                                    <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Printed</td>
+                                    <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Email</td>
+                                    <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Print</td>
+                                    <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Create Only</td> 
+                                </tr>
+                            </tbody>    
+                        </table>
+                    </div>
+                     <apex:outputPanel id="oppPanelTableNoPosting" > 
+                       <apex:outputText rendered="{!noOfAccs == 0}" id="emptyTableMsg" style="font: 11px Arial,Helvetica,sans-serif; color:gray; padding: 10px;" value="There are no opportunities for this account, or the opportunities do not conform to the billing rules" />
+                        <apex:dataTable id="apxTableNoPosting" value="{!billingScenarioAccs}" var="billingScenarioAcc" cellspacing="0" cellpadding="0"  width="100%"   columnsWidth="460px,110px,45px,70px,70px,40px,40px,60px"  styleClass="ifsIMTable"  style="table-layout:fixed;border-collapse:collapse;" rowClasses="ifsTableRows" > 
+                             <apex:column >
+                                <apex:outputLink target="_blank" value="/{!billingScenarioAcc.accId}">{!billingScenarioAcc.accName}</apex:outputLink>
+                             </apex:column>
+                             <apex:column >
+                                  <apex:inputText id="accNameContainerNoPosting" value="{!billingScenarioAcc.accName}" style="display:none;" />
+                                  <apex:actionStatus onstart="displayOppProcResults();" onstop="hideOppProcResults();" id="loadingOppProcResults"/>  
+
+                                  <apex:outputPanel rendered="{!billingScenarioAcc.invStatus=='Not Done'}">{!billingScenarioAcc.invStatus}</apex:outputPanel>
+								  <apex:outputLink target="_blank" value="/{!billingScenarioAcc.invoiceId}" rendered="{!OR(billingScenarioAcc.invStatus=='Created Only',billingScenarioAcc.invStatus=='Processed')}">{!billingScenarioAcc.invStatus}</apex:outputLink>                                                    
+
+                                  <apex:commandLink style="color:#D74C3B;" action="{!calculateProcessingErrors}" value="{!billingScenarioAcc.invStatus}" reRender="procErrorsPanel" onclick="cleanProcessingErrorsPanel();" oncomplete="displayProcessingErrors(document.getElementById('{!$Component.accNameContainerNoPosting}'));" rendered="{!billingScenarioAcc.invStatus=='Processing Error'}" status="loadingStatus" />
+                                  <apex:commandLink style="color:#D74C3B;" action="{!calculateMissingFields}" value="{!billingScenarioAcc.invStatus}" reRender="missingFieldsPanel"  onclick="cleanMissingFieldsPanel();" oncomplete="displayMissingFields(document.getElementById('{!$Component.accNameContainerNoPosting}'));" rendered="{!billingScenarioAcc.invStatus=='Missing Data'}" status="loadingStatus" />
+                                  <apex:commandLink style="color:#D74C3B;" action="{!calculateOutOfSync}" value="{!billingScenarioAcc.invStatus}" reRender="outOfSyncPanel"  onclick="cleanOutOfSyncPanel();" oncomplete="displayOutOfSync(document.getElementById('{!$Component.accNameContainerNoPosting}'));" rendered="{!billingScenarioAcc.invStatus=='Out-of-Sync'}" status="loadingStatus" />
+                                  <apex:commandLink style="color:#D74C3B;" action="{!calculateInconsistentFields}" value="{!billingScenarioAcc.invStatus}" reRender="inconsistentFieldsPanel"  onclick="cleanInconsistentFieldsPanel();" oncomplete="displayInconsistentFields(document.getElementById('{!$Component.accNameContainerNoPosting}'));" rendered="{!billingScenarioAcc.invStatus=='Inconsistent Data'}" status="loadingStatus" />
+                            </apex:column>
+                            <apex:column style="text-align:center;">
+                                <apex:outputPanel >
+                                    <apex:outputLink rendered="{!billingScenarioAcc.invAttachmentId != null}" target="_blank" value="/servlet/servlet.FileDownload?file={!billingScenarioAcc.invAttachmentId}" title="Download Invoice PDF">
+                                        <apex:image rendered="{!billingScenarioAcc.invAttachmentId != null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/pdf.png')}" />
+                                    </apex:outputLink>
+                                    <apex:image rendered="{!billingScenarioAcc.invAttachmentId == null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/noinvoice.png')}" />
+                                </apex:outputPanel>
+                            </apex:column>
+                            <apex:column style="text-align:center;">
+                                <apex:outputPanel rendered="{!billingScenarioAcc.isEmailed == true}">
+                                    <img alt="" height="16" width="21" title="Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" /> 
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!billingScenarioAcc.isEmailed == false}">
+                                    <img alt="" height="16" width="21" title="Not Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                </apex:outputPanel>
+                            </apex:column>
+                            <apex:column style="text-align:center;">
+                                <apex:outputPanel rendered="{!billingScenarioAcc.isPrinted == true}">
+                                    <img alt="" height="16" width="21" title="Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" />
+                                </apex:outputPanel>
+                                <apex:outputPanel rendered="{!billingScenarioAcc.isPrinted == false}">
+                                    <img alt="" height="16" width="21" title="Not Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                </apex:outputPanel>
+                            </apex:column>
+                            <apex:column style="text-align:center;">
+                                <apex:inputcheckBox id="mail" disabled="{!billingScenarioAcc.isDisabled == true}" onclick="checkEmail(this)"  />
+                            </apex:column>
+                            <apex:column style="text-align:center;">
+                                <apex:inputcheckBox id="print" disabled="{!billingScenarioAcc.isDisabled == true}" onclick="checkPrint(this)"  />
+                            </apex:column>
+                            <apex:column style="text-align:center;">
+                                <apex:inputcheckBox id="onlycreate" disabled="{!billingScenarioAcc.isDisabled == true}" onclick="checkCreateOnly(this)"  />
+                            </apex:column>
+                        </apex:dataTable>                                       
+                     </apex:outputPanel>
+    
+    
+                     <table width="100%" style="background-color:#F8F8F8;border-bottom:1px solid #DBDBDB;">
+                         <tr>
+                            <td style="text-align:right;width:50%;"><apex:commandButton value="Back" onclick="hideStep3(); return false;"/></td>
+                            <td style="text-align:left;width:50%;">
+                                <apex:commandButton value="Process Invoice" rendered="{!NOT(isPreprocessing)}" onclick="resetInvDateError();if(!checkSelections()) return false;if(!validateInvoiceDate()) return false;captureBillingActions();" action="{!internalPreprocessInvoice}" reRender="errorInController,errorBagJSONContField,invoiceDatePanel" status="processingStatus1"/>
+                                <apex:commandButton value="Process Invoice" rendered="{!isPreprocessing}" onclick="resetInvDateError();if(!checkSelections()) return false;if(!validateInvoiceDate()) return false; captureBillingActions();" action="{!preprocessInvoice}" reRender="errorInController,errorBagJSONContField,invoiceDatePanel" status="preprocessingStatus"/>
+                            </td>
+                         </tr>
+                     </table>                 
+                 </div>
+             </div>  
+           </apex:outputPanel>  
+         
+           <apex:outputPanel id="oppPanelPosting" layout="block" rendered="{!isPosting}">
+                <p> <apex:outputText value="3" rendered="{!NOT(isMulticurrencyOrg)}"/><apex:outputText value="4" rendered="{!isMulticurrencyOrg}" />. Select the invoice posting mode  </p>
+                <div class="ifsBody" style="border-top: 2px solid #236FBD">
+                  <div class="ifsWizardHeader">
+                        <apex:outputPanel layout="block">
+                           <!-- TOGGLE AUTOMAIC/MANUAL  POSTING -->
+                           <apex:actionStatus onstart="displayPostModeStatus();" onstop="hidePostModeStatus();" id="postModeStatus"/>  
+                            <fieldset style="margin-top:3px;margin-bottom:3px;margin-left:40%;padding:2px;width:15%; background-color: rgb(248, 248, 248);border:1px solid #DBDBDB;">
+                                <legend style="font-weight:normal;">Posting Mode</legend>
+                                <apex:selectRadio value="{!qbPostingMode}" id="postModeSelector">
+                                    <apex:selectOptions value="{!qbPostingModeOptions}" />
+                                    <apex:actionSupport event="onclick" status="postModeStatus" rerender="oppSelPanel"/>
+                                </apex:selectRadio>
+                            </fieldset>
+                        </apex:outputPanel>
+                    </div>
+                 </div>
+           
+                <apex:outputPanel layout="block" id="oppSelPanel" >
+                    <apex:outputPanel layout="block" style="margin-top:20px;margin-bottom:10px;"  id="secondStepMsgPanel">
+                        <apex:outputPanel rendered="{!(noOfAccs > 0)}" id="secondStepMsg">
+                            &nbsp;
+                        </apex:outputPanel>  
+                        <apex:outputPanel rendered="{!(noOfAccs == 0)}">
+                            &nbsp;
+                        </apex:outputPanel>
+                    </apex:outputPanel> 
+                    
+                    <apex:outputPanel rendered="{!qbPostingMode=='Automatic'}">
+                         <div class="ifsBody" style="border-top: 2px solid #236FBD">
+                             <div class="ifsWizardHeader">
+                                <div id="oppPanelTableHeaderPostingAuto" class="ifsthBack" style="width:100%;">
+                                    <table id="imTableHeadersPostingAuto" style="table-layout:fixed;border-collapse:collapse;" cellspacing="0" cellpadding="0" width="100%">
+                                        <colgroup span="9">
+                                            <col width="350px" />
+                                            <col width="110px" />
+                                            <col width="110px" />
+                                            <col width="45px" />
+                                            <col width="70px" />
+                                            <col width="70px" />
+                                            <col width="40px" />
+                                            <col width="40px" />
+                                            <col width="60px" />
+                                        </colgroup>
+                                        <tbody>
+                                            <tr>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Account Name</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Invoice Status</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Post Status</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Invoice</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Emailed</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Printed</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Email</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Print</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Create Only</td> 
+                                            </tr>
+                                        </tbody>    
+                                    </table>
+                                </div>
+                                 <apex:outputPanel id="oppPanelTablePostingAuto" > 
+                                   <apex:outputText rendered="{!noOfAccs == 0}" id="emptyTableMsgPostingAuto" style="font: 11px Arial,Helvetica,sans-serif; color:gray; padding: 10px;" value="There are no opportunities for this account, or the opportunities do not conform to the billing rules" />
+                                    <apex:dataTable id="apxTablePostingAuto" value="{!billingScenarioAccs}" var="billingScenarioAcc" cellspacing="0" cellpadding="0"  width="100%"   columnsWidth="350px,110px,110px,45px,70px,70px,40px,40px,60px"  styleClass="ifsIMTable"  style="table-layout:fixed;border-collapse:collapse;" rowClasses="ifsTableRows" > 
+                                         <apex:column >
+                                            <apex:outputLink target="_blank" value="/{!billingScenarioAcc.accId}">{!billingScenarioAcc.accName}</apex:outputLink>
+                                         </apex:column>
+                                         <apex:column >
+                                              <apex:inputText id="accNameContainerPostingAuto" value="{!billingScenarioAcc.accName}" style="display:none;" />
+                                              <apex:actionStatus onstart="displayOppProcResults();" onstop="hideOppProcResults();" id="loadingOppProcResults"/>  
+
+			                                  <apex:outputPanel rendered="{!billingScenarioAcc.invStatus=='Not Done'}">{!billingScenarioAcc.invStatus}</apex:outputPanel>
+											  <apex:outputLink target="_blank" value="/{!billingScenarioAcc.invoiceId}" rendered="{!OR(billingScenarioAcc.invStatus=='Created Only',billingScenarioAcc.invStatus=='Processed')}">{!billingScenarioAcc.invStatus}</apex:outputLink>                                                    
+
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculateProcessingErrors}" value="{!billingScenarioAcc.invStatus}" reRender="procErrorsPanel" onclick="cleanProcessingErrorsPanel();" oncomplete="displayProcessingErrors(document.getElementById('{!$Component.accNameContainerPostingAuto}'));" rendered="{!billingScenarioAcc.invStatus=='Processing Error'}" status="loadingStatus" />
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculateMissingFields}" value="{!billingScenarioAcc.invStatus}" reRender="missingFieldsPanel"  onclick="cleanMissingFieldsPanel();" oncomplete="displayMissingFields(document.getElementById('{!$Component.accNameContainerPostingAuto}'));" rendered="{!billingScenarioAcc.invStatus=='Missing Data'}" status="loadingStatus" />
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculateOutOfSync}" value="{!billingScenarioAcc.invStatus}" reRender="outOfSyncPanel"  onclick="cleanOutOfSyncPanel();" oncomplete="displayOutOfSync(document.getElementById('{!$Component.accNameContainerPostingAuto}'));" rendered="{!billingScenarioAcc.invStatus=='Out-of-Sync'}" status="loadingStatus" />
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculateInconsistentFields}" value="{!billingScenarioAcc.invStatus}" reRender="inconsistentFieldsPanel"  onclick="cleanInconsistentFieldsPanel();" oncomplete="displayInconsistentFields(document.getElementById('{!$Component.accNameContainerPostingAuto}'));" rendered="{!billingScenarioAcc.invStatus=='Inconsistent Data'}" status="loadingStatus" />
+                                        </apex:column>
+                                         <apex:column >
+                                              <apex:outputText value="{!billingScenarioAcc.postStatus}" rendered="{!billingScenarioAcc.postStatus !='Posting Error'}" />
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculatePostingErrors}" value="{!billingScenarioAcc.postStatus}" reRender="postErrorPanel"  onclick="cleanPostingErrorsPanel();" oncomplete="displayPostingErrors(document.getElementById('{!$Component.accNameContainerPostAuto}'));" rendered="{!billingScenarioAcc.postStatus=='Posting Error'}" status="loadingStatus" />
+                                         </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:outputPanel >
+                                                <apex:outputLink rendered="{!billingScenarioAcc.invAttachmentId != null}" target="_blank" value="/servlet/servlet.FileDownload?file={!billingScenarioAcc.invAttachmentId}" title="Download Invoice PDF">
+                                                    <apex:image rendered="{!billingScenarioAcc.invAttachmentId != null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/pdf.png')}" />
+                                                </apex:outputLink>
+                                                <apex:image rendered="{!billingScenarioAcc.invAttachmentId == null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/noinvoice.png')}" />
+                                            </apex:outputPanel>
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:outputPanel rendered="{!billingScenarioAcc.isEmailed == true}">
+                                                <img alt="" height="16" width="21" title="Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" /> 
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!billingScenarioAcc.isEmailed == false}">
+                                                <img alt="" height="16" width="21" title="Not Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                            </apex:outputPanel>
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:outputPanel rendered="{!billingScenarioAcc.isPrinted == true}">
+                                                <img alt="" height="16" width="21" title="Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" />
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!billingScenarioAcc.isPrinted == false}">
+                                                <img alt="" height="16" width="21" title="Not Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                            </apex:outputPanel>
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:inputcheckBox id="mail" disabled="{!billingScenarioAcc.isDisabled == true}" onclick="checkEmail(this)"  />
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:inputcheckBox id="print" disabled="{!billingScenarioAcc.isDisabled == true}" onclick="checkPrint(this)"  />
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:inputcheckBox id="onlycreate" disabled="{!billingScenarioAcc.isDisabled == true}" onclick="checkCreateOnly(this)"  />
+                                        </apex:column>
+                                    </apex:dataTable>                                       
+                                 </apex:outputPanel>
+                
+                
+                                 <table width="25%" style="background-color:#F8F8F8;border-bottom:1px solid #DBDBDB;margin-left:30%">
+                                     <tr>
+                                        <td style="text-align:right;width:33%;"><apex:commandButton value="Back" onclick="hideStep3(); return false;"/></td>
+                                        <td style="text-align:left;width:33%;">
+                                            <apex:commandButton value="Process Invoice" rendered="{!NOT(isPreprocessing)}" onclick="resetInvDateError();if(!checkSelections()) return false;if(!validateInvoiceDate()) return false;captureBillingActions();" action="{!internalPreprocessInvoice}" reRender="errorInController,errorBagJSONContField,invoiceDatePanel" status="processingStatus2"/>
+                                            <apex:commandButton value="Process Invoice" rendered="{!isPreprocessing}" onclick="resetInvDateError();if(!checkSelections()) return false;if(!validateInvoiceDate()) return false; captureBillingActions();" action="{!preprocessInvoice}" reRender="errorInController,errorBagJSONContField,invoiceDatePanel" status="preprocessingStatus2"/>
+                                        </td>
+                                        <td style="text-align:left;width:33%;">
+                                             <!-- POST INVOICES  BUTTON -->
+                                              <apex:commandButton value="Post Invoice"  disabled="true" /> 
+                                        </td>
+                                     </tr>
+                                 </table>                 
+                             </div>
+                         </div>  
+                    </apex:outputPanel>
+
+                    <apex:outputPanel rendered="{!qbPostingMode=='Manual'}">
+                         <div class="ifsBody" style="border-top: 2px solid #236FBD">
+                             <div class="ifsWizardHeader">
+                                <div id="oppPanelTableHeaderPostingManual" class="ifsthBack" style="width:100%;">
+                                    <table id="imTableHeadersPostingManual" style="table-layout:fixed;border-collapse:collapse;" cellspacing="0" cellpadding="0" width="100%">
+                                        <colgroup span="10">
+                                            <col width="310px" />
+                                            <col width="110px" />
+                                            <col width="110px" />
+                                            <col width="45px" />
+                                            <col width="70px" />
+                                            <col width="70px" />
+                                            <col width="40px" />
+                                            <col width="40px" />
+                                            <col width="60px" />
+                                            <col width="40px" />
+                                        </colgroup>
+                                        <tbody>
+                                            <tr>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Account Name</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Invoice Status</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;">Post Status</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Invoice</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Emailed</td>
+                                                <td class="ifsthBack" style="text-align:center;vertical-align:middle;">Printed</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Email</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Print</td>
+                                                <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Create Only</td> 
+                                                <td class="ifsthBack" style="vertical-align:middle;text-align:center;">Post</td> 
+                                            </tr>
+                                        </tbody>    
+                                    </table>
+                                </div>
+                                 <apex:outputPanel id="oppPanelTablePostingManual" > 
+                                   <apex:outputText rendered="{!noOfAccs == 0}" id="emptyTableMsgPostingManual" style="font: 11px Arial,Helvetica,sans-serif; color:gray; padding: 10px;" value="There are no opportunities for this account, or the opportunities do not conform to the billing rules" />
+                                    <apex:dataTable id="apxTablePostingManual" value="{!billingScenarioAccs}" var="billingScenarioAcc" cellspacing="0" cellpadding="0"  width="100%"   columnsWidth="310px,110px,110px,45px,70px,70px,40px,40px,60px,40px"  styleClass="ifsIMTable"  style="table-layout:fixed;border-collapse:collapse;" rowClasses="ifsTableRows" > 
+                                         <apex:column >
+                                            <apex:outputLink target="_blank" value="/{!billingScenarioAcc.accId}">{!billingScenarioAcc.accName}</apex:outputLink>
+                                         </apex:column>
+                                         <apex:column >
+                                              <apex:inputText id="accNameContainerPostingManual" value="{!billingScenarioAcc.accName}" style="display:none;" />
+                                              <apex:actionStatus onstart="displayOppProcResults();" onstop="hideOppProcResults();" id="loadingOppProcResults"/>  
+
+			                                  <apex:outputPanel rendered="{!billingScenarioAcc.invStatus=='Not Done'}">{!billingScenarioAcc.invStatus}</apex:outputPanel>
+											  <apex:outputLink target="_blank" value="/{!billingScenarioAcc.invoiceId}" rendered="{!OR(billingScenarioAcc.invStatus=='Created Only',billingScenarioAcc.invStatus=='Processed')}">{!billingScenarioAcc.invStatus}</apex:outputLink>                                                    
+
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculateProcessingErrors}" value="{!billingScenarioAcc.invStatus}" reRender="procErrorsPanel" onclick="cleanProcessingErrorsPanel();" oncomplete="displayProcessingErrors(document.getElementById('{!$Component.accNameContainerPostingManual}'));" rendered="{!billingScenarioAcc.invStatus=='Processing Error'}" status="loadingStatus" />
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculateMissingFields}" value="{!billingScenarioAcc.invStatus}" reRender="missingFieldsPanel"  onclick="cleanMissingFieldsPanel();" oncomplete="displayMissingFields(document.getElementById('{!$Component.accNameContainerPostingManual}'));" rendered="{!billingScenarioAcc.invStatus=='Missing Data'}" status="loadingStatus" />
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculateOutOfSync}" value="{!billingScenarioAcc.invStatus}" reRender="outOfSyncPanel"  onclick="cleanOutOfSyncPanel();" oncomplete="displayOutOfSync(document.getElementById('{!$Component.accNameContainerPostingManual}'));" rendered="{!billingScenarioAcc.invStatus=='Out-of-Sync'}" status="loadingStatus" />
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculateInconsistentFields}" value="{!billingScenarioAcc.invStatus}" reRender="inconsistentFieldsPanel"  onclick="cleanInconsistentFieldsPanel();" oncomplete="displayInconsistentFields(document.getElementById('{!$Component.accNameContainerPostingManual}'));" rendered="{!billingScenarioAcc.invStatus=='Inconsistent Data'}" status="loadingStatus" />
+                                        </apex:column>
+                                         <apex:column >
+                                              <apex:outputText value="{!billingScenarioAcc.postStatus}" rendered="{!billingScenarioAcc.postStatus !='Posting Error'}" />
+                                              <apex:commandLink style="color:#D74C3B;" action="{!calculatePostingErrors}" value="{!billingScenarioAcc.postStatus}" reRender="postErrorPanel"  onclick="cleanPostingErrorsPanel();" oncomplete="displayPostingErrors(document.getElementById('{!$Component.accNameContainerPostAuto}'));" rendered="{!billingScenarioAcc.postStatus=='Posting Error'}" status="loadingStatus" />
+                                         </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:outputPanel >
+                                                <apex:outputLink rendered="{!billingScenarioAcc.invAttachmentId != null}" target="_blank" value="/servlet/servlet.FileDownload?file={!billingScenarioAcc.invAttachmentId}" title="Download Invoice PDF">
+                                                    <apex:image rendered="{!billingScenarioAcc.invAttachmentId != null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/pdf.png')}" />
+                                                </apex:outputLink>
+                                                <apex:image rendered="{!billingScenarioAcc.invAttachmentId == null}" value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce,'images/noinvoice.png')}" />
+                                            </apex:outputPanel>
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:outputPanel rendered="{!billingScenarioAcc.isEmailed == true}">
+                                                <img alt="" height="16" width="21" title="Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" /> 
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!billingScenarioAcc.isEmailed == false}">
+                                                <img alt="" height="16" width="21" title="Not Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                            </apex:outputPanel>
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:outputPanel rendered="{!billingScenarioAcc.isPrinted == true}">
+                                                <img alt="" height="16" width="21" title="Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_checked.gif')}" />
+                                            </apex:outputPanel>
+                                            <apex:outputPanel rendered="{!billingScenarioAcc.isPrinted == false}">
+                                                <img alt="" height="16" width="21" title="Not Checked" class="checkImg" src="{!URLFOR($Resource.invoicesforsalesforce,'images/checkbox_unchecked.gif')}" />
+                                            </apex:outputPanel>
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:inputcheckBox id="mail" disabled="{!billingScenarioAcc.isDisabled == true}" onclick="checkEmail(this)"  />
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:inputcheckBox id="print" disabled="{!billingScenarioAcc.isDisabled == true}" onclick="checkPrint(this)"  />
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:inputcheckBox id="onlycreate" disabled="{!billingScenarioAcc.isDisabled == true}" onclick="checkCreateOnly(this)"  />
+                                        </apex:column>
+                                        <apex:column style="text-align:center;">
+                                            <apex:inputcheckBox id="post" disabled="{!OR(billingScenarioAcc.isDisabled==true,billingScenarioAcc.isPostable==false)}" onclick="checkPost(this)"  />
+                                        </apex:column>
+                                    </apex:dataTable>                                       
+                                 </apex:outputPanel>
+                
+                
+                                 <table width="25%" style="background-color:#F8F8F8;border-bottom:1px solid #DBDBDB;margin-left:30%">
+                                     <tr>
+                                        <td style="text-align:right;width:33%;"><apex:commandButton value="Back" onclick="hideStep3(); return false;"/></td>
+                                        <td style="text-align:left;width:33%;">
+                                            <apex:commandButton value="Process Invoice" rendered="{!NOT(isPreprocessing)}" onclick="resetInvDateError();if(!checkSelections()) return false;if(!validateInvoiceDate()) return false;captureBillingActions();" action="{!internalPreprocessInvoice}" reRender="errorInController,errorBagJSONContField,invoiceDatePanel" status="processingStatus1"/>
+                                            <apex:commandButton value="Process Invoice" rendered="{!isPreprocessing}" onclick="resetInvDateError();if(!checkSelections()) return false;if(!validateInvoiceDate()) return false; captureBillingActions();" action="{!preprocessInvoice}" reRender="errorInController,errorBagJSONContField,invoiceDatePanel" status="preprocessingStatus"/>
+                                        </td>
+                                        <td style="text-align:left;width:33%;">
+                                             <!-- POST INVOICES  BUTTON -->
+                                              <apex:commandButton value="Post Invoice"  disabled="false" onclick="if(!captureSelectedOppForPosting()) return false; " action="{!manualPushAccInvoice}" rerender="opportunityPanel,errorInController,errorBagJSONContField,invoiceDatePanel" status="quickbooksPush"/> 
+                                        </td>
+                                     </tr>
+                                 </table>                 
+                             </div>
+                         </div>  
+                    </apex:outputPanel>
+                
+                
+                </apex:outputPanel>
+           
+           </apex:outputPanel>          
+         
+         
+     </apex:outputPanel>  
+
+
+
+        <apex:inputText value="{!integrityCheckJSON}" id="integrityCheckJSONContField" style="display:none"/>
+        <apex:inputText value="{!isError}" id="errorInController" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+        <apex:inputText value="{!sfdcServerUrl}" id="sfdcServerUrlContField" style="display:none"/>
+        <apex:inputText value="{!billingActionsXML}" id="billingActionsContField" style="display:none"/>
+        <apex:inputText value="{!isServerEnabled}" id="isServerEnabledContField" style="display:none"/>
+        <apex:inputText value="{!customMessage}" id="customMessageContField" style="display:none"/>
+        <apex:inputText value="{!isMulticurrencyOrg}" id="isMulticurrencyOrgContField" style="display:none"/>
+
+        <apex:actionFunction action="{!processInvoice}" name="processInvoice" status="processingStatus" reRender="errorInController,errorBagJSONContField,opportunityPanel,invoiceDatePanel" oncomplete="showStep3();"/>
+        <apex:actionFunction action="{!processInvoice}" name="processInvoiceAuto" status="processingStatusAuto" reRender="errorInController,errorBagJSONContField,invoiceDatePanel"/>
+        <apex:actionFunction action="{!internalPreprocessInvoice}" name="internalPreprocessInvoice" status="internalPreprocessingStatus" reRender="errorInController,errorBagJSONContField,invoiceDatePanel"/>
+        <apex:actionFunction action="{!internalPreprocessInvoice}" name="internalPreprocessInvoiceAuto" status="internalPreprocessingStatus2" reRender="errorInController,errorBagJSONContField,invoiceDatePanel"/>
+        <apex:actionFunction action="{!autoPushAccInvoice}" name="autoPushAccInvoice" status="quickbooksPush" reRender="errorInController,errorBagJSONContField,opportunityPanel,invoiceDatePanel" oncomplete="showStep3();"/>
+        <!-- ###########################################
+        
+                ERROR HANDLING MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="errorInfoPanel" style="display:none;">
+            <apex:outputPanel id="errorPanel">
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                CUSTOM MESSAGE MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="customMessagePanel" style="display:none;">
+            <div >
+                <p>Use the text area to add an optional custom message to the invoice processed in this billing session. The custom message will be displayed according to the Custom Message merge field in your invoice templates.</p>
+                <textarea cols="60" rows="5" id="customMessage"/>
+            </div>
+        </div>  
+
+
+        <!-- ###########################################
+        
+                PROCESSING ERRORS MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="invoiceProcessingErrorsPanel" style="display:none;">
+            <apex:outputPanel id="procErrorsPanel">
+                <apex:repeat value="{!processingErrors}" var="processingError">
+                    <p>{!processingError}</p>
+                </apex:repeat>   
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                POSTING ERRORS MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="invoicePostingErrorsPanel" style="display:none;">
+            <apex:outputPanel id="postErrorPanel">
+                <apex:repeat value="{!postingErrors}" var="postingError">
+                    <p>{!postingError}</p>
+                </apex:repeat>   
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                INCONSISTENT FIELDS MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="invoiceInconsistentDataFieldsPanel" style="display:none;">
+            <apex:outputPanel id="inconsistentFieldsPanel">
+                <apex:outputPanel rendered="{!noOfInconsistentFields > 0}" >
+                    <apex:outputText value="The following merge fields used in the invoice template have different values over the opportunities included in the invoice." style="font-weight:normal;font-style:normal;"/>
+                    <apex:dataTable value="{!inconsistentFields}" var="inconsistentField" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:column > 
+                            <apex:facet name="header">Merge field</apex:facet>
+                            <apex:outputText value="{!inconsistentField.fieldName}" />
+                        </apex:column>
+                    </apex:dataTable>               
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                MISSING DATA FIELDS MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="invoiceMissingDataFieldsPanel" style="display:none;">
+            <apex:outputPanel id="missingFieldsPanel">
+                <apex:outputPanel rendered="{!noOfMissingMFs > 0}" >
+                    <apex:outputText value="The following merge fields or roll-up summary fields used in the invoice template are missing data" style="font-weight:normal;font-style:normal;"/>
+                    <apex:dataTable value="{!missingMergeFields}" var="missingMergeField" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:column > 
+                            <apex:facet name="header">Merge field</apex:facet>
+                            <apex:outputText value="{!missingMergeField.fieldName}" />
+                        </apex:column>
+                    </apex:dataTable>               
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!noOfMissingLICols > 0}" >
+                    <apex:outputPanel rendered="{!IF(AND(noOfMissingMFs > 0,noOfMissingLICols > 0),true,false)}" ><hr/></apex:outputPanel>
+                    <apex:outputText value="The following fields used in the invoice items table columns are missing data" style="font-weight:normal;font-style:italic;"/>
+                    <apex:dataTable value="{!missingLineItemCols}" var="missingLineItemCol" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                        <apex:column >
+                            <apex:facet name="header">Merge field</apex:facet>
+                            <apex:outputText value="{!missingLineItemCol.fieldName}" />
+                        </apex:column>
+                    </apex:dataTable>               
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </div>  
+
+
+        <!-- ###########################################
+        
+                OUT OF SYNC MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="invoiceOutOfSyncPanel" style="display:none;">
+            <apex:outputPanel id="outOfSyncPanel">
+                <!-- Out of sync fields -->
+                <apex:outputPanel rendered="{!noOfOutOfSyncFields > 0}">
+                    <apex:outputText value="The following merge fields values in the account are out-of-sync with the values in the existing invoice" style="font-weight:normal;font-style:normal;"/>
+                    <apex:dataTable value="{!outOfSyncFields}" var="outOfSyncField" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:column >
+                            <apex:facet name="header">Merge field</apex:facet>
+                            <apex:outputText value="{!outOfSyncField.oppFieldValuePair.fieldName}" />
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Account side field value</apex:facet>
+                            <apex:outputText value="{!outOfSyncField.oppFieldValuePair.fieldValue}" rendered="{!outOfSyncField.oppFieldValuePair.fieldValue!=null}"/>
+                            <apex:outputText value="missing data" rendered="{!outOfSyncField.oppFieldValuePair.fieldValue==null}" style="color:#D74C3B;"/>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Invoice side field value</apex:facet>
+                            <apex:outputText value="{!outOfSyncField.invFieldValuePair.fieldValue}" rendered="{!outOfSyncField.invFieldValuePair.fieldValue!=null}"/>
+                            <apex:outputText value="missing data" rendered="{!outOfSyncField.invFieldValuePair.fieldValue==null}" style="color:#D74C3B"/>
+                        </apex:column>
+                    </apex:dataTable>
+                </apex:outputPanel>
+                <!-- Out of sync opp line items -->
+                <apex:outputPanel rendered="{!noOfOutOfSyncOppLineItems > 0}" >
+                <apex:outputPanel rendered="{!IF(AND(noOfOutOfSyncFields > 0,noOfOutOfSyncOppLineItems > 0),true,false)}" ><hr/></apex:outputPanel>
+                <apex:outputText value="The following opportunity line items do not have a corresponding invoice line item in the existing invoice"  style="font-weight:normal;font-style:normal;"/>
+                    <table cellspacing="0" cellpadding="1" border="1" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:repeat value="{!outOfSyncOppLineItems}" var="outOfSyncLineItem">
+                        <tr style="vertical-align:top;">                
+                            <apex:repeat value="{!outOfSyncLineItem.fieldValuePairs}" var="fieldValuePair">
+                            <td style="vertical-align:top;">
+                                <apex:outputPanel >
+                                    <apex:outputText value="{!fieldValuePair.fieldValue}" />
+                                    <apex:outputText value="missing data" rendered="{!fieldValuePair.fieldValue==null}" style="color:#D74C3B"/>
+                                </apex:outputPanel>
+                            </td>
+                            </apex:repeat>
+                        </tr>
+                        </apex:repeat>
+                    </table>
+                </apex:outputPanel>
+                <!-- Out of sync inv line items -->
+                <apex:outputPanel rendered="{!noOfOutOfSyncInvLineItems > 0}">
+                <apex:outputPanel rendered="{!OR(noOfOutOfSyncFields > 0,noOfOutOfSyncOppLineItems > 0)}" ><hr/></apex:outputPanel>
+                <apex:outputText value="The following invoice line items in the existing invoice do not have a corresponding opporuntity line item"  style="font-weight:normal;font-style:normal;"/>
+                    <table cellspacing="0" cellpadding="1" border="1" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                        <apex:repeat value="{!outOfSyncInvLineItems}" var="outOfSyncLineItem">
+                        <tr style="vertical-align:top;">                
+                            <apex:repeat value="{!outOfSyncLineItem.fieldValuePairs}" var="fieldValuePair">
+                            <td style="vertical-align:top;">
+                                <apex:outputPanel >
+                                    <apex:outputText value="{!fieldValuePair.fieldValue}" />
+                                    <apex:outputText value="missing data" rendered="{!fieldValuePair.fieldValue==null}" style="color:#D74C3B"/>
+                                </apex:outputPanel>
+                            </td>
+                            </apex:repeat>
+                        </tr>
+                        </apex:repeat>
+                    </table>
+                </apex:outputPanel>
+
+                <!-- Additional template items -->
+                <apex:outputPanel rendered="{!OR(noOfAdditionalMergeFields > 0,noOfAdditionalTableColumns >0)}">
+                    <apex:outputPanel rendered="{!OR(noOfOutOfSyncFields > 0,noOfOutOfSyncOppLineItems > 0,noOfOutOfSyncInvLineItems > 0)}" ><hr/></apex:outputPanel>
+                    <apex:outputText value="The following merge fields and invoice table columns have been added to the invoice template after the existing invoice was created, or the invoice was created using a different billing scenario."  style="font-weight:normal;font-style:normal;"/>
+                        <table cellspacing="0" cellpadding="1" border="0" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                            <tr style="vertical-align:top;">
+                                <td vertical-align="top">
+                                    <apex:outputPanel >
+                                        <apex:dataTable value="{!templateAdditionalMergeFields}" var="additionalMergeField" rendered="{!noOfAdditionalMergeFields > 0}" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                                            <apex:column >
+                                                <apex:facet name="header">Merge field</apex:facet>
+                                                <apex:outputText value="{!additionalMergeField}" />
+                                            </apex:column>
+                                        </apex:dataTable>
+                                    </apex:outputPanel>
+                                </td>
+                                <td vertical-align="top">
+                                    <apex:outputPanel >
+                                        <apex:dataTable value="{!templateAdditionalTableColumns}" var="additionalTableColumn" rendered="{!noOfAdditionalTableColumns > 0}" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                                            <apex:column >
+                                                <apex:facet name="header">Invoice items table column</apex:facet>
+                                                <apex:outputText value="{!additionalTableColumn}" />
+                                            </apex:column>
+                                        </apex:dataTable>
+                                    </apex:outputPanel>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+                <!-- Removed template items -->
+                <apex:outputPanel rendered="{!OR(noOfRemovedMergeFields > 0,noOfRemovedTableColumns >0)}">
+                    <apex:outputPanel rendered="{!OR(noOfOutOfSyncFields > 0,noOfOutOfSyncOppLineItems > 0,noOfOutOfSyncInvLineItems > 0,noOfAdditionalMergeFields > 0,noOfAdditionalTableColumns >0)}" ><hr/></apex:outputPanel>
+                    <apex:outputText value="The following merge fields and invoice table columns have been removed from the invoice template after the existing invoice was created, or the invoice was created using a different billing scenario."  style="font-weight:normal;font-style:normal;"/>
+                        <table cellspacing="0" cellpadding="1" border="0" style="margin-bottom:10px;margin-top:10px;border-collapse:collapse;">
+                            <tr style="vertical-align:top;">
+                                <td vertical-align="top">
+                                    <apex:outputPanel >
+                                        <apex:dataTable value="{!templateRemovedMergeFields}" var="removedMergeField" rendered="{!noOfRemovedMergeFields > 0}" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                                            <apex:column >
+                                                <apex:facet name="header">Merge field</apex:facet>
+                                                <apex:outputText value="{!removedMergeField}" />
+                                            </apex:column>
+                                        </apex:dataTable>
+                                    </apex:outputPanel>
+                                </td>
+                                <td vertical-align="top">
+                                    <apex:outputPanel >
+                                        <apex:dataTable value="{!templateRemovedTableColumns}" var="removedTableColumn" rendered="{!noOfRemovedTableColumns > 0}" cellspacing="0" cellpadding="1" border="1" headerClass="ifsthBack" style="margin-bottom:5px;margin-top:5px;border-collapse:collapse;">
+                                            <apex:column >
+                                                <apex:facet name="header">Invoice items table column</apex:facet>
+                                                <apex:outputText value="{!removedTableColumn}" />
+                                            </apex:column>
+                                        </apex:dataTable>
+                                    </apex:outputPanel>
+                                </td>
+                            </tr>
+                        </table>
+                    </apex:outputPanel>
+            </apex:outputPanel>
+        </div>  
+
+
+
+        <!-- ###########################################
+        
+                ACTION STATUS
+        
+         ###############################################-->
+        <apex:actionStatus onstart="displayProcessing();" onstop="sendProcessInvoice();" id="processingStatus1"/>
+        <apex:actionStatus onstart="displayProcessing();" onstop="hideProcessing();" id="processingStatus"/>
+        <apex:actionStatus onstart="displayProcessing();" onstop="sendProcessInvoice();" id="internalPreprocessingStatus"/>
+        <apex:actionStatus onstart="displayPreprocessing();" onstop="sendInternalPreprocessing();" id="preprocessingStatus"/>
+        <apex:actionStatus onstart="displayProcessing();" onstop="sendProcessInvoiceAuto();" id="processingStatus2"/>
+        <apex:actionStatus onstart="displayProcessing();" onstop="postInvoice();" id="processingStatusAuto"/>
+        <apex:actionStatus onstart="displayQBPush();" onstop="hideQBPush();" id="quickbooksPush"/>   
+        
+        <apex:actionStatus onstart="displayPreprocessing();" onstop="sendInternalPreprocessInvoiceAuto();" id="preprocessingStatus2"/>
+        <apex:actionStatus onstart="displayProcessing();" onstop="sendProcessInvoiceAuto();" id="internalPreprocessingStatus2"/>
+        <apex:actionStatus onstart="displayLoading();" onstop="hideLoading();" id="loadingStatus"/>
+        <apex:actionStatus onstart="displayLoading();"  id="checkStatus"/>
+        <div id="statusMsgContainer" class="statusPopup" >
+            <div  class="popupStatus1" >
+            </div>
+            <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+                <div style="text-align:center;margin-top:15px;" > 
+                    <table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+                        <tr>
+                            <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+                            <td><span id="statusMsg" style="z-index:153;"></span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <apex:actionFunction action="{!goToStep2}" name="redirectToStep2" status="loadingStatus" oncomplete="showStep2();" reRender="billingRulesPanel,errorInController,errorBagJSONContField,integrityCheckJSONContField,oppBillingRulesPanel1,oppBillingRulesPanel2,oppBillingRulesPanel3,oppBillingRulesPanel4,oppLineItemBillingRulesPanel1,oppLineItemBillingRulesPanel2,oppLineItemBillingRulesPanel3,oppLineItemBillingRulesPanel4,revenueScheduleBillingRulesPanel1,revenueScheduleBillingRulesPanel2,revenueScheduleBillingRulesPanel3,revenueScheduleBillingRulesPanel4,isServerEnabledContField" />  
+
+</apex:form>
+
+</apex:page>

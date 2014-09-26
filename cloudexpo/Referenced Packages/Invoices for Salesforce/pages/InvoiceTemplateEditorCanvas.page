@@ -1,0 +1,1709 @@
+<apex:page standardController="kognoz1__Invoice2_Template__c" extensions="kognoz1.InvoiceTemplateEditorController" tabStyle="kognoz1__Invoice2_Template__c" title="Invoice Template">
+
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/colorpicker.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-json-2.2.js')}"></script> 
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-a-tools-1.5.1.js')}"></script> 
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/colorpicker.js')}"></script> 
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce,'js/invoicesforsalesforce.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce,'js/transpose.js')}"></script>
+
+    <style type="text/css">
+        #mainContainer .ui-selected{border: 0 none;}
+        .lookupInput{display:inline-table;}
+    </style>
+
+    <script type="text/javascript" >
+    var enableMove = true;
+    var textBoxItemsCounter = 0; 
+    var imageItemsCounter = 0; 
+    var productsTableCounter = 0; 
+    var summaryTableCounter = 0; 
+    var lineItemsCounter = 0; 
+    function removedMfClass() {}
+    function mfTypeClass() {}  
+    var rollupFieldsDescription = new Array();
+
+    $(function() {
+        $('#mainContainer').click(function(e){
+            if(e.target.id=="mainContainer")
+            {
+                if($(".ui-selected").size()>0)
+                {
+                    $(".ui-selected").each(function() {
+                        $(this).removeClass("ui-selected");
+                        $(".showEditBt").addClass("hideEditBt");
+                        $(".showEditBt").removeClass("showEditBt");
+                    });
+                }
+                $("div[id=mainContainer]").children().children("div[id=sizeDiv]").css("display","none");
+                $("div[id=mainContainer]").children().children("div[id=resizeDiv]").css("display","none");
+            }
+        });
+
+        $('#mainContainer').keydown(function(e){
+            if(e.keyCode==13)
+                e.preventDefault();
+        });
+
+        $('.removeBoxBt').live('click', function() {
+            if ($(this).hasClass('removeLine'))
+                $(this).parent().parent().remove();
+            else
+            {   
+                if($(".ui-selected").attr("id")=="prodsTable")
+                {
+                    selectedColumnsArray = [];
+                    prevselectedColumnsArray = [];
+                    $('.selectedField').each(function(index) {
+                        $(this).removeClass('selectedField');
+                        $(this).addClass('selectableField');
+                        $('#selectable').append($(this).clone().removeClass('ui-selected'));
+                        $(this).remove();
+                    });
+                    $("input[id=ptBorderColor]").val("#000000");
+                    $("input[id=ptTableType]").val("model1");
+                    $("select[id=ptCellHeightSelector]").val("10");
+                    $("#ptHeadFontWeight").val("normal");
+                    $("#ptHeadFontStyle").val("normal");
+                    $("#ptHeadTextAlign").val("left");
+                    $("#ptHeaderFontSizeSelect").val("9px");
+                    $("#ptHeaderFontFamilySelect").val("Arial, Helvetica, sans-serif");
+                    $("input[id=ptHeadBackColor]").val("#FFFFFF");
+                    $("input[id=ptHeadColor]").val("000000");
+                    $("#ptBodyFontWeight").val("normal");
+                    $("#ptBodyFontStyle").val("normal");
+                    $("#ptBodyFontSizeSelect").val("9px");
+                    $("#ptBodyFontFamilySelect").val("Arial, Helvetica, sans-serif");
+                    $("input[id=ptBodyBackColor]").val("#FFFFFF");
+                    $("input[id=ptBodyColor]").val("#000000");
+                    generateLabelAlignWidthTable();
+                    initColsAlignment();
+                    initPTProperties();
+                    previewTable();         
+                    productsTableCounter--;
+                }
+                if($(".ui-selected").attr("id").indexOf("summaryTable")==0)
+                {
+                    stColsArray = [];
+                    prevstColsArray = [];
+                    $("#ncols").html(0);
+                    $("#nrows").html(0);
+                    $("input[id=stTableType]").val("model1");
+                    $("input[id=stBorderColor]").val("#000000");
+                    $("select[id=stCellHeightSelector]").val("10");
+                    createWidthTable();                     
+                    cleanColorPickers();
+                    generateSummaryTable();
+                    initSTProperties();
+                    summaryTableCounter--;
+                }
+                $(".ui-selected").remove();
+            }
+        });
+        
+        $("#oppPreviewLink").live("click",function(){
+
+            $("#oppPreviewLink").css('display', 'none');
+            if($("#oppPreviewLink").html()!="Select opportunity")
+                $(".oppPreviewInput").val($("#oppPreviewLink").html());
+            else
+                $(".oppPreviewInput").val("");
+            $("#previewOppInp").css('display', 'inline');
+        });
+
+        $("#textBoxEditorBtn").click(function(event) {
+            // unselect all selected items
+            $(".ui-selected").removeClass("ui-selected");
+            $(".showEditBt").addClass("hideEditBt");
+            $(".showEditBt").removeClass("showEditBt");
+            cleanupmfui();
+            initNewTxtBoxProperties();
+            $("#dynDataTabs").tabs("select",0);
+            $("#textBoxEditor").dialog("option","dialogMode","createNewItem");
+            $("#textBoxEditor").dialog("open");
+        });
+
+        // image editor button onclick
+        $("#imageEditorBtn").click(function(event) {
+            // unselect all selected items
+            $(".ui-selected").removeClass("ui-selected");
+            $(".showEditBt").addClass("hideEditBt");
+            $(".showEditBt").removeClass("showEditBt");
+            // open the image editor
+            $("#imageEditor").dialog("option","dialogMode","createNewItem");
+            $("#imageEditor").dialog("open");
+        });
+
+        // product table editor button onclick
+        $("#productTableEditorBtn").click(function(event) {
+            if(productsTableCounter>0)
+                window.alert("There is already an invoice items table on the canvas.\nDouble click on it to edit.");
+            else
+            {
+                // unselect all selected items
+                $(".ui-selected").removeClass("ui-selected");
+                $(".showEditBt").addClass("hideEditBt");
+                $(".showEditBt").removeClass("showEditBt");
+                // open the product's table editor
+                sortAvailableColumns();
+                initNewPTProperties();
+                $("#productTableEditor").dialog("option","dialogMode","createNewItem");
+                $("#productTableEditor").dialog("open");
+            }
+        });
+
+        // summary table editor button onclick
+        $("#summaryTableEditorBtn").click(function(event) {
+            if(summaryTableCounter>0)
+                window.alert("There is already a summary table on the canvas.\nDouble click on it to edit.");
+            else
+            {
+                // unselect all selected items
+                $(".ui-selected").removeClass("ui-selected");
+                $(".showEditBt").addClass("hideEditBt");
+                $(".showEditBt").removeClass("showEditBt");
+                // open the summary table editor
+                initNewSTProperties();
+                $("#dynSTDataTabs").tabs("select",0);
+                $("#summaryTableEditor").dialog("option","dialogMode","createNewItem");
+                $("#summaryTableEditor").dialog("open");
+            }
+        });
+
+        // summary table editor button onclick
+        $("#horizontalLineBtn").click(function(event) {
+            // unselect all selected items
+            $(".ui-selected").removeClass("ui-selected");
+            $(".showEditBt").addClass("hideEditBt");
+            $(".showEditBt").removeClass("showEditBt");
+            initNewLineProperties();
+            $("#lineEditor").dialog("option","dialogMode","createNewItem");
+            $("#lineEditor").dialog("option","lineType","HorizontalLine");
+            $("#lineEditor").dialog("open");
+        });
+
+        $("#verticalLineBtn").click(function(event) {
+            // unselect all selected items
+            $(".ui-selected").removeClass("ui-selected");
+            $(".showEditBt").addClass("hideEditBt");
+            $(".showEditBt").removeClass("showEditBt");
+            initNewLineProperties();
+            $("#lineEditor").dialog("option","dialogMode","createNewItem");
+            $("#lineEditor").dialog("option","lineType","VerticalLine");
+            $("#lineEditor").dialog("open");
+        });
+
+        /*---------------------------------
+            Editors
+        ----------------------------------*/
+        $("#textBoxEditor").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 850,
+                height:'auto',
+                minWidth: 850,
+                title:'Create/Edit text content'
+        });
+
+        $("#imageEditor").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                minHeight:350,
+                title:'Create/Edit image'
+        });
+
+        $("#productTableEditor").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 800,
+                height:'auto',
+                minWidth:820,
+                title:'Create/Edit invoice line items table'
+        });
+
+        $("#summaryTableEditor").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 870,
+                height:'auto',
+                minWidth: 890,
+                title:'Create/Edit summary table'
+        });
+
+        $("#errorInfoPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Processing errors'
+        });
+        
+        $("#lineEditor").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:230,
+                title:'Create/Edit line'
+        });
+        
+        $(document).bind('keydown', function(event) {
+            switch(event.which) 
+            {
+                case 37: {
+                    moveLeft();
+                    break;
+                }
+                case 38:{
+                    moveUp()
+                    break;
+                }
+                case 39:{
+                    moveRight();
+                    break;
+                }
+                case 40:{
+                    moveDown();
+                    break;
+                }
+            }
+        });
+
+
+        // text boxes
+        var txtBoxesJsonObjStr = $("input[id*=textBoxesJSONContField]").val();
+        if(txtBoxesJsonObjStr)
+        {
+            var txtBoxesJsonObj = JSON.parse(txtBoxesJsonObjStr);
+            for(var itemIndex=0; itemIndex< txtBoxesJsonObj.length;itemIndex++)
+            {
+                var txboxContainerStyle = txtBoxesJsonObj[itemIndex].style;
+                var txtboxContent = txtBoxesJsonObj[itemIndex].content.replace(/#lb#/g,'<br>');
+                txtBoxesJsonObj[itemIndex].content = txtboxContent; 
+                var txtboxId = txtBoxesJsonObj[itemIndex].box;
+                var txtboxWrapping = txtBoxesJsonObj[itemIndex].wrapping;
+                $("#mainContainer").append('<div id="'+txtboxId+'"  style="'+txboxContainerStyle+';" ></div>');
+                var textBoxContainerSelector = ("#"+txtboxId);
+                $(textBoxContainerSelector).append('<div id="txt'+txtboxId+'txt" '+
+                'style="position:absolute; width: 100%; height:100%; padding:2px;overflow:hidden;">'+txtboxContent+'</div>');//white-space:nowrap;
+                var imgsrc = $("#deleteEditorItemImg").attr("src");
+                var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+                var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+                $(textBoxContainerSelector).append(imgNode);
+                var sizeNode = '<div id="sizeDiv" style="position:absolute;top:-16px;left:0px;width:70px; height:15px;background-color:#FFFFFF;color:red;font-size:9px;font-weight:bold;display:none" />';
+                var resizeNode = '<div id="resizeDiv" style="position:absolute;top:-16px;left:0px;width:130px; height:15px;background-color:#DBDBDB;color:red;font-size:9px;font-weight:bold;display:none" > W:<input id="width"type"text" size="3" style="font-size:0.85em;color:red;"/>&nbsp;H:<input id="height" type="text" size="3" style="font-size:0.85em;color:red"/>&nbsp;<a id="doneResize" style="color:red;">Done</a></div>';
+                $(textBoxContainerSelector).append(sizeNode);
+                $(textBoxContainerSelector).append(resizeNode);
+                $(textBoxContainerSelector).children("div[id=sizeDiv]").click(function(){
+                    $(this).css("display","none");
+                    var w = $(this).parent("div").width().toFixed();
+                    var h = $(this).parent("div").height().toFixed();
+                    $(this).siblings("div[id=resizeDiv]").children("input[id=width]").val(w);
+                    $(this).siblings("div[id=resizeDiv]").children("input[id=height]").val(h);
+                    $(this).siblings("div[id=resizeDiv]").css("display","block");                                   
+                });
+                $(textBoxContainerSelector).children("div[id=resizeDiv]").children("a[id=doneResize]").click(function(){
+                    $(this).parent("div[id=resizeDiv]").css("display","none");
+                    var w = $(this).siblings("input[id=width]").val();
+                    var h = $(this).siblings("input[id=height]").val();
+                    $(this).parent("div[id=resizeDiv]").parent().width(w);
+                    $(this).parent("div[id=resizeDiv]").parent().height(h);
+                    $(this).parent("div[id=resizeDiv]").siblings("div[id=sizeDiv]").css("display","block"); 
+                });                             
+                $(textBoxContainerSelector).click(function() {
+                    $('.ui-selected').each(function(index){
+                        $(this).removeClass('ui-selected');
+                        $(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+                        $(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+                        $(this).children("div[id=sizeDiv]").css("display","none");
+                    });
+                    $(this).addClass('ui-selected');
+                    $(this).children('.imgsDiv').children('img').addClass('showEditBt');
+                    $(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+                    var w = parseInt($(this).css("width").replace("px","")).toFixed();
+                    var h = parseInt($(this).css("height").replace("px","")).toFixed();
+                    $(this).children("div[id=sizeDiv]").html("W:"+w+" H:"+h);
+                    $(this).children("div[id=sizeDiv]").css("display","block");
+                    var zindex = calculateMaxZIndex();
+                    $(this).css("z-index",zindex);
+                });
+                $(textBoxContainerSelector).draggable({
+                    containment: 'parent',
+                    grid: [1, 1], 
+                    stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable], div[id^=lineElement]" 
+                });
+                $(textBoxContainerSelector).resizable({
+                    grid: [1,1], 
+                    autoHide:true,
+                    resize:function(event,ui){
+                        $(this).children("div[id=sizeDiv]").html("W:"+ui.size.width.toFixed()+" H:"+ui.size.height.toFixed());
+                        $(this).children("div[id=sizeDiv]").css("display","block");
+                    }
+                });
+                $(textBoxContainerSelector).data(txtboxId,txtBoxesJsonObj[itemIndex]);
+                $(textBoxContainerSelector).dblclick(function() {
+                    var elementObj = $(this).data($(this).attr("id"));
+                    $("textarea[id$=toEditText]").val(elementObj.content.replace(/<br>/g,'\n'));
+                    $("textarea[id$=toEditText]").attr("style",elementObj.edstyle);
+                    var wrapping = elementObj.wrapping;
+                    if(wrapping=="normal")
+                        $("#textWrapEnable").attr("checked",true);
+                    else 
+                        $("#textWrapEnable").attr("checked",false);
+                    $("textarea[id$=toEditText]").css("white-space","");
+                    $("#dynDataTabs").tabs("select",0);
+                    initTxtProperties();
+                    $("textarea[id$=toEditText]").css("width","350px");
+                    $("textarea[id$=toEditText]").css("height","50px");
+                    $("#textBoxEditor").dialog("option","dialogMode","editExistingItem");
+                    $("#textBoxEditor").dialog("option","selectorId",$(this).attr("id"));
+                    $("#textBoxEditor").dialog("open");
+                });
+                
+            }
+            textBoxItemsCounter = txtBoxesJsonObj.length;
+        }
+            
+        // images
+        var imagesJsonObjStr = $("input[id*=imagesJSONContField]").val();
+        if(imagesJsonObjStr)
+        {
+            var imagesJsonObj = JSON.parse(imagesJsonObjStr);
+            for(var itemIndex=0; itemIndex< imagesJsonObj.length;itemIndex++)
+            {
+                var imageContainerStyle = imagesJsonObj[itemIndex].style;
+                var imageId = imagesJsonObj[itemIndex].attId;
+                var containerId = imagesJsonObj[itemIndex].box;
+                $("#mainContainer").append('<div id="'+containerId+'"  style="'+imageContainerStyle+'" ></div>');
+                var imageContainerSelector = $("#"+containerId);
+                $(imageContainerSelector).append('<img alt="" attId="'+imageId+'" id="image'+containerId+'" src="/servlet/servlet.FileDownload?file='+imageId+'" />');
+                var imageSelectorOnCanvas = "#image"+containerId;
+                var imgStyle = imagesJsonObj[itemIndex].imagestyle;
+                var imgsrc = $("#deleteEditorItemImg").attr("src");
+                var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+                var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+                $(imageContainerSelector).append(imgNode);
+                var sizeNode = '<div id="sizeDiv" style="position:absolute;top:-16px;left:0px;width:70px; height:15px;background-color:#FFFFFF;color:red;font-size:9px;font-weight:bold;display:none" />';
+                $(imageContainerSelector).append(sizeNode);
+                $(imageContainerSelector).children("div[id=sizeDiv]").click(function(){
+                    window.alert("Image resizing preserves the image aspect ratio. Use the handle to resize it.");
+                });
+                $(imageSelectorOnCanvas).data("image"+containerId,imagesJsonObj[itemIndex]);
+                $(imageSelectorOnCanvas).load(function() {
+                    var imageObj = $(this).data($(this).attr("id"));
+                    var imgStyle = imageObj.imagestyle;
+                    var imgStyleParts = imgStyle.split(";");
+                    var imgWidth;
+                    var imgHeight;
+                    if(imgStyleParts.length>0)
+                    {
+                        for(var i=0; i<imgStyleParts.length;i++)
+                        {
+                            indvStyle = imgStyleParts[i];
+                            var parts = indvStyle.split(":");
+                            if(parts.length>0)
+                            {
+                                if($.trim(parts[0])=="width")
+                                    imgWidth = $.trim(parts[1].replace("px",""));
+                                if($.trim(parts[0])=="height")
+                                    imgHeight = $.trim(parts[1].replace("px",""));
+                            }
+                        }
+                        if(imgHeight && imgWidth)
+                        {
+                            $(this).css("width",imgWidth);
+                            $(this).css("height",imgHeight);
+                            $(this).css("position","absolute");
+                            $(this).parent().css("width",$(this).css("width"));
+                            $(this).parent().css("height",$(this).css("height"));
+                        }
+                    }
+                });
+                $(imageContainerSelector).resizable({
+                    grid: [1,1],
+                    aspectRatio:true,
+                    alsoResize: imageSelectorOnCanvas,
+                    autoHide:true,
+                    resize:function(event,ui){
+                        $(this).children("div[id=sizeDiv]").html("W:"+ui.size.width.toFixed()+" H:"+ui.size.height.toFixed());
+                        $(this).children("div[id=sizeDiv]").css("display","block");
+                    }
+                });
+                $(imageContainerSelector).draggable({
+                    containment: 'parent',
+                    grid: [1, 1], 
+                    stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable], div[id^=lineElement]" 
+                });
+                $(imageContainerSelector).click(function() {
+                    $('.ui-selected').each(function(index){
+                        $(this).removeClass('ui-selected');
+                        $(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+                        $(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+                        $(this).children("div[id=sizeDiv]").css("display","none");
+                    });
+                    $(this).addClass('ui-selected');
+                    $(this).children('.imgsDiv').children('img').addClass('showEditBt');
+                    $(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+                    var w = parseInt($(this).css("width").replace("px","")).toFixed();
+                    var h = parseInt($(this).css("height").replace("px","")).toFixed();
+                    $(this).children("div[id=sizeDiv]").html("W:"+w+" H:"+h);
+                    $(this).children("div[id=sizeDiv]").css("display","block");
+                    var zindex = calculateMaxZIndex();
+                    $(this).css("z-index",zindex);
+                });
+                var editorObj = new Object();
+                editorObj.fileImgPreview    = '<img alt="" src="/servlet/servlet.FileDownload?file='+imageId+'">';
+                editorObj.imgId             =   imageId;
+                editorObj.selImg            =   imageId;
+                $(imageContainerSelector).data(containerId,editorObj);
+                $(imageContainerSelector).dblclick(function() {
+                    var edObj = $(this).data($(this).attr("id"));
+                    $("#fileImagePreview").html(edObj.fileImgPreview);
+                    $("#imageFileId").html(edObj.imgId);
+                    $("select[id$=imageList]").val(edObj.selImg);
+                    $("#imageEditor").dialog("option","dialogMode","editExistingItem");
+                    $("#imageEditor").dialog("option","selectorId",$(this).attr("id"));
+                    $("#imageEditor").dialog("open");
+                });
+                    
+            }
+            imageItemsCounter = imagesJsonObj.length;
+        }
+
+        // product table
+        var tableJsonObjStr = $("input[id*=templateTableJSONContField]").val();
+        if(tableJsonObjStr) 
+        {
+            var tableJsonObj = JSON.parse(tableJsonObjStr);
+            $(tableJsonObj).each(function(i){
+                var trHeader = '';
+                var trDummy = '';
+                var totalWidth = 0;
+                var columns = '';
+    
+                var ptTableModel = tableJsonObj[i].model;
+                var ptTableBorderColor = tableJsonObj[i].bordercolor;
+                var ptTableCellHeight = tableJsonObj[i].cellheight;
+                var columnsArray = tableJsonObj[i].headers;
+
+                var headFontWeight = tableJsonObj[i].headfontweight;
+                var headFontStyle = tableJsonObj[i].headfontstyle;
+                var headTextAlign = tableJsonObj[i].headtextalign;
+                var headFontSize = tableJsonObj[i].headfontsize;
+                var headFontFamily = tableJsonObj[i].headfontfamily;
+                var headBackColor = tableJsonObj[i].headbackcolor;
+                var headColor = tableJsonObj[i].headcolor;
+                var bodyFontSize = tableJsonObj[i].bodyfontsize;
+                var bodyFontFamily = tableJsonObj[i].bodyfontfamily;
+                var bodyBackColor = tableJsonObj[i].bodybackcolor;
+                var bodyColor = tableJsonObj[i].bodycolor;
+                var bodyFontWeight = tableJsonObj[i].bodyfontweight;
+                var bodyFontStyle = tableJsonObj[i].bodyfontstyle;
+                var bodyStyle = 'font-weight:'+bodyFontWeight+';font-style:'+bodyFontStyle+';font-size:'+bodyFontSize+';font-family:'+bodyFontFamily+';background-color:'+bodyBackColor+';color:'+bodyColor+';';
+
+                $(columnsArray).each(function(index){
+                    var colAuxiliar = '<COL >';
+                    columns = columns + colAuxiliar;
+                    var colWidth = parseFloat(this.width);
+                    totalWidth = totalWidth + colWidth;
+                    
+                    var colWidthCss;
+                    if($.trim(ptTableModel)=='model1' || $.trim(ptTableModel)=='model5')
+                    {
+                        var cWidth = colWidth-1;
+                        colWidthCss = 'width:'+cWidth+'px;';
+                    }
+                    else if($.trim(ptTableModel)=='model4' || $.trim(ptTableModel)=='model6')
+                    {
+                        var cWidth;
+                        if(index==0 || index==$(columnsArray).size()-1)
+                            cWidth = colWidth-1;
+                        else
+                            cWidth = colWidth;
+                            colWidthCss = 'width:'+cWidth+'px;';
+                    }
+                    else
+                        colWidthCss = 'width:'+colWidth+'px;';
+
+                    var th = '<th idField="'+this.fieldName+'" fieldType="'+this.fieldType+'" fieldPrecision="'+this.fieldPrecision+'"  fieldScale="'+this.fieldScale+'" fieldLength="'+this.fieldLength+'" objType="'+this.parent+'" style="'+colWidthCss+';border-color:'+ptTableBorderColor+';font-weight:'+headFontWeight+';font-style:'+headFontStyle+';text-align:'+headTextAlign+';font-size:'+headFontSize+';font-family:'+headFontFamily+';background-color:'+headBackColor+';color:'+headColor+';overflow:hidden; white-space:nowrap;vertical-align:middle;">'+this.label+'</th>';
+                    trHeader = trHeader + th;
+                    trDummy = trDummy + '<td style=" white-space:nowrap;overflow:hidden;vertical-align:middle;'+bodyStyle+';text-align:'+this.textalign+';border-color:'+ptTableBorderColor+';"> sample </td>';
+                    
+                    
+                    var field = this.fieldName; 
+                    var selColumnArray = $.grep($('.selectableField'),function(obj){return $(obj).attr("idfield")==field;});
+                    if(selColumnArray.length>0)
+                    {
+                        var selColumn = selColumnArray[0];
+                        $(selColumn).removeClass('selectableField');
+                        $(selColumn).addClass('selectedField');
+                        $('#choosen').append($(selColumn).clone().removeClass('ui-selected'));
+                        $(selColumn).remove();
+                        
+                        var selColItem = new selectedColClass();
+                        selColItem.type = this.parent;
+                        selColItem.field = this.fieldName;
+                        selColItem.fieldType = this.fieldType;
+                        selColItem.fieldPrecision = this.fieldPrecision;
+                        selColItem.fieldScale = this.fieldScale;
+                        selColItem.fieldLength = this.fieldLength;
+                        selColItem.label = this.label;
+                        selColItem.width = this.width/20; 
+                        selColItem.alignment = this.textalign;
+                        selColItem.order = selectedColumnsArray.length+1;
+                        selectedColumnsArray.push(selColItem);
+                        
+                    }
+                    
+                });
+                trHeader = '<tr id="tHeader" style="border-color:'+ptTableBorderColor+';">'+trHeader+'</tr>';
+                trDummy1 = '<tr id="row1" style="  height:'+ptTableCellHeight+'px; '+bodyStyle+';border-color:'+ptTableBorderColor+';">'+trDummy+'</tr>';
+                trDummy2 = '<tr id="row2" style="  height:'+ptTableCellHeight+'px; '+bodyStyle+';border-color:'+ptTableBorderColor+';">'+trDummy+'</tr>';
+                trDummy3 = '<tr id="row3" style="  height:'+ptTableCellHeight+'px; '+bodyStyle+';border-color:'+ptTableBorderColor+';">'+trDummy+'</tr>';
+                var table = '<table id="productTable1"  cellpadding="0" class="'+ptTableModel+'"style="position:absolute;border-collapse: collapse; table-layout:fixed;border-color:'+ptTableBorderColor+';" width="'+totalWidth+'px">'+columns+trHeader+trDummy1+trDummy2+trDummy3+'</table>';
+                $("#mainContainer").append('<div id="prodsTable"  style="cursor:pointer;position:absolute;'+tableJsonObj[i].position+'" ></div>');
+                $("#prodsTable").append(table);
+                $("#prodsTable").css("width",$("#productTable1").width());
+                $("#prodsTable").css("height",$("#productTable1").height());
+                
+                var imgsrc = $("#deleteEditorItemImg").attr("src");
+                var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+                var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+                $("#prodsTable").append(imgNode);
+                
+                $("#prodsTable").click(function() {
+                    $('.ui-selected').each(function(index){
+                        $(this).removeClass('ui-selected');
+                        $(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+                        $(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+                    });
+                    $(this).addClass('ui-selected');
+                    $(this).children('.imgsDiv').children('img').addClass('showEditBt');
+                    $(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+                    var zindex = calculateMaxZIndex();
+                    $(this).css("z-index",zindex);
+                });
+                $("#prodsTable").draggable({
+                    containment: 'parent',
+                    grid: [1, 1], 
+                    stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable], div[id^=lineElement]" 
+                });
+                prevselectedColumnsArray = $.evalJSON($.toJSON(selectedColumnsArray));
+                $("#prodsTable").dblclick(function() {
+                    $("input[id=ptTableType]").val(ptTableModel);
+                    $("input[id=ptBorderColor]").val(ptTableBorderColor);
+                    $("select[id=ptCellHeightSelector]").val(ptTableCellHeight);
+                    $("#ptHeadFontWeight").val(headFontWeight);
+                    $("#ptHeadFontStyle").val(headFontStyle);
+                    $("#ptHeadTextAlign").val(headTextAlign);
+                    $("#ptHeaderFontSizeSelect").val(headFontSize);
+                    $("#ptHeaderFontFamilySelect").val(getFontFamilyValue($.trim(headFontFamily)));
+                    $("input[id=ptHeadBackColor]").val(headBackColor);
+                    $("input[id=ptHeadColor]").val(headColor);
+                    $("#ptBodyFontWeight").val(bodyFontWeight);
+                    $("#ptBodyFontStyle").val(bodyFontStyle);
+                    $("select[id=ptBodyFontSizeSelect]").val(bodyFontSize);
+                    $("#ptBodyFontFamilySelect").val(getFontFamilyValue($.trim(bodyFontFamily)));
+                    $("input[id=ptBodyBackColor]").val(bodyBackColor);
+                    $("input[id=ptBodyColor]").val(bodyColor);
+                    sortAvailableColumns();
+                    generateLabelAlignWidthTable();
+                    initColsAlignment();
+                    initPTProperties();
+                    previewTable();         
+                    $("#productTableEditor").dialog("option","dialogMode","editExistingItem");
+                    $("#productTableEditor").dialog("option","selectorId",$(this).attr("id"));
+                    $("#productTableEditor").dialog("open");
+                });
+                
+                $("select[id=ptCellHeightSelector]").val(ptTableCellHeight);        
+                
+            });
+            productsTableCounter = tableJsonObj.length; 
+        
+        }
+        // summary table
+        var summaryTableJsonObjStr = $("input[id*=templateSummaryTableJSONContField]").val();
+        if(summaryTableJsonObjStr) 
+        {
+            var summaryTableJsonObj = JSON.parse(summaryTableJsonObjStr);
+            $(summaryTableJsonObj).each(function(k){
+                var stTotalWidth = 0;
+                var stColsArrayTranspose = new Array();
+                var model =summaryTableJsonObj[k].model;
+                var stBorderColor =summaryTableJsonObj[k].bordercolor;
+                var stCellHeight =summaryTableJsonObj[k].cellheight;
+                var cols = parseInt(summaryTableJsonObj[k].cols);
+                var rows = parseInt(summaryTableJsonObj[k].rows);
+                var cells = summaryTableJsonObj[k].cells;
+                var stRowCellsHtml='';
+                for(var i = 0; i < rows; i++)
+                {
+                    var stRowArray = new Array();
+                    var stRowHtml = '<tr style="height:'+stCellHeight+'px;border-color:'+stBorderColor+'">';
+                    var cellRowColumns = $.grep($(cells),function(obj){return $(obj).attr("row")==i;});
+                    cellRowColumns = cellRowColumns.sort(function(a,b){return a.col - b.col;});
+                    $(cellRowColumns).each(function(j) {
+                        if(i==0)
+                            stTotalWidth+=parseFloat(this.width);
+                        var cellId = "cell"+j+i;
+                        
+                        var colWidth;
+                        if($.trim(model)=="model1" || $.trim(model)=="model5")
+                        {
+                            var width = parseFloat(this.width) -1;
+                            colWidth = "width:"+width+"px"
+                        }
+                        else if($.trim(model)=="model6")
+                        {
+                            if(i==0)
+                            {
+                                var width = parseFloat(this.width) -1;
+                                colWidth = "width:"+width+"px"
+                            }
+                            else
+                                colWidth = "";
+                        }
+                        else
+                            colWidth = "width:"+parseFloat(this.width)+"px";
+
+                        var td = '<td class="summaryCellTd" id="'+cellId+'" style="'+colWidth+';font-weight:'+this.fontweight+';font-style:'+this.fontstyle+';text-align:'+this.textalign+';font-size:'+this.fontsize+';font-family:'+this.fontfamily+';background-color:'+this.backcolor+';color:'+this.fontcolor+';border-color:'+stBorderColor+';overflow:hidden; white-space: nowrap;vertical-align:middle;" col="'+j+'" row="'+i+'">'+this.content+'</td>'; 
+                        stRowHtml+=td;
+                        
+                        var cell = new stCellClass();
+                        cell.text = this.content;
+                        cell.col = j;
+                        cell.row = i;
+                        cell.width = parseFloat(this.width)/20;
+                        cell.fontweight = this.fontweight;
+                        cell.fontstyle = this.fontstyle;
+                        cell.textalign = this.textalign;
+                        cell.fontsize = this.fontsize;
+                        cell.fontfamily = this.fontfamily;
+                        cell.backcolor = this.backcolor;
+                        cell.fontcolor = this.fontcolor;
+                        stRowArray.push(cell);
+                        
+                    });
+                    stRowHtml=stRowHtml+'</tr>';
+                    stRowCellsHtml+=stRowHtml;
+                    stColsArrayTranspose.push(stRowArray);
+                }
+               var stTotalWidthStr=stTotalWidth+"px";
+               var colsHtml = '<col span="'+cols+'" />';
+               var summaryTblCanvasHtml='<table id="summaryTbl1"  cellpadding="0" style="position:absolute;table-layout: fixed;border-color:'+stBorderColor+';" class="'+model+'" width="'+stTotalWidthStr+'">'+colsHtml+stRowCellsHtml+'</table>';     
+                $("#mainContainer").append('<div id="summaryTable"  style="cursor:pointer;position:absolute;'+summaryTableJsonObj[k].position+'" ></div>');
+                $("#summaryTable").html(summaryTblCanvasHtml);      
+                $("#summaryTable").css("width",$("#summaryTbl1").width());
+                $("#summaryTable").css("height",$("#summaryTbl1").height());
+
+                var imgsrc = $("#deleteEditorItemImg").attr("src");
+                var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+                var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+                $("#summaryTable").append(imgNode);
+                
+                $("#summaryTable").click(function() {
+                    $('.ui-selected').each(function(index){
+                        $(this).removeClass('ui-selected');
+                        $(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+                        $(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+                    });
+                    $(this).addClass('ui-selected');
+                    $(this).children('.imgsDiv').children('img').addClass('showEditBt');
+                    $(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+                    var zindex = calculateMaxZIndex();
+                    $(this).css("z-index",zindex);
+                });
+                $("#summaryTable").draggable({
+                    containment: 'parent',
+                    grid: [1, 1], 
+                    stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable], div[id^=lineElement]" 
+                });
+                stColsArray = stColsArrayTranspose.transpose(); 
+                var stDataObj = new Object();
+                stDataObj.cols = cols;
+                stDataObj.rows = rows;
+                stDataObj.model = model; 
+                stDataObj.bordercolor = stBorderColor; 
+                stDataObj.cellheight = stCellHeight; 
+                prevstColsArray = $.evalJSON($.toJSON(stColsArray));
+                
+                $("#summaryTable").data("summaryTable",stDataObj);
+                $("#summaryTable").dblclick(function() {
+                    var stData = $(this).data($(this).attr("id"));
+                    $("#ncols").html(stData.cols);
+                    $("#nrows").html(stData.rows);
+                    $("input[id=stTableType]").val(stData.model);
+                    $("input[id=stBorderColor]").val(stData.bordercolor);
+                    $("select[id=stCellHeightSelector]").val(stData.cellheight);
+                    createWidthTable();                     
+                    cleanColorPickers();
+                    generateSummaryTable();
+                    initSTProperties();
+                    $("#dynSTDataTabs").tabs("select",0);
+                    $("#summaryTableEditor").dialog("option","dialogMode","editExistingItem");
+                    $("#summaryTableEditor").dialog("option","selectorId",$(this).attr("id"));
+                    $("#summaryTableEditor").dialog("open");
+                });
+    
+                $("select[id=stCellHeightSelector]").val(stCellHeight);
+            });         
+            summaryTableCounter = summaryTableJsonObj.length; 
+        }
+        
+        // lines
+        var linesJsonObjStr = $("input[id*=linesJSONContField]").val();
+        if(linesJsonObjStr)
+        {
+            var linesJsonObj = JSON.parse(linesJsonObjStr);
+            for(var itemIndex=0; itemIndex< linesJsonObj.length;itemIndex++)
+            {
+                var lineContainerStyle = linesJsonObj[itemIndex].style;
+                var lineId = linesJsonObj[itemIndex].line;
+                var lineType = linesJsonObj[itemIndex].linetype;
+                var lineWidth = linesJsonObj[itemIndex].linewidth;
+                var lineHeight = linesJsonObj[itemIndex].lineheight;
+                var lineColor = linesJsonObj[itemIndex].backcolor;
+                $("#mainContainer").append('<div id="'+lineId+'"  style="'+lineContainerStyle+'" lineType="'+lineType+'" ></div>');
+                var lineSelector = "#"+lineId;
+                $(lineSelector).click(function() {
+                    $('.ui-selected').each(function(index){
+                        $(this).removeClass('ui-selected');
+                        $(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+                        $(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+                        $(this).children("div[id=sizeDiv]").css("display","none");
+                    });
+                    $(this).addClass('ui-selected');
+                    $(this).children('.imgsDiv').children('img').addClass('showEditBt');
+                    $(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+                    var w = parseInt($(this).css("width").replace("px","")).toFixed();
+                    var h = parseInt($(this).css("height").replace("px","")).toFixed();
+                    $(this).children("div[id=sizeDiv]").html("W:"+w+" H:"+h);
+                    $(this).children("div[id=sizeDiv]").css("display","block");
+                    var zindex = calculateMaxZIndex();
+                    $(this).css("z-index",zindex);
+                });
+                $(lineSelector).addClass("lineClass");
+                var imgsrc = $("#deleteEditorItemImg").attr("src");
+                var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+                var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+                $(lineSelector).append(imgNode);
+                var sizeNode = '<div id="sizeDiv" style="position:absolute;top:-16px;left:0px;width:70px; height:15px;background-color:#FFFFFF;color:red;font-size:9px;font-weight:bold;display:none" />';
+                $(lineSelector).append(sizeNode);
+                $(lineSelector).draggable({
+                    containment: 'parent',
+                    grid: [1, 1], 
+                    stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable], div[id^=lineElement]" 
+                });
+                var lineWidthNumber = parseInt($.trim(lineWidth.replace("px","")));
+                var lineHeightNumber = parseInt($.trim(lineHeight.replace("px","")));
+                if(lineType=="HorizontalLine")
+                {
+                    $(lineSelector).resizable({
+                        grid: [1,1], 
+                        handles:'e,w',
+                        minHeight: lineWidthNumber,
+                        maxHeight: lineWidthNumber,
+                        maxWidth: parseFloat($("#mainContainer").width()),
+                        resize:function(event,ui){
+                            $(this).children("div[id=sizeDiv]").html("W:"+ui.size.width.toFixed()+" H:"+ui.size.height.toFixed());
+                            $(this).children("div[id=sizeDiv]").css("display","block");
+                        }
+                    });
+                    var resizeNode = '<div id="resizeDiv" style="position:absolute;top:-16px;left:0px;width:90px; height:15px;background-color:#DBDBDB;color:red;font-size:9px;font-weight:bold;display:none" > W:<input id="width"type"text" size="3" style="font-size:0.85em;color:red;"/>&nbsp;<a id="doneResize" style="color:red;">Done</a></div>';
+                    $(lineSelector).append(resizeNode);
+                    $(lineSelector).children("div[id=sizeDiv]").click(function(){
+                        $(this).css("display","none");
+                        var w = $(this).parent("div").width().toFixed();
+                        $(this).siblings("div[id=resizeDiv]").children("input[id=width]").val(w);
+                        $(this).siblings("div[id=resizeDiv]").css("display","block");                                   
+                    });
+                    $(lineSelector).children("div[id=resizeDiv]").children("a[id=doneResize]").click(function(){
+                        $(this).parent("div[id=resizeDiv]").css("display","none");
+                        var w = $(this).siblings("input[id=width]").val();
+                        $(this).parent("div[id=resizeDiv]").parent().width(w);
+                        $(this).parent("div[id=resizeDiv]").siblings("div[id=sizeDiv]").css("display","block");                                 
+                    });
+                    
+                }
+                else
+                {
+                    $(lineSelector).resizable({
+                        grid: [1,1], 
+                        handles:'n,s',
+                        minWidth: lineWidthNumber,
+                        maxwidth: lineWidthNumber,
+                        maxHeight: parseFloat($("#mainContainer").height()),
+                        resize:function(event,ui){
+                            $(this).children("div[id=sizeDiv]").html("W:"+ui.size.width.toFixed()+" H:"+ui.size.height.toFixed());
+                            $(this).children("div[id=sizeDiv]").css("display","block");
+                        }
+                    });
+                    var resizeNode = '<div id="resizeDiv" style="position:absolute;top:-16px;left:0px;width:90px; height:15px;background-color:#DBDBDB;color:red;font-size:9px;font-weight:bold;display:none" > H:<input id="height"type"text" size="3" style="font-size:0.85em;color:red;"/>&nbsp;<a id="doneResize" style="color:red;">Done</a></div>';
+                    $(lineSelector).append(resizeNode);
+                    $(lineSelector).children("div[id=sizeDiv]").click(function(){
+                        $(this).css("display","none");
+                        var h = $(this).parent("div").height().toFixed();
+                        $(this).siblings("div[id=resizeDiv]").children("input[id=height]").val(h);
+                        $(this).siblings("div[id=resizeDiv]").css("display","block");                                   
+                    });
+                    $(lineSelector).children("div[id=resizeDiv]").children("a[id=doneResize]").click(function(){
+                        $(this).parent("div[id=resizeDiv]").css("display","none");
+                        var h = $(this).siblings("input[id=height]").val();
+                        $(this).parent("div[id=resizeDiv]").parent().height(h);
+                        $(this).parent("div[id=resizeDiv]").siblings("div[id=sizeDiv]").css("display","block");                                 
+                    });
+                }
+                $(lineSelector).data(lineId,linesJsonObj[itemIndex]);
+                $(lineSelector).dblclick(function(){
+                    var elementObj = $(this).data($(this).attr("id"));
+                    $("input[id=lineColor]").val(elementObj.backcolor);
+                    var lineType = elementObj.linetype;     
+                    var lineWidthSelection;
+                    var lineWidth = elementObj.linewidth;
+                    var lineHeight = elementObj.lineheight;
+                    if(lineType=="HorizontalLine")
+                        lineWidthSelection=lineHeight;
+                    else
+                        lineWidthSelection=lineWidth;
+                    $("select[id=lineWidthSelect]" ).val(lineWidthSelection);
+                    $("#lineEditor").dialog("option","dialogMode","editExistingItem");
+                    $("#lineEditor").dialog("option","selectorId",$(this).attr("id"));
+                    $("#lineEditor").dialog("option","lineType",lineType);
+                    $("#lineEditor").dialog("open");
+                });
+            }
+            lineItemsCounter = linesJsonObj.length;         
+        }
+        
+        if($("input[id$=previewOppNameContField]").val() != "")
+        {
+            $("#oppPreviewLink").html($("input[id$=previewOppNameContField]").val());
+            $(".oppPreviewInput").val($("input[id$=previewOppNameContField]").val());
+        }
+        else
+            $("#oppPreviewLink").html("Select opportunity");
+            
+    });
+
+    function captureTemplate()
+    {
+            // text boxes
+            var textBoxesXML = "<TextBoxes>";
+            $("div[id^='box']").each(function() {
+                var style = $(this).attr("style").toLowerCase().replace(/\'/g,'');
+                $(this).find("div[id$='txt']").each(function() {
+                    var content = $(this).html().replace(/<br>/g,'#lb#');
+                    content = content.replace(/<br style="">/g,'#lb#');
+                    content = content.replace(/<BR>/g,'#lb#');
+                    content = content.replace(/<BR style="">/g,'#lb#');
+                    content = content.replace(/[&]nbsp[;]/gi," ");
+                    textBoxesXML+="<TextBox content=\""+content+"\" style=\""+style+"\" /> ";   
+                });
+            });
+            textBoxesXML+="<\/TextBoxes>";
+            $("input[id*=textBoxesContField]").val(textBoxesXML);
+        
+            // pics
+            var imagesXML = "<Images>";     
+            $("div[id^='imgbox']").each(function() {
+                var style = $(this).attr("style").toLowerCase();
+                $(this).find("img[id^=image]").each(function() {
+                    var imageId = $(this).attr("attId");
+                    imagesXML+="<Image attachmentId=\""+$(this).attr("attId")+"\" style=\""+style+"\"><\/Image>";
+                });
+                
+            });
+            imagesXML+="<\/Images>";
+            $("input[id*=imagesContField]").val(imagesXML);
+    
+            // product table
+            var templTableXML = "<TemplateTable>";
+            if($("#prodsTable").size()>0)
+            {
+            	var headerStyle = $("#productTable1 tr[id=tHeader] th").attr("style").toLowerCase().replace(/\'/g,'');
+            	var bodyStyle = $("#productTable1 tr[id=row1]").attr("style").toLowerCase().replace(/\'/g,'');
+                var ptTableModel = $("#productTable1").attr("class");
+                templTableXML+= "<Model>"+ptTableModel+"<\/Model>";
+                templTableXML+= "<Height>"+$("#prodsTable").height()+"<\/Height>";
+                templTableXML+= "<BorderColor>"+$("#productTable1").css("border-top-color")+"<\/BorderColor>";
+                templTableXML+= "<CellHeight>"+$("#ptCellHeightSelector").val()+"<\/CellHeight>";
+                templTableXML+= "<Position>"+$("#prodsTable").attr("style").toLowerCase()+"<\/Position>";
+                templTableXML+= "<HeaderStyle>"+headerStyle+"<\/HeaderStyle>";// patch 2.8.2
+                templTableXML+= "<BodyStyle>"+bodyStyle+"<\/BodyStyle>";// patch 2.8.2
+                templTableXML+= "<Headers>";
+                var trs = $("#productTable1 tr[id=tHeader] > th").parent("tr").siblings();
+                var ftr = trs[0];
+                var colsTxtAlign = new Array();
+                $(ftr).children().each(function(){colsTxtAlign.push($(this).css("text-align"));})
+                $("#productTable1 tr[id=tHeader] > th").each(function(idx){
+                    var style = $(this).attr("style").toLowerCase();
+                    var xStyle;
+                    if($.trim(ptTableModel)=='model1' || $.trim(ptTableModel)=='model5')
+                        xStyle = correctStyle(style);
+                    else if($.trim(ptTableModel)=='model4' || $.trim(ptTableModel)=='model6')
+                    {
+                        if(idx==0 || idx==$("#productTable1 tr[id=tHeader] > th").size()-1)
+                            xStyle = correctStyle(style);
+                        else
+                            xStyle = style;
+                    }
+                    else
+                        xStyle = style; 
+                    templTableXML+="<Header fieldName=\""+$.trim($(this).attr("idfield"))+"\" label=\""+$.trim($(this).html())+"\" fieldType=\""+$.trim($(this).attr("fieldType"))+"\" fieldPrecision=\""+$.trim($(this).attr("fieldPrecision"))+"\"  fieldScale=\""+$.trim($(this).attr("fieldScale"))+"\"  fieldLength=\""+$.trim($(this).attr("fieldLength"))+"\" order=\""+idx+"\" parentObj=\""+$(this).attr("objType")+"\" style=\""+xStyle+"\" textAlign=\""+colsTxtAlign[idx]+"\" />";
+                });
+                templTableXML+= "<\/Headers>";
+                templTableXML+= "<Rows>";
+                $("#productTable1 tr[id=row1] > td").each(function(idx){
+                    templTableXML+="<Row style=\""+$(this).attr("style").toLowerCase()+"\" />";
+                });
+                templTableXML+= "<\/Rows>";
+            }
+            templTableXML+= "<\/TemplateTable>";
+            $("input[id*=templateTableContField]").val(templTableXML);
+            
+            // merge fields
+            var canvasMfs = new Array();            
+            var canvasSTMfs = new Array();
+            collectCanvasMfs(canvasMfs);
+            collectCanvasSTMfs(canvasSTMfs);
+            var isMFError = false;
+            var removedMFs = new Array();
+            var mergeFieldsXML = "<MergeFields>"
+            if(canvasMfs.length>0 || canvasSTMfs.length>0)
+            {
+                if(canvasMfs.length>0)
+                {
+                    $(canvasMfs).each(function(){
+                        var strippedMf = $.trim($.trim(this).substring(2,this.length-1));
+                        var mfParent = getMfParent(strippedMf);
+                        var mfType = getFieldType(strippedMf);
+                        if(mfParent!=null && mfType!=null)
+                        {
+                            mergeFieldsXML+="<MergeField mergePath=\""+strippedMf+"\"  parent=\""+mfParent+"\"  type=\""+mfType.type.toLowerCase()+"\" precision=\""+mfType.precision+"\" scale=\""+mfType.scale+"\"  length=\""+mfType.length+"\" />";
+                        }
+                        else
+                        {
+                            var removedMf = new removedMfClass();
+                            removedMf.field = strippedMf;
+                            removedMf.parent = mfParent;
+                            removedMFs.push(removedMf);
+                            isMFError = true;
+                        }
+                    });
+                }
+                if(canvasSTMfs.length>0)
+                {
+                    $(canvasSTMfs).each(function(){
+                        var strippedMf = $.trim($.trim(this).substring(2,this.length-1));//this.trim().substring(2,this.length-1).trim();
+                        var mfParent = getMfParent(strippedMf);
+                        var mfType = getFieldType(strippedMf);
+                        if(mfParent!=null && mfType!=null)
+                        {
+                            mergeFieldsXML+="<MergeField mergePath=\""+strippedMf+"\"  parent=\""+mfParent+"\" type=\""+mfType.type.toLowerCase()+"\" precision=\""+mfType.precision+"\" scale=\""+mfType.scale+"\"  length=\""+mfType.length+"\" />";
+                        }
+                        else
+                        {
+                            var removedMf = new removedMfClass();
+                            removedMf.field = strippedMf;
+                            removedMf.parent = mfParent;
+                            removedMFs.push(removedMf);
+                            isMFError = true;
+                        }
+                    });
+                }
+                if(isMFError)
+                {
+                    var msg = "The following fields and/or relationships have been removed from your org, or your are not allowed to access them because of the field-level security settings:\n\n";
+                    if(removedMFs.length >0)
+                    {
+                        $(removedMFs).each(function(){
+                            msg+="Field: "+this.field+" from object:"+this.parent+"\n";
+                        });
+                    }
+                    msg+="\nAdd these fields to the respective objects or remove them from the invoice template to continue.";
+                    alert(msg);
+                    return false;
+                }
+                mergeFieldsXML+="<\/MergeFields>"
+            }
+            else
+                mergeFieldsXML+="<\/MergeFields>"
+            $("input[id*=mergeFieldsContField]").val(mergeFieldsXML);
+
+            // roll-up summaries
+            var canvasRs = new Array();         
+            var canvasSTRs = new Array();
+            collectCanvasRs(canvasRs);
+            collectCanvasSTRs(canvasSTRs);
+            var isRSError = false;
+            var removedRs = new Array();
+            var rollupSummariesXML = "<RollupSummaries>"
+            if(canvasRs.length>0 || canvasSTRs.length>0)
+            {
+                if(canvasRs.length>0)
+                {
+                    $(canvasRs).each(function(){
+                        var strippedRs = $.trim($.trim(this).substring(4,this.length-1));
+                        var rollupFieldDesc = getRollupFieldDesc(strippedRs);
+                        if(rollupFieldDesc!=null)
+                        {
+                            rollupSummariesXML+="<RollupSummary mergePath=\""+rollupFieldDesc.fieldName+"\"  parent=\""+rollupFieldDesc.fieldParent+"\"  type=\""+rollupFieldDesc.fieldType.toLowerCase()+"\" precision=\""+rollupFieldDesc.fieldPrecision+"\" scale=\""+rollupFieldDesc.fieldScale+"\"  length=\""+rollupFieldDesc.fieldLength+"\" />";
+                        }
+                        else
+                        {
+                            removedRs.push(strippedRs);
+                            isRSError = true;
+                        }
+                    });
+                }
+                if(canvasSTRs.length>0)
+                {
+                    $(canvasSTRs).each(function(){
+                        var strippedRs = $.trim($.trim(this).substring(4,this.length-1));//this.trim().substring(2,this.length-1).trim();
+                        var rollupFieldDesc = getRollupFieldDesc(strippedRs);
+                        if(rollupFieldDesc!=null)
+                        {
+                            rollupSummariesXML+="<RollupSummary mergePath=\""+rollupFieldDesc.fieldName+"\"  parent=\""+rollupFieldDesc.fieldParent+"\"  type=\""+rollupFieldDesc.fieldType.toLowerCase()+"\" precision=\""+rollupFieldDesc.fieldPrecision+"\" scale=\""+rollupFieldDesc.fieldScale+"\"  length=\""+rollupFieldDesc.fieldLength+"\" />";
+                        }
+                        else
+                        {
+                            removedRs.push(strippedRs);
+                            isRSError = true;
+                        }
+                    });
+                }
+                if(isRSError)
+                {
+                    var msg = "The following OpportunityLineItem and PricebookEntry fields and/or relationships have been removed from your org, or your are not allowed to access them because of the field-level security settings:\n\n";
+                    if(removedRs.length >0)
+                    {
+                        $(removedRs).each(function(){
+                            msg+="Field: "+this+"\n";
+                        });
+                    }
+                    msg+="\nAdd these fields to the respective objects or remove them from the invoice template to continue.";
+                    alert(msg);
+                    return false;
+                }
+                rollupSummariesXML+="<\/RollupSummaries>"
+            }
+            else
+                rollupSummariesXML+="<\/RollupSummaries>"
+            $("input[id*=rollupFieldsContField]").val(rollupSummariesXML);
+            
+            
+            // summary table
+            var summaryTableXML = "<TemplateSummaryTable>";
+            if($("#summaryTable").size() > 0)
+            {
+                var tblModel = $("#summaryTbl1").attr("class");
+                summaryTableXML+= "<Model>"+tblModel+"<\/Model>";
+                summaryTableXML+= "<Height>"+$("#summaryTable").height()+"<\/Height>";
+                summaryTableXML+= "<BorderColor>"+$("#summaryTbl1").css("border-top-color")+"<\/BorderColor>";
+                summaryTableXML+= "<CellHeight>"+$("select[id=stCellHeightSelector]").val()+"<\/CellHeight>";
+                summaryTableXML+= "<Position>"+$("#summaryTable").attr("style").toLowerCase()+"<\/Position>";
+
+                var summaryTablePos = $("#summaryTable").position();
+                if($("#prodsTable").size()>0)
+                {
+                    var prodsTablePos = $("#prodsTable").position();
+                    var prodsTableHeight = $("#prodsTable").height();
+                    var prodsTableWidth = $("#prodsTable").width();
+                    var marginLeft = summaryTablePos.left;
+                    var spaceBefore =  summaryTablePos.top - (prodsTablePos.top + prodsTableHeight);
+                }
+                else
+                {
+                    var marginLeft = summaryTablePos.left;
+                    var spaceBefore =  summaryTablePos.top;
+                }
+                var relativePosition = "margin-left:"+marginLeft+";space-before:"+spaceBefore;
+                summaryTableXML+= "<RelativePosition>"+relativePosition+"<\/RelativePosition>";
+
+                var stNoOfRows = $("#summaryTbl1").children().children("tr").size();
+                var colsArray = $.grep($("#summaryTbl1").children().children("tr").children("td"),function(o){return $(o).attr("row")==0});
+                var stNoOfCols = $(colsArray).size();
+                summaryTableXML+= "<Rows>"+stNoOfRows+"<\/Rows>";
+                summaryTableXML+= "<Cols>"+stNoOfCols+"<\/Cols>";
+                summaryTableXML+="<Cells>";
+                var stCellsXML = "";
+                $("#summaryTbl1").children().children("tr").each(function(i){
+                    $(this).children("td").each(function(j){
+
+                        var style = $(this).attr("style").toLowerCase().replace(/\'/g,'');
+                        var xStyle;
+                        if($.trim(tblModel)=='model1' || $.trim(tblModel)=='model5')
+                            xStyle = correctStyle(style);
+                        else if($.trim(tblModel)=='model6')
+                        {
+                            if(j==0 || j==stNoOfCols-1)
+                                xStyle = correctStyle(style);
+                            else
+                                xStyle = style;
+                        }
+                        else
+                            xStyle = style;
+
+                        stCellsXML+="<Cell row=\""+$(this).attr("row")+"\" col=\""+$(this).attr("col")+"\" style=\""+xStyle+"\">"+$.trim($(this).html())+"<\/Cell>";
+                    });
+                });         
+                summaryTableXML+=stCellsXML+"<\/Cells>";
+            }
+            summaryTableXML+="<\/TemplateSummaryTable>";
+            $("input[id*=templateSummaryTableContField]").val(summaryTableXML);
+
+            // lines
+            var linesXML = "<Lines>";
+            $("div[id^=lineElement]").each(function() {
+                var style = $(this).attr("style").toLowerCase();
+                var lineType = $(this).attr("lineType");
+                linesXML+="<Line type=\""+lineType+"\"  style=\""+style+"\" />";    
+            });
+            linesXML+="<\/Lines>";
+            $("input[id*=linesContField]").val(linesXML);
+            return true;
+    }   
+
+
+    /*
+        Utility functions
+    */
+    
+    function displayPreviewInProgress()
+    {
+        $("#checkingOppStatMsg").css("display","block");
+        $("#validatingOppMsg").html("Creating preview ...");
+    }
+
+    function displayPreviewResults()
+    {
+        $("#checkingOppStatMsg").css("display","none");
+        var isError = $("input[id*=errorInController]").val();
+        if(isError=="true")
+        {
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+            $("#errorInfoPanel").dialog("open");
+        }
+        else
+        {
+            var previewURL = $("input[id*=previewPdfUrlContField]").val(); 
+            if(previewURL!="")
+                window.open(previewURL,"Invoice_Preview","toolbar=1,location=1,menubar=1, resizable=1,status=1");
+            else
+                alert("Cannot display preview PDF");
+        }       
+    }
+    function displaySaveInProgress()
+    {
+        $("#checkingOppStatMsg").css("display","block");
+        $("#validatingOppMsg").html("Saving template ...");
+    }
+
+    function displaySaveResults()
+    {
+        var isError = $("input[id*=errorInController]").val();
+        if(isError=="true")
+        {
+            $("#checkingOppStatMsg").css("display","none");
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+            $("#errorInfoPanel").dialog("open");
+        }
+        else
+        {
+            redirectToTemplatesTabPage();
+        }       
+    }
+
+    function correctStyle(style)
+    {
+        var xstyle = "";
+        var styles = style.split(";");
+        if(styles.length > 0)
+        {
+            for(var i=0; i< styles.length; i++)
+            {
+                var styleParts = styles[i].split(":");
+                if(styleParts.length > 0)
+                {
+                    if($.trim(styleParts[0])=="width")
+                    {
+                        var value = parseInt(styleParts[1].replace("px",""))+1;
+                        var cstyle = "width:"+value+"px";
+                        xstyle+=cstyle+";";
+                    }
+                    else
+                        xstyle+=styles[i]+";";                  
+                }
+            }       
+        }
+        return xstyle;
+    }
+
+    
+    function moveRight()
+    {
+        if (enableMove && $(".ui-selected").size() > 0)
+        {
+            var topPos = $("#mainContainer").offset().top;
+            var leftPos = $("#mainContainer").offset().left;
+            var actualLeft = $(".ui-selected").offset().left;
+            var actualTop = $(".ui-selected").offset().top;
+            var pageActualWidth = {!pageActualWidth};
+            if(actualLeft + $(".ui-selected").width() <= leftPos + pageActualWidth)
+            {
+                actualLeft = parseFloat(actualLeft) + 1;
+                $(".ui-selected").offset({ top: actualTop, left: actualLeft });
+            }
+            
+         }
+        
+    }
+    
+    function moveLeft()
+    {
+        if (enableMove && $(".ui-selected").size() > 0)
+        {       
+            var topPos = $("#mainContainer").offset().top;
+            var leftPos = $("#mainContainer").offset().left;
+            var actualLeft = $(".ui-selected").offset().left;
+            var actualTop = $(".ui-selected").offset().top;
+            if(actualLeft >= leftPos)
+            {
+                actualLeft = parseFloat(actualLeft) - 1;
+                $(".ui-selected").offset({ top: actualTop, left: actualLeft });
+            }
+        }       
+        
+    }
+    
+    function moveUp()
+    {
+        if (enableMove && $(".ui-selected").size() > 0){        
+            var topPos = $("#mainContainer").offset().top;
+            var leftPos = $("#mainContainer").offset().left;
+            var actualLeft = $(".ui-selected").offset().left;
+            var actualTop = $(".ui-selected").offset().top;
+            if(actualTop >= topPos)
+            {
+                actualTop = parseFloat(actualTop) - 1;
+                $(".ui-selected").offset({ top: actualTop, left: actualLeft });
+            }
+        }   
+        
+    }
+    
+    function moveDown()
+    {
+        if (enableMove && $(".ui-selected").size() > 0){        
+            var topPos = $("#mainContainer").offset().top;
+            var leftPos = $("#mainContainer").offset().left;
+            var actualLeft = $(".ui-selected").offset().left;
+            var actualTop = $(".ui-selected").offset().top;
+            var pageActualHeight = {!pageActualHeight};
+            
+            if(actualTop + $(".ui-selected").height()<= topPos + pageActualHeight)
+            {
+                actualTop = parseFloat(actualTop) + 1;
+                $(".ui-selected").offset({ top: actualTop, left: actualLeft });
+            }
+        }   
+        
+    }
+    
+    function toHex(N) {
+        if (N==null) return "00";
+        N=parseInt(N); if (N==0 || isNaN(N)) return "00";
+        N=Math.max(0,N); N=Math.min(N,255); N=Math.round(N);
+        return "0123456789ABCDEF".charAt((N-N%16)/16) + "0123456789ABCDEF".charAt(N%16);
+    }
+
+    function RGBtoHEX(str)
+    {
+        if ($.trim(str).substring(0, 3) == 'rgb') {
+            var arr = str.split(",");
+            var r = $.trim(arr[0].replace('rgb(','')), g = $.trim(arr[1]), b = $.trim(arr[2].replace(')',''));
+            var hex = [
+                toHex(r),
+                toHex(g),
+                toHex(b)
+            ];
+            return "#" + hex.join('');              
+        }
+        else{
+        return str;
+        }
+    }
+    
+    function checkPreviewOpp()
+    {
+        if($(".errorMsg").length > 0 || $.trim($(".oppPreviewInput").val())=="" || $("#oppPreviewLink").css('display')=='none')
+        {
+            alert("Provide a valid opportunity to preview the template");
+            return false;
+        }
+        else
+        {
+            if(captureTemplate())
+                return true;
+            else
+                return false;
+        }
+    }
+
+    function nonEmptyOppInput()
+    {
+        if($.trim($(".oppPreviewInput").val())!="")
+            return true;
+        else
+        {
+            alert("Enter a valid opportunity or cancel the opportunity input");
+            return false;
+        }   
+    }
+    
+    function displayOppCheckingInProgress()
+    {
+        $("#checkingOppStatMsg").css("display","block");
+        $("#validatingOppMsg").html("Validating opportunity input ...");
+        $(".errorMsg").empty();
+    }   
+
+    function displayOppValidationResults()
+    {
+        if($(".errorMsg").length > 0)
+        {
+            $("#checkingOppStatMsg").css("display","none"); 
+            $("#previewOppInp").css("display","block");
+            $("#oppPreviewLink").css("display","none");
+            $(".errorMsg").css("position","absolute");
+            $(".errorMsg").css("top","19%");
+        }
+        else
+        {
+            $("#checkingOppStatMsg").css("display","none"); 
+            $("#previewOppInp").css("display","none");
+            $("#oppPreviewLink").html($.trim($(".oppPreviewInput").val()));
+            $("#oppPreviewLink").css("display","block");
+        }
+    }
+
+    function cancelInputPreviewOpp()
+    {
+        $("#previewOppInp").css('display', 'none');
+        $("#oppPreviewLink").css('display', 'block');
+        if($("#oppPreviewLink").html()=="Select opportunity")
+            $(".oppPreviewInput").val("");
+        else 
+            $(".oppPreviewInput").val($("#oppPreviewLink").html());
+    }
+    
+
+
+    function calculateMaxZIndex()
+    {
+        var maxzindex = 0;
+        $("div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable], div[id^=lineElement]").each(function(){
+            
+            var zindex = $(this).css("z-index");
+            if(!isNaN(zindex))
+            {
+                var compzindex = parseInt(zindex); 
+                if(compzindex > maxzindex)
+                    maxzindex=compzindex;
+            }
+        }); 
+        maxzindex+=1;
+        return maxzindex;
+    }
+    
+    </script>
+    
+    <apex:form id="canvasForm">
+        <apex:pageMessages />
+    
+        <apex:sectionHeader subtitle="{!template.Name}" title="Invoice Template Edit" help="{!ifsHelpUrl}"/>
+        <p>Use the canvas to add content to the invoice template.</p>
+        <div class="ifsWizardBlock ifsTertiaryPalette"> 
+            <apex:outputPanel styleClass="ifsWizardTitle ifsTertiaryPalette" layout="block" rendered="{!NOT(newInvoiceTemplate)}">        
+                    <div class="ifsRightTitle">Step 2 of 2</div>
+                    <h2>Step 2: Invoice layout and content</h2>
+            </apex:outputPanel>
+            <apex:outputPanel styleClass="ifsWizardTitle ifsTertiaryPalette" layout="block" rendered="{!newInvoiceTemplate}">        
+                    <div class="ifsRightTitle">Step 3 of 3</div>
+                    <h2>Step 3: Invoice layout and content</h2>
+            </apex:outputPanel>
+            <div class="ifsBody " style="background-color: #FFFFFF">
+                  <div class="ifsWizardHeader" style="background-color: #F8F8F8">
+                      <div class="ifsTopButtons" style="white-space: nowrap;">
+                            <apex:commandButton value="Cancel"  action="{!cancel}" title="Cancel invoice template editing"/>
+                            <apex:commandButton value="Back" onclick="if(!captureTemplate()) return false;" action="{!back}"  rendered="{!OR(NOT(newInvoiceTemplate),AND(newInvoiceTemplate,newTemplateMethodChoice=='scratch'))}" title="Go to invoice page and format definitions"/>  
+                            <apex:commandButton value="Back"  action="{!backToInvoiceTemplatesGallery}"  title="Go to predefined templates gallery" rendered="{!AND(newInvoiceTemplate,newTemplateMethodChoice=='based')}"/>  
+                            <apex:actionStatus onstart="displaySaveInProgress();" onstop="displaySaveResults();" id="saveStatus"/>
+                            <apex:commandButton id="saveBtn" value="Save"  onclick="if(!captureTemplate()) return false;" action="{!save}" status="saveStatus"  rerender="errorInController,errorBagJSONContField" title="Save invoice template"/>  
+                      </div>
+                  </div> 
+            </div>
+            <div style="min-width:950px;"> 
+                <table style="border-collapse: collapse; margin-left: 7%;">
+                    <tr>
+                        <td>
+                            <br />
+                            <div style="width: 500px; margin-left: 16%">
+                                <table style="width: 500px;">
+                                    <tr style="height: 30px;">
+                                        <td>
+                                            &nbsp;&nbsp;&nbsp;
+                                        </td>
+                                        <td style="vertical-align: middle; width: 15%;">
+                                            <apex:actionStatus onstart="displayPreviewInProgress();" onstop="displayPreviewResults();" id="previewStatus"/>
+                                            <apex:commandButton value="Preview" status="previewStatus"  onclick="if(!checkPreviewOpp()) return false;" action="{!preview}" rerender="errorInController,previewPdfUrlContField,errorBagJSONContField,debugPanel" style="margin-left: 5%;" title="Preview invoice template"/> <!-- Debug XSL-FO start : added debugPanel to reRender -->
+                                        </td>
+                                        <td style="vertical-align: middle; width: 70%;">
+                                          <apex:outputPanel id="inpOpp" layout="block">
+                                                <table id="previewOppInp" width="320px" cellspacing="1" cellpadding="1" border="0" style="display:none;table-layout:fixed;float:left;">
+                                                    <col width="160"/>
+                                                    <col width="60"/>
+                                                    <col width="50"/>
+                                                    <col width="50"/>
+                                                    <tr>
+                                                        <td>
+                                                            <apex:inputField styleClass="oppPreviewInput"  value="{!template.kognoz1__OpportunityPreview__c}" style="margin-left: 5%; vertical-align: middle;width:140px;"/>  
+                                                        </td>
+                                                        <td>
+                                                            &nbsp;&nbsp;&nbsp;&nbsp;
+                                                        </td>
+                                                        <td>
+                                                            <apex:actionStatus onstart="displayOppCheckingInProgress();" onstop="displayOppValidationResults();" id="validateOppStatus"/>
+                                                            <apex:commandButton value="Save"  onclick="if(!nonEmptyOppInput()) return;" action="{!validateOpportunity}" status="validateOppStatus" rerender="inpOpp,previewOppNameContField" style="height:20px;width:50px;font-size:0.90em;" />
+                                                        </td>
+                                                        <td>
+                                                             <input type="button" value="Cancel" onclick="cancelInputPreviewOpp();" style="height:20px;width:50px;font-size:0.90em;" class="btnCancel"/>
+                                                            
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                                <a style="vertical-align: middle; text-decoration: underline;cursor:pointer;" id="oppPreviewLink" title="Select an opportunity to preview the invoice template">Select opportunity</a>
+                                            </apex:outputPanel>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                        <td style="width:60%">
+                            <table id="mainTable" style="float: left;">
+                                <tr>
+                                    <td style="width:100px"/>
+                                    <td >
+                                        <div id="containerBackground" style="height:{!backgroundHeight}px;width:{!backgroundWidth}px;border-color:#94B9D1;border-style:solid;border-width:thin;background-color:lightgrey;">
+                                          <div id="containerBorders" style="height:{!pageHeight}px;width:{!pageWidth}px;margin-top:{!marginBackgroundTop}px;margin-left:{!marginBackgroundLeft}px;border-color:#94B9D1;border-style:solid;border-width:thin;background-color:white;position:relative;">
+                                            <div id="mainContainer" style="height:{!templateEffectiveHeight}px; width:{!templateEffectiveWidth}px; margin-top:{!marginTop}px;margin-left:{!marginLeft}px;border-color:#94B9D1; border-style:dotted;border-width:thin;background-color:white;">
+                                                                                    
+                                                <!-- HERE -->
+                                            </div>  
+                                          </div>    
+                                        </div>  
+                                    </td>
+                                </tr>
+                            </table> 
+                        </td>
+                        <td style="width:40%">
+                            <div style="margin-left: 2%;">
+                                        <table>
+                                            <tr>
+                                                <td>                
+                                                    <center>
+                                                    <input id="textBoxEditorBtn" type="button" title="Add static text and live data from salesforce" style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/addTextIcon.jpg')}'); background-color: transparent; background-repeat: no-repeat; width: 45px; height: 52px; border: thin solid rgb(148, 185, 209);"/>
+                                                    <div style="font-weight: bold">Text</div>
+                                                    <hr/>
+                                                    </center>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                <center>    
+                                                    <input id="imageEditorBtn" type="button" title="Add an image" style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/addImageIcon.jpg')}'); background-color: transparent; background-repeat: no-repeat; width: 45px; height: 52px; border: thin solid rgb(148, 185, 209);"/>
+                                                    <div style="font-weight: bold">Image</div>
+                                                    <hr/>
+                                                </center>   
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <center>                
+                                                    <input id="productTableEditorBtn" type="button" title="Add a table for the invoiced items" style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/addInvItemsTableIcon.jpg')}'); background-color: transparent; background-repeat: no-repeat; width: 45px; height: 52px; border: thin solid rgb(148, 185, 209);"/>
+                                                    <div style="font-weight: bold">Invoice items Table</div>
+                                                    <hr/>
+                                                    </center>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <center>                
+                                                    <input id="summaryTableEditorBtn" type="button" title="Add a summary table following the invoiced items table " style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/addSummaryTableIcon.jpg')}'); background-color: transparent; background-repeat: no-repeat; width: 45px; height: 52px; border: thin solid rgb(148, 185, 209);"/>
+                                                    <div style="font-weight: bold">Summary Table</div>
+                                                    <hr/>
+                                                    </center>
+                                                </td>
+                                            </tr>       
+                                            <tr>
+                                                <td>                
+                                                <center>
+                                                    <input id="horizontalLineBtn" type="button" title="Add an horizontal line" style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/addHorLineIcon.jpg')}'); background-color: transparent; background-repeat: no-repeat; width: 45px; height: 52px; border: thin solid rgb(148, 185, 209);" />
+                                                    <div style="font-weight: bold">Horizontal Line</div>
+                                                    <hr/>
+                                                </center>   
+                                                </td>
+                                            </tr>   
+                                            <tr>
+                                                <td>
+                                                <center>                
+                                                    <input id="verticalLineBtn" type="button" title="Add a vertical line" style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/addVerLineIcon.jpg')}'); background-color: transparent; background-repeat: no-repeat; width: 45px; height: 52px; border: thin solid rgb(148, 185, 209);" />
+                                                    <div style="font-weight: bold">Vertical Line</div>
+                                                    <hr/>
+                                                </center>       
+                                                </td>
+                                            </tr>
+                                        </table>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div> 
+        </div> 
+        <!-- Debug XSL-FO start -->
+<!-- 
+        <apex:outputPanel id="debugPanel">
+            <apex:outputLabel value="top equator: " for="topEquator" />
+            <apex:outputText value="{!topEquator}" id="topEquator" />
+            <br/>
+            <apex:outputLabel value="top St equator: " for="topStEquator" />
+            <apex:outputText value="{!topStEquator}" id="topStEquator" />
+            <br/>
+            <apex:outputLabel value="no of post table items: " for="nopti" />
+            <apex:outputText value="{!noOfPostTableItems}" id="nopti" />
+            <br/>
+            <apex:outputLabel value="no of post summary table items: " for="nopstti" />
+            <apex:outputText value="{!noOfPostSummaryTableItems}" id="nopstti" />
+            <br/>
+            <apex:outputLabel value="summary table space-before: " for="spaceBefore" />
+            <apex:outputText value="{!stSpaceBefore}" id="spaceBefore" />
+            <br/>
+            <apex:outputLabel value="last post table item equator: " for="itemEquator" />
+            <apex:outputText value="{!itemEquator}" id="itemEquator" />
+            <br/>
+            <apex:outputLabel value="summary table correction: " for="stCorrection" />
+            <apex:outputText value="{!stCorrection}" id="stCorrection" />
+            <br/>
+            <apex:outputLabel value="table position : " for="tablePos" />
+            <apex:outputText value="{!tablePosition}" id="tablePos" />
+            <br/>
+            <apex:outputLabel value="summary table position : " for="summTablePos" />
+            <apex:outputText value="{!summaryTablePosition}" id="summTablePos" />
+        </apex:outputPanel>
+ -->
+        <!-- Debug XSL-FO start -->
+
+        <!-- ###########################################
+        
+                CONTROLLER-PAGE MEMBERS
+        
+         ###############################################-->
+        <apex:inputText value="{!textBoxesXML}" id="textBoxesContField" style="display:none"/>
+        <apex:inputText value="{!textBoxesJSON}" id="textBoxesJSONContField" style="display:none"/>
+        <apex:inputText value="{!imagesXML}" id="imagesContField" style="display:none"/>
+        <apex:inputText value="{!imagesJSON}" id="imagesJSONContField" style="display:none"/>
+        <apex:inputText value="{!templateTableXML}" id="templateTableContField" style="display:none"/>
+        <apex:inputText value="{!templateTableJSON}" id="templateTableJSONContField" style="display:none"/>
+        <apex:inputText value="{!mergeFieldsXML}" id="mergeFieldsContField" style="display:none"/>
+        <apex:inputText value="{!rollupFieldsXML}" id="rollupFieldsContField" style="display:none"/>
+        <apex:inputText value="{!templateSummaryTableXML}" id="templateSummaryTableContField" style="display:none"/>
+        <apex:inputText value="{!templateSummaryTableJSON}" id="templateSummaryTableJSONContField" style="display:none"/>
+        <apex:inputText value="{!isError}" id="errorInController" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+        <apex:inputText value="{!previewPdfUrl}" id="previewPdfUrlContField" style="display:none"/>
+        <apex:inputText value="{!linesXML}" id="linesContField" style="display:none"/>
+        <apex:inputText value="{!linesJSON}" id="linesJSONContField" style="display:none"/>
+        <apex:inputText value="{!previewOppName}" id="previewOppNameContField" style="display:none"/>
+
+        <!-- ###########################################
+        
+                ERROR HANDLING MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="errorInfoPanel" style="display:none;">
+            <apex:outputPanel id="errorPanel">
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                ACTION STATUS IN PROGRESS
+        
+         ###############################################-->
+        <div id="checkingOppStatMsg" class="statusPopup">
+            <div  class="popupStatus1" >
+            </div>
+            <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+                <div style="text-align:center;margin-top:15px;" > 
+                    <table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+                        <tr>
+                            <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+                            <td><span id="validatingOppMsg" style="z-index:153;"></span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ###########################################
+        
+                ACTION FUNCTIONS
+        
+         ###############################################-->
+        <apex:actionFunction action="{!redirectToTemplatesTabPage}" name="redirectToTemplatesTabPage" />
+
+    </apex:form>
+
+        <!-- ###########################################
+        
+                TEMPLATE ITEMS EDITOR COMPONENTS
+        
+         ###############################################-->
+         <c:TemplateTextBoxEditor pageController="{!pageEditorController}" />
+         <c:TemplateImageEditor /> 
+         <c:TemplateProductTableEditor /> 
+         <c:TemplateSummaryTableEditor pageController="{!pageEditorController}" />   
+         <c:TemplateLineEditor />   
+
+        <img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/deleteEditorItem.png')}" style="display:none" id="deleteEditorItemImg" title="Remove item"/>
+</apex:page>

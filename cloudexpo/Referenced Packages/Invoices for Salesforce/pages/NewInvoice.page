@@ -1,0 +1,9 @@
+<apex:page standardController="kognoz1__Invoice2__c"  extensions="kognoz1.NewInvoiceController" showHeader="true" tabStyle="kognoz1__Invoice2__c">
+    <apex:sectionHeader title="New Invoice"  help="{!ifsHelpUrl}"/>
+    <p><apex:outputLink value="{!$CurrentPage.parameters.retURL}" >Back</apex:outputLink></p>
+    <p>Invoices must be created out of opportunity records in single or bulk mode.</p>
+    <ul>
+        <li>To create an invoice in single mode go to the opportunity record detail page and use the Invoice button on that page</li>
+        <li>To create invoices in bulk mode use the Invoice Manager</li>
+    </ul>
+</apex:page>

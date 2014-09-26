@@ -1,0 +1,346 @@
+<apex:page standardController="kognoz1__Invoice2__c" recordSetVar="invoices" extensions="kognoz1.ReceivePaymentsController" title="Receive Payments" tabStyle="kognoz1__Invoice2__c">
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-json-2.2.js')}"></script> 
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+	<style tyep="text/css">
+	   table#imTableHeaders td
+	    {
+	        overflow:hidden;
+	        text-align:left;
+	        white-space:nowrap;
+	        height:25px;
+	        border:1px dotted lightgrey;
+	        border-collapse:collapse;
+	        vertical-align:middle;
+	    }
+	    
+	    .ifsTableRows{height:25px;}
+	</style>
+	<script type="text/javascript">
+	    
+	     $(function(){
+	     
+	        $("#errorInfoPanel").dialog({
+	                modal: true, 
+	                autoOpen: false,
+	                width: 550,
+	                height:'auto',
+	                title:'Processing information'
+	        });
+	     
+		    $("table[class=ifsIMTable] > tbody > tr").hover(
+		    	function(){
+	            	$(this).addClass("trHoover");
+	            	$(this).find("td > input").addClass("trHoover");
+	            	$(this).find("td > select").addClass("trHoover");
+	            	$(this).find("td > div > input").addClass("trHoover");
+	            	$(this).find("td > div > span > input").addClass("trHoover");
+		    	},
+		    	function(){
+	            	$(this).removeClass("trHoover");
+	            	$(this).find("td > input").removeClass("trHoover");
+	            	$(this).find("td > select").removeClass("trHoover");
+	            	$(this).find("td > div > input").removeClass("trHoover");
+	            	$(this).find("td > div > span > input").removeClass("trHoover");
+		    	}
+		    );
+		    
+		    $("div[id=ext-gen10]").scroll(function(){
+		    	var pos = $("div[id=ext-gen11]").position();
+		    	var npos =pos.left;
+//		    	$("div[id=ext-gen15]").animate({'left':npos},1);
+		    	$("div[id=ext-gen15]").css("left",npos);
+		    	
+		    });
+		    
+		    var ww = $("body").width()-$("div[id$=mainBlock]").position().left-50;
+	    	$("div[id=00BG0000006lx1Z_grid]").width(ww);
+	    	$("div[id=ext-gen4]").width(ww);
+	    	$("div[id=ext-gen7]").width(ww);
+	    	$("div[id=ext-gen10]").width(ww);
+
+		    
+		    var h = window.innerHeight -$("div[id$=mainBlock]").position().top - 140;
+	    	$("div[id$=listBody]").height(h);
+	    	$("div[id=ext-gen4]").height(h);
+	    	$("div[id=ext-gen7]").height(h);
+	    	$("div[id=ext-gen10]").height(h-30);
+		    
+		    $(window).resize(function(){
+		    	var w = $("body").width()-$("div[id$=mainBlock]").position().left-50;
+		    	$("div[id=00BG0000006lx1Z_grid]").width(w);
+		    	$("div[id=ext-gen4]").width(w);
+		    	$("div[id=ext-gen7]").width(w);
+		    	$("div[id=ext-gen10]").width(w);
+
+			    var h = window.innerHeight -$("div[id$=mainBlock]").position().top - 140;
+	    		$("div[id$=listBody]").height(h);
+		    	$("div[id=ext-gen4]").height(h);
+		    	$("div[id=ext-gen7]").height(h);
+		    	$("div[id=ext-gen10]").height(h-30);
+		    });
+		    
+			var minWidth = 0;
+			$("table[id=imTableHeaders]").find("td").each(function(){
+			    minWidth+=$(this).width();
+			});
+		    $("table[id=imTableHeaders]").css("min-width",minWidth);
+		    $("table.ifsIMTable").css("min-width",minWidth);
+		    $("div[id=ext-gen15]").css("min-width",minWidth+26);
+	    });
+		
+		function validateEntries()
+		{
+			var validEntries = true;
+			$("div.requiredInput").find("input").each(function(){
+			    var val = $(this).val();
+			    if(val=='')
+			    {
+		    		$(this).parent().append('<div class="errorInp" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;"><strong>Error: </strong>You must enter a valid value</div>');
+		    		validEntries = false;
+			    	
+			    }
+
+			});
+			return validEntries;
+		}
+
+        function displaySaving()
+        {
+          $("span[id=statusMsg]").html("Saving ...");
+          $("#statusMsgContainer").css("display","block");
+        }
+        
+        function hideSaving()
+        {
+          console.log("hide saving");
+          var isError = $("input[id*=errorInController]").val();
+          $("span[id=statusMsg]").empty();
+          $("#statusMsgContainer").css("display","none");
+          if(isError=="true")
+          {
+              var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+              if(errorsJsonObjStr)
+              {
+                var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+                var errorHtml="";
+                for(var i=0;i<errorsJsonObj.length;i++)
+                {
+                    errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+                }
+                $("span[id*=errorPanel]").html(errorHtml);
+              }
+              $("#errorInfoPanel").dialog("open");
+          }
+        }
+
+	
+	</script>
+	<apex:form >
+		<apex:sectionHeader title="Bulk Payments" subtitle="Receive Payments" help="{!ifsHelpUrl}" />
+		<apex:outputPanel layout="block" style="width:100%;margin-bottom:10px">
+			Use the Receive Payments screen to enter payments for each invoice in the list. 
+			Note that the payment date and payment amount for each invoice default to today's date and the invoice outstanding balance respectively.
+			Change these default values as necessary and click Save to create the new payment records. 
+		</apex:outputPanel>
+
+	<apex:pageBlock id="mainBlock" mode="detail">
+		<apex:pageBlockButtons location="top">
+			<apex:commandButton action="{!save}" value="Save" onclick="if(!validateEntries()) return false;" status="savingStatus" reRender="errorInController,errorBagJSONContField" style="margin-left:15%;"/>
+			<apex:commandButton action="{!cancel}" value="Cancel" />
+		</apex:pageBlockButtons>
+	<div id="00BG0000006lx1Z_listBody"  style="position: relative; height: 403px;"> 	
+		<div id="00BG0000006lx1Z_grid"  style="width: 1404px; display: block; height: 403px;"> 
+		 	<div id="ext-gen3" style="left:0;top:0;overflow:hidden;"> 		
+				<div id="ext-gen4" style="width: 1404px; height: 403px;overflow:hidden !important;"> 
+					<div hidefocus="true" id="ext-gen7" style="width: 1404px; height: 403px;overflow:hidden;position:relative;"> 
+						<div  id="ext-gen8" style="overflow:hidden;min-width:1500px;">
+							
+							<div id="ext-gen9" > 
+								<div id="ext-gen15" style="min-width:1500px;overflow:hidden;position:relative;"> 
+									<div style="min-width: 1500px;" id="magic"> 
+										<table id="imTableHeaders" cellspacing="0" cellpadding="0" width="100%" border="0" style="table-layout:fixed;border-collapse:collapse;">
+											<thead>
+												<tr>
+													<td width="170px" class="ifsthBack">
+														<div>Account</div>
+													</td>
+													<td width="120px" class="ifsthBack">
+														<div>Invoice Number</div>
+													</td>
+													<td width="120px" class="ifsthBack">
+														<div>Invoice Total</div>
+													</td>
+													<td width="140px" class="ifsthBack">
+														<div>Outstanding Balance</div>
+													</td>
+													<td width="120px" class="ifsthBack">
+														<div>Payment Status</div>
+													</td>
+													<td width="200px" class="ifsthBack" >
+														<div>Payment Name</div>
+													</td>
+													<td width="200px" class="ifsthBack" >
+														<div>Payment Date</div>
+													</td>
+													<td width="200px" class="ifsthBack" >
+														<div>Payment Amt</div>
+													</td>
+													<td width="150px" class="ifsthBack" >
+														<div>Payment Method</div>
+													</td>
+													<apex:repeat value="{!additionalPaymentFldLabels}" var="fldLabel">
+														<td width="200px" class="ifsthBack">
+															<div>{!fldLabel}</div>
+														</td>
+													</apex:repeat>
+												</tr>
+											</thead>								
+										</table>
+								
+									</div>
+								</div>
+							</div>
+							
+							<div id="ext-gen10" style="width: min-width:1500px; height: 373px;overflow:auto;position:relative">
+								<div id="ext-gen11" style="width: min-width:1500px;"> 
+									<apex:outputText rendered="{!noOfInvoices == 0}" id="emptyTableMsg" style="font: 11px Arial,Helvetica,sans-serif; color:gray; padding: 10px;" value="No records to display. You must select invoices in the invoices home page before clicking on the Receive Payments button." />
+			        				<apex:repeat value="{!dispInvoices}" var="dispinv">
+				        				<div style="width:min-width:1500px;">
+				        					<table class="ifsIMTable" cellspacing="0" cellpadding="0" width="100%" border="0" style="table-layout:fixed;border-collapse:collapse;cursor:default;" >
+				        						<tr>
+				        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="170px"><apex:outputLink target="blank" value="/{!dispinv.invoice.Account__r.Id}" ><apex:outputField value="{!dispinv.invoice.Account__r.Name}" /></apex:outputLink></td>
+				        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="120px"><apex:outputLink target="blank" value="/{!dispinv.invoice.Id}"><apex:outputField value="{!dispinv.invoice.kognoz1__Invoice2_Number__c}" /></apex:outputLink></td>
+				        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="120px"><apex:outputField value="{!dispinv.invoice.kognoz1__Invoice_Total_Amount__c}" /></td>
+				        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="140px"><apex:outputField value="{!dispinv.invoice.kognoz1__Outstanding_Balance__c}" /></td>
+				        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="120px"><apex:outputField value="{!dispinv.invoice.kognoz1__Payment_Status__c}" /></td>
+				        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="200px">
+				        								<apex:inputField value="{!dispinv.payment.Name}"  required="true" rendered="{!NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0}"/>
+				        								<apex:outputField value="{!dispinv.payment.Name}" rendered="{!NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0}"/>
+				        							</td>
+				        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="200px">
+				        								<apex:inputField value="{!dispinv.payment.kognoz1__Payment_Date__c}"  rendered="{!NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0}"/>
+				        								<apex:outputField value="{!dispinv.payment.kognoz1__Payment_Date__c}" rendered="{!NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0}" />
+				        							</td>
+				        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="200px">
+				        								<apex:inputField value="{!dispinv.payment.kognoz1__Payment_Amount__c}" style="text-align:right;" rendered="{!NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0}"/>
+				        								<apex:outputField value="{!dispinv.payment.kognoz1__Payment_Amount__c}" style="text-align:right;" rendered="{!NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0}"/>
+				        							</td>
+				        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="150px">
+				        								<apex:inputField value="{!dispinv.payment.kognoz1__Payment_Method__c}" rendered="{!NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0}"/>
+				        								<apex:outputText value="" rendered="{!NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0}"/>
+				        							</td>
+													<apex:repeat value="{!dispinv.addFlds}" var="fld">
+					        							<td class="ifsTableRows" style="border-left:1px solid #F8F8F8;border-right:1px solid #F8F8F8;vertical-align:middle;" width="200px">
+					        								<span invoiceId="{!dispinv.invoice.Id}" fldName="{!fld.billingRule.QueryText__c}" fdlType="{!fld.billingRule.Type__c}" style="display:none;" />
+					        								<!-- date -->
+					        								<apex:inputField value="{!fld.billingRule.kognoz1__Date__c}" styleClass="dateField"  rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'date',fld.billingRule.kognoz1__Variable__c==false, NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}" />
+											                <apex:outputPanel styleClass="requiredInput" layout="block" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'date',fld.billingRule.kognoz1__Variable__c==true,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}">
+											                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						        								<apex:inputField value="{!fld.billingRule.kognoz1__Date__c}" styleClass="dateField" />
+											                </apex:outputPanel>
+															<apex:outputField value="{!fld.billingRule.kognoz1__Date__c}" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'date',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0)}"/>
+					        								<!-- datetime -->
+					        								<apex:inputField value="{!fld.billingRule.kognoz1__Datetime__c}" styleClass="datetimeField"  rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'datetime',fld.billingRule.kognoz1__Variable__c==false,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}" />
+											                <apex:outputPanel styleClass="requiredInput" layout="block" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'datetime',fld.billingRule.kognoz1__Variable__c==true,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}">
+											                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						        								<apex:inputField value="{!fld.billingRule.kognoz1__Datetime__c}" styleClass="datetimeField" />
+											                </apex:outputPanel>
+															<apex:outputField value="{!fld.billingRule.kognoz1__Datetime__c}" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'datetime',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0)}"/>
+					        								<!-- double -->
+					        								<apex:inputField value="{!fld.billingRule.kognoz1__Double__c}" styleClass="doubleField"  rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'double',fld.billingRule.kognoz1__Variable__c==false,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}" />
+											                <apex:outputPanel styleClass="requiredInput" layout="block" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'double',fld.billingRule.kognoz1__Variable__c==true,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}">
+											                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						        								<apex:inputField value="{!fld.billingRule.kognoz1__Double__c}" styleClass="doubleField" />
+											                </apex:outputPanel>
+															<apex:outputField value="{!fld.billingRule.kognoz1__Double__c}" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'double',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0)}"/>
+					        								<!-- currency -->
+					        								<apex:inputField value="{!fld.billingRule.kognoz1__Currency__c}" styleClass="currencyField"  rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'currency',fld.billingRule.kognoz1__Variable__c==false,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}" />
+											                <apex:outputPanel styleClass="requiredInput" layout="block" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'currency',fld.billingRule.kognoz1__Variable__c==true,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}">
+											                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						        								<apex:inputField value="{!fld.billingRule.kognoz1__Currency__c}" styleClass="currencyField" />
+											                </apex:outputPanel>
+															<apex:outputField value="{!fld.billingRule.kognoz1__Currency__c}" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'currency',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0)}"/>
+					        								<!-- percent -->
+					        								<apex:inputField value="{!fld.billingRule.kognoz1__Percent__c}" styleClass="percentField"  rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'percent',fld.billingRule.kognoz1__Variable__c==false,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}" />
+											                <apex:outputPanel styleClass="requiredInput" layout="block" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'percent',fld.billingRule.kognoz1__Variable__c==true,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}">
+											                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						        								<apex:inputField value="{!fld.billingRule.kognoz1__Percent__c}" styleClass="percentField" />
+											                </apex:outputPanel>
+															<apex:outputField value="{!fld.billingRule.kognoz1__Percent__c}" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'percent',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0)}"/>
+					        								<!-- integer -->
+					        								<apex:inputField value="{!fld.billingRule.kognoz1__Integer__c}" styleClass="integerField"  rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'integer',fld.billingRule.kognoz1__Variable__c==false,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}" />
+											                <apex:outputPanel styleClass="requiredInput" layout="block" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'integer',fld.billingRule.kognoz1__Variable__c==true,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}">
+											                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						        								<apex:inputField value="{!fld.billingRule.kognoz1__Integer__c}" styleClass="integerField" />
+											                </apex:outputPanel>
+															<apex:outputField value="{!fld.billingRule.kognoz1__Integer__c}" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'integer',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0)}"/>
+					        								<!-- text -->
+					        								<apex:inputField value="{!fld.billingRule.kognoz1__Text__c}" styleClass="textField"  rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'string',fld.billingRule.kognoz1__Variable__c==false,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}" /> 
+											                <apex:outputPanel styleClass="requiredInput" layout="block" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'string',fld.billingRule.kognoz1__Variable__c==true,NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}">
+											                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						        								<apex:inputField value="{!fld.billingRule.kognoz1__Text__c}" styleClass="textField" />
+											                </apex:outputPanel>
+															<apex:outputField value="{!fld.billingRule.kognoz1__Text__c}" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'string',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0)}"/>
+															<!-- boolean field -->
+															<apex:inputCheckbox value="{!fld.billingRule.kognoz1__Variable__c}" styleClass="booleanField" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'boolean',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}"/>												
+															<apex:outputField value="{!fld.billingRule.kognoz1__Variable__c}" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'boolean',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0)}"/>
+															<!-- picklist field -->
+															<apex:selectList value="{!fld.billingRule.kognoz1__Value__c}" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'picklist',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) > 0)}" size="1" multiselect="false">
+																<apex:selectOptions value="{!fld.pickListValues}"/>
+															</apex:selectList>
+															<apex:outputText value="" rendered="{!AND(fld.billingRule.kognoz1__Type__c == 'picklist',NULLVALUE(dispinv.invoice.kognoz1__Outstanding_Balance__c,0) <= 0)}"/>
+					        							</td> 
+													</apex:repeat>
+				        						</tr>
+				        					</table>
+				        				</div>
+			        				</apex:repeat>
+							
+								</div>
+							</div>
+							
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	</apex:pageBlock>
+        <!-- ###########################################
+        
+                ERROR HANDLING MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="errorInfoPanel" style="display:none;">
+            <apex:outputPanel id="errorPanel">
+            </apex:outputPanel>
+        </div>  
+
+
+        <!-- ###########################################
+        
+                ACTION STATUS
+        
+         ###############################################-->
+        <div id="statusMsgContainer" class="statusPopup" >
+            <div  class="popupStatus1" >
+            </div>
+            <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+                <div style="text-align:center;margin-top:15px;" > 
+                    <table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+                        <tr>
+                            <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+                            <td><span id="statusMsg" style="z-index:153;"></span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+		<apex:actionStatus onstart="displaySaving();" onstop="hideSaving();" id="savingStatus"/>
+        <apex:inputText value="{!isError}" id="errorInController" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+	</apex:form>
+</apex:page>

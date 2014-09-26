@@ -1,0 +1,21 @@
+<apex:page standardController="mployee__MF_EmployeeFile__c" sidebar="false" showHeader="false">
+ <apex:form >
+ 
+ 
+     <apex:pageBlock title="{!$Label.Employee_Contact_Information}" >
+         <apex:pageBlockSection columns="2" title="{!$Label.address}" id="ghb">
+             <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__ContactAddress}" var="f"> 
+        <apex:outputField value="{!mployee__MF_EmployeeFile__c[f]}" >
+        </apex:outputField></apex:repeat>
+         </apex:pageBlockSection>
+    
+    <apex:pageBlockSection title="{!$Label.EmailPhone}" columns="2">
+             <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__ContactEmailPhone}" var="g"> 
+        <apex:outputField value="{!mployee__MF_EmployeeFile__c[g]}" >
+        </apex:outputField>
+    </apex:repeat>
+         </apex:pageBlockSection>     
+     </apex:pageBlock>
+ 
+ </apex:form>
+</apex:page>

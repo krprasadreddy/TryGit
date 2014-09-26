@@ -1,0 +1,11 @@
+<apex:page controller="RadarChartController">
+    <apex:chart height="450" width="900" legend="true" data="{!data}"  >
+    <apex:legend position="left" padding="5" />
+    <apex:axis type="Radial" position="radial" >
+        <apex:chartLabel /> 
+    </apex:axis> 
+    <apex:radarSeries xField="memName" yField="value1" tips="true" opacity="0.4" markerType="circle" strokeWidth="1" strokeColor="#FF0000" fill="red"/>
+    <apex:radarSeries xField="memName" yField="value2" tips="true" opacity="0.4" markerType="circle" strokeWidth="1" strokeColor="#00FF00" fill="green"/>
+    <apex:radarSeries xField="memName" yField="value3" tips="true" markerType="circle" strokeWidth="1" strokeColor="#0000FF" fill="blue" opacity="0.4"/>
+    </apex:chart>
+</apex:page>

@@ -1,0 +1,98 @@
+<apex:page standardController="EMP_TIME__Timesheet__c" extensions="EMP_TIME.TimesheetClass" sidebar="false" showHeader="true" tabStyle="Timesheet__tab">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<head>
+<style>
+.td7 {
+    border-bottom: 2px solid #FF0000;
+    color: #29457B;
+    font-weight: bold;
+}
+</style>
+    <apex:includeScript value="{!URLFOR($Resource.EMP_TIME__TM_JS, '/jq1.10.2.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.EMP_TIME__TM_JS, '/jqUI1.10.4.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.EMP_TIME__TM_JS, '/jqUI1.10.4.css')}"/>
+    <script type="text/javascript" src="{!URLFOR($Resource.jquery)}"></script>
+<script>
+    $(function() {$("#TimeBlock").tooltip({track: true});
+  });
+ </script>   
+</head>
+<script>
+   function DeleteConfirmation(){
+     var r=window.confirm("Are you sure?");
+     if (r==true){  
+        return true;
+     }
+     else {
+        return false;
+     }               
+   }
+</script> 
+  <div id="TimeBlock">
+    
+  <apex:form >
+    <apex:sectionHeader title="New/Edit" subtitle="Employee Timesheet"/>
+      <apex:pageBlock title="Employee Timesheet"  mode="edit">
+        <apex:pageBlockSection columns="1" title="Instructions" collapsible="false">
+                <apex:pageBlockSectionItem ><apex:outputText escape="false" value="{!$Label.emp_time__Timesheet_Instruction}" /></apex:pageBlockSectionItem>
+         </apex:pageBlockSection> 
+          <apex:pageBlockSection columns="1" title="Current Timesheet ({!weekStart} - {!weekEnd})" rendered="{!timesheetwrapperlist1.size>0}" collapsible="false" >
+           <apex:pageMessages />
+            <apex:pageblockTable value="{!timesheetwrapperlist1}" var="lsttm" style="width:100%;">
+              <apex:column headerValue="Time #" style="width:40px;">
+                 <a href="/{!lsttm.TimesheetObj.Id}?nooverride=1">{!lsttm.TimesheetObj.Name}</a>
+              </apex:column>
+              <apex:column headerValue="Employee">
+               <apex:outputField value="{!lsttm.TimesheetObj.EMP_TIME__Employee_Name__c}"/>
+              </apex:column>
+            <apex:column headerValue="Project">
+                <apex:outputField value="{!lsttm.TimesheetObj.EMP_TIME__Project__c}"/>
+            </apex:column>
+            <apex:column headerValue="Task"><apex:outputField value="{!lsttm.TimesheetObj.EMP_TIME__Task__c}"/></apex:column>
+            <apex:column headerValue="Location"><apex:outputField value="{!lsttm.TimesheetObj.EMP_TIME__Location__c}"/></apex:column> -->
+            <apex:column headerValue="Project Type"><apex:outputField value="{!lsttm.TimesheetObj.EMP_TIME__Project_Type__c}"/></apex:column>
+            <apex:column headerValue="Date"><apex:outputText value="{0,date,EE,d'th' MMMM, yyyy}"> <apex:param value="{!lsttm.TimesheetObj.EMP_TIME__Date__c}" /> </apex:outputText></apex:column>
+            <apex:column headerValue="Hours"><apex:outputField value="{!lsttm.TimesheetObj.EMP_TIME__Hours__c}"/></apex:column>
+            <apex:column headerValue="Status"><apex:outputField value="{!lsttm.TimesheetObj.EMP_TIME__Status__c}"/></apex:column>
+            <apex:column headerValue="Comments"><apex:outputField value="{!lsttm.TimesheetObj.EMP_TIME__Comments__c}"/></apex:column>
+             <apex:column headerValue="Del"><apex:commandLink immediate="true" action="{!deleteTime}" onclick="return DeleteConfirmation();" title="Delete Timesheet" ><apex:image url="{!$Resource.EMP_TIME__Del}"/>
+                 <apex:param name="DelTimesheet" value="{!lsttm.TimesheetObj.Id}"/>
+             </apex:commandLink></apex:column>
+        </apex:pageblockTable>
+        <div style=" position:relative; font-size:13px;">
+         <b>Total Hours:&nbsp;</b>{!totalvalue}
+        </div>  
+       </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" title="New Timesheet" collapsible="false"> 
+                <apex:pageBlockTable value="{!timesheetwrapperlist}" var="lsttm" style="width:100%;" id="TimeId">
+                    <apex:column headerValue="Employee" title="Employee"><apex:inputField value="{!lsttm.TimesheetObj.EMP_TIME__Employee_Name__c}" required="true"/></apex:column>
+                    <apex:column headerValue="Project"><apex:inputField value="{!lsttm.TimesheetObj.EMP_TIME__Project__c}" required="true"/></apex:column>
+                    <apex:column headerValue="Task"><apex:inputField value="{!lsttm.TimesheetObj.EMP_TIME__Task__c}" /></apex:column>
+                    <apex:column headerValue="Location"><apex:inputField value="{!lsttm.TimesheetObj.EMP_TIME__Location__c}" /></apex:column>
+                    <apex:column headerValue="Project Type"><apex:inputField value="{!lsttm.TimesheetObj.EMP_TIME__Project_Type__c}" /></apex:column>
+                    <apex:column headerValue="Date">
+                         <c:HideDate > <apex:inputField value="{!lsttm.TimesheetObj.EMP_TIME__Date__c}" style="width:60px;" required="true"/></c:HideDate>
+                    </apex:column>
+                    <apex:column headerValue="Hours">
+                         <apex:inputField value="{!lsttm.TimesheetObj.EMP_TIME__Hours__c}" style="width:30px;" required="true"/>
+                    </apex:column>
+                    <apex:column headerValue="Comments">
+                         <apex:inputField value="{!lsttm.TimesheetObj.EMP_TIME__Comments__c}" style="height:15px; width:150px;" required="true"/>
+                    </apex:column>
+                      <apex:column headerValue="Del" rendered="{!timesheetwrapperlist.size>1}">
+                        <apex:commandLink action="{!DelRow}" immediate="true" reRender="TimeId" title="Delete Column"><apex:image url="{!$Resource.EMP_TIME__Del}"/>
+                            <apex:param value="{!lsttm.UniqueNumber}" name="TimesheetNumber"/>
+                        </apex:commandLink>
+                    </apex:column> 
+                 </apex:pageBlockTable>
+              </apex:pageBlockSection> 
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<apex:commandLink action="{!AddRow}" immediate="true" reRender="TimeId" title="Add Row"><apex:image url="{!$Resource.EMP_TIME__AddRow}" style="width:14px;"/></apex:commandLink><br/>
+         <apex:pageBlockButtons location="bottom" rendered="{!!flag}">
+            <apex:commandButton value="Save" action="{!onSave}"/>
+             <apex:commandButton value="Submit" action="{!onSubmit}"  rendered="{!timesheetwrapperlist1.size>0}" immediate="true" onclick="return DeleteConfirmation();"/>
+            <apex:commandButton value="Cancel" action="{!onCancel}"/>
+         </apex:pageBlockButtons>            
+ </apex:pageBlock>
+ </apex:form>
+</div> 
+</apex:page>

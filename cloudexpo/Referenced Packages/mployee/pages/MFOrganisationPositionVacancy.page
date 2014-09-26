@@ -1,0 +1,346 @@
+<apex:page id="MFOrganisationPositionVacancy"
+    standardController="mployee__MF_Organisation_PositionVacancy__c" 
+    docType="html-5.0"
+    applyHtmlTag="false"
+    applyBodyTag="false"
+    standardStylesheets="false"
+    showHeader="false"
+    cache="false"
+>
+    <apex:variable value="{!mployee__MF_Organisation_PositionVacancy__c}" var="item"/>
+    <apex:composition template="mployee__AdminTemplateBootstrap">
+    
+        <apex:define name="css">
+            <style>
+                .section {
+                    padding: 20px 0 0 0;
+                    min-height: 300px;
+                }
+                .dl-horizontal dt {
+                	text-align: left;
+                }
+            </style>
+        </apex:define>
+        
+        
+        
+        <apex:define name="javascript">
+            <script type="text/javascript">
+            
+            	
+                $(document).ready( function() {
+                
+                	initialize();
+                	getMarkers('mployee__MF_Recruitment_Candidate__c');
+                	getMarkersApplication();
+                	getMarker();
+                	window.setTimeout(function() {
+				      hide('mployee__MF_Recruitment_Candidate__c');
+				    }, 3000);
+                	
+                    
+                    $('a[href="#address"]').on('shown.bs.tab', function (e) {
+                        initialize();
+                        
+                        getMarkers('mployee__MF_Recruitment_Candidate__c');
+                        getMarkersApplication();
+                        
+                        hide('mployee__MF_Recruitment_Candidate__c');
+                        getMarker();
+                                        
+                    });
+                    
+                    
+                    $( ".detailList" ).addClass( "table" );
+                    $( ".hide" ).hide();
+                    
+                });
+        
+                function show(category) {
+                    for (var i=0; i<gmarkers.length; i++) {
+                      if (gmarkers[i].params.categoryName == category) {
+                        gmarkers[i].setVisible(true);
+                      }
+                    }
+                    // == check the checkbox ==
+                    document.getElementById(category+"box").checked = true;
+                }
+                
+                // == hides all markers of a particular category, and ensures the checkbox is cleared ==
+                function hide(category) {
+                    for (var i=0; i<gmarkers.length; i++) {
+                      if (gmarkers[i].params.categoryName == category) {
+                        gmarkers[i].setVisible(false);
+                      }
+                    }
+                    // == clear the checkbox ==
+                    document.getElementById(category+"box").checked = false;
+                    // == close the info window, in case its open on a marker that we just hid
+                    infowindow.close();
+                }
+        
+                // == a checkbox has been clicked ==
+                function boxclick(box,category) {
+                    if (box.checked) {
+                      show(category);
+                    } else {
+                      hide(category);
+                    }
+                    // == rebuild the side bar
+                    //makeSidebar('sidebar_'+category);
+                }
+                
+                
+                
+               
+                
+                
+            </script>
+        </apex:define>
+        
+        <apex:define name="body">
+			<div class="container-fluid">
+				
+				<apex:outputPanel layout="block" styleClass="row"  rendered="false">
+	        		<div class="col-sm-12">		        	
+						<h4><apex:outputField value="{!item.Position__r.Name}"/>&nbsp;<small><apex:outputField value="{!item.Name}"/></small></h4>		            
+		        	</div>
+		        </apex:outputPanel>
+		        
+				<div class="row">
+					<div class="col-xs-8">
+						<c:adminMod_GoogleMap />
+					</div>
+					<div class="col-xs-4">
+						<table class="table">                           
+							<tr>
+								<td>
+							      <input type="checkbox" checked="checked" id="mployee__MF_Organisation_Position__cbox" onclick="boxclick(this,'mployee__MF_Organisation_Position__c')" />                                  
+								</td>
+								<td>
+							    	<label for="mployee__MF_Organisation_Position__cbox"><apex:outputText value="{!$Label.MOD_GOOGLE_MAP_TOGGLE_SHOW_POSITION}" /></label>
+								</td>
+							</tr>
+							<tr>
+								<td>
+							    	<input type="checkbox" checked="checked"  id="mployee__MF_Recruitment_Candidate__cbox" onclick="boxclick(this,'mployee__MF_Recruitment_Candidate__c')" />                             
+								</td>
+								<td>
+							    	<label for="mployee__MF_Recruitment_Candidate__cbox"><apex:outputText value="{!$Label.MOD_GOOGLE_MAP_TOGGLE_SHOW_OTHER_CANDIDATES}" /> </label>
+								</td>
+							</tr>                           
+							<tr>
+								<td>
+							    	<input type="checkbox" checked="checked" id="mployee__MF_Recruitment_JobApplication__cbox"  onclick="boxclick(this,'mployee__MF_Recruitment_JobApplication__c')" />                               
+								</td>
+								<td>
+							    	<label for="mployee__MF_Recruitment_JobApplication__cbox"><apex:outputText value="{!$Label.MOD_GOOGLE_MAP_TOGGLE_SHOW_APPLICATIONS}" /></label>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>      	
+			</div>
+        </apex:define>
+        
+        <!-- Rotzooi!! -->
+        <apex:define name="XXX">       
+        	<div class="container-fluid">
+	        	
+	        	<div class="row">
+	        		<div class="col-sm-12">		        	
+						<h3><apex:outputField value="{!item.Position__r.Name}"/>&nbsp;<small><apex:outputField value="{!item.Name}"/></small></h3>		            
+		        	</div>
+		        	<div class="col-sm-2">
+			            
+						<ul class="list-inline ">
+			                <li>
+			                    <apex:outputLink target="_blank" title="Share this job on Twitter" id="share-twitter" value="https://twitter.com/intent/tweet">
+			                        <apex:param name="original_referer" value="http://mployee.nl/&source=tweetbutton" />
+			                        <apex:param name="text" value="We are looking for a {!MF_Organisation_PositionVacancy__c.mployee__Position__r.name}" />
+			                        <apex:param name="url" value="http://mployeerec-developer-edition.eu2.force.com/mployeeRec__SiteApplicationNew?vacancy={!MF_Organisation_PositionVacancy__c.id}" />
+			                        <span class="fa-stack fa-lg">
+			                          <i class="fa fa-square-o fa-stack-2x"></i>
+			                          <i class="fa fa-twitter fa-stack-1x"></i>
+			                        </span>
+			                        
+			                    </apex:outputLink>
+			                </li>
+			                <li>
+			                    <apex:outputLink target="_blank" title="Share this job on LinkedIn" id="share-linkedin" value="https://www.linkedin.com/shareArticle">                        
+			                        <apex:param name="mini" value="true" />
+			                        <apex:param name="url" value="http://mployee.nl/" />
+			                        <apex:param name="title" value="We are looking for a {!MF_Organisation_PositionVacancy__c.mployee__Position__r.name}" />
+			                        <apex:param name="summary" value="http://mployeerec-developer-edition.eu2.force.com/mployeeRec__SiteApplicationNew?vacancy={!MF_Organisation_PositionVacancy__c.id}" />		                        
+			                        <span class="fa-stack fa-lg">
+			                          <i class="fa fa-square-o fa-stack-2x"></i>
+			                          <i class="fa fa-linkedin fa-stack-1x"></i>
+			                        </span>
+			                    </apex:outputLink>
+			                </li>
+			                <li>
+			                    <apex:outputLink target="_blank" title="Share this job on Facebook" id="share-facebook"
+			                        value="http://www.facebook.com/sharer.php?u={!MF_Organisation_PositionVacancy__c.id}">                      
+			                        <span class="fa-stack fa-lg">
+			                          <i class="fa fa-square-o fa-stack-2x"></i>
+			                          <i class="fa fa-facebook fa-stack-1x"></i>
+			                        </span>
+			                        
+			                    </apex:outputLink>
+			                </li>
+			            </ul>
+					</div>
+				
+		        	
+		        </div>
+				
+				<div class="row">
+					<div class="col-sm-12">
+			        <ul class="nav nav-tabs">
+			          <li class="active"><a href="#profile" data-toggle="tab">Information</a></li>
+			          <li><a href="#address" data-toggle="tab">Map</a></li>
+			          <li><a href="#contact" data-toggle="tab">Applications</a></li>          
+			        </ul>
+				
+        
+			        <apex:outputpanel layout="block" styleClass="tab-content">
+			        
+			            <section class="tab-pane active section profile" id="profile">                          
+			                <div class="row">
+			                    
+			                    <div class="col-md-4">
+			                        <dl class="dl-horizontal">
+			                            <dt><apex:outputText value="{!$ObjectType.MF_Organisation_PositionVacancy__c.Fields.DateStart__c.label}"/></dt>
+			                            <dd><apex:outputField value="{!item.DateStart__c}" /></dd>
+			                            <dt><apex:outputText value="{!$ObjectType.MF_Organisation_PositionVacancy__c.Fields.DateEnd__c.label}"/></dt>
+			                            <dd><apex:outputField value="{!item.DateEnd__c}" /></dd>
+			                            <dt><apex:outputText value="{!$ObjectType.MF_Organisation_PositionVacancy__c.Fields.hireByDate__c.label}"/></dt>
+			                            <dd><apex:outputField value="{!item.hireByDate__c}" /></dd>
+			                            <dt><apex:outputText value="{!$ObjectType.MF_Organisation_PositionVacancy__c.Fields.State__c.label}"/></dt>
+			                            <dd><apex:outputField value="{!item.State__c}" /></dd>
+			                        </dl>
+			                    </div>
+			    
+			                    <div class="col-md-8">
+			                        <!-- Nav tabs -->
+			                        <ul class="nav nav-tabs">
+			                          <li class="active"><a href="#position" data-toggle="tab"><apex:outputText value="{!$ObjectType.MF_Organisation_Position__c.label}"/></a></li>
+			                          <li><a href="#responsibilities" data-toggle="tab"><apex:outputText value="{!$ObjectType.MF_Organisation_Position__c.Fields.ResponsibilitiesPDF__c.label}"/></a></li>
+			                          <li><a href="#requiredSkills" data-toggle="tab"><apex:outputText value="{!$ObjectType.MF_Organisation_Position__c.Fields.RequiredSkillsPDF__c.label}"/></a></li>
+			                          <li><a href="#requiredEducation" data-toggle="tab"><apex:outputText value="{!$ObjectType.MF_Organisation_Position__c.Fields.RequiredEducationPDF__c.label}"/></a></li>
+			                        </ul>
+			                        
+			                        <!-- Tab panes -->
+			                        <div class="tab-content">
+			                          <div class="tab-pane active" id="position">
+			                            <h3><apex:outputField value="{!item.Position__r.Name}"/></h3>
+			                            <apex:outputField value="{!item.Position__r.LocationStreet__c}"/><br/>
+			                            <apex:outputField value="{!item.Position__r.LocationPostalCode__c}"/>&nbsp;<apex:outputField value="{!item.Position__r.LocationCity__c}"/><br/>
+			                            <apex:outputField value="{!item.Position__r.LocationCountryCode__c}"/>
+			                          </div>
+			                          <div class="tab-pane" id="responsibilities">
+			                          	<apex:outputField value="{!item.Position__r.ResponsibilitiesPDF__c}" rendered="{!IF(item.Position__r.ResponsibilitiesPDF__c == '', false,true)}"/>
+			                          	<apex:outputpanel layout="block" styleClass="alert alert-info" rendered="{!IF(item.Position__r.ResponsibilitiesPDF__c == '', true,false)}">
+			                          		<strong>Heads up!</strong> This alert needs your attention, but it's not super important.
+			                          	</apex:outputpanel>
+			                          	
+			                          </div>
+			                          <div class="tab-pane" id="requiredSkills">
+			                          	
+			                          	<div class="panel panel-default">
+										  <div class="panel-body">
+										    <apex:outputField value="{!item.Position__r.RequiredSkillsPDF__c}"/>
+										  </div>
+										</div>
+			                          </div>
+			                          <div class="tab-pane" id="requiredEducation"><apex:outputField value="{!item.Position__r.RequiredEducationPDF__c}"/></div>
+			                        </div>                      
+			                    </div>
+			                    
+			                    
+			                    
+			                    
+			                </div>              
+			            </section>
+			            
+			            <section class="tab-pane section address" id="address">
+			                        
+			                    <div class="row">
+			                        <div class="col-xs-8">
+			                            <c:adminMod_GoogleMap />
+			                            
+			                        </div>
+			                        <div class="col-xs-4">                          
+			                            <table>                           
+			                              <tr>
+			                                <td>
+			                                    <input type="checkbox" checked="checked" id="mployee__MF_Organisation_Position__cbox" onclick="boxclick(this,'mployee__MF_Organisation_Position__c')" />                                  
+			                                </td>
+			                                <td>
+			                                    <label for="applicationbox">Show Positions</label>
+			                                </td>
+			                              </tr>
+			                              <tr>
+			                                <td>
+			                                    <input type="checkbox" checked="checked"  id="mployee__MF_Recruitment_Candidate__cbox" onclick="boxclick(this,'mployee__MF_Recruitment_Candidate__c')" />                             
+			                                </td>
+			                                <td>
+			                                    <label for="candidatebox">Show Other candidates</label>
+			                                </td>
+			                              </tr>                           
+			                              <tr>
+			                                <td>
+			                                    <input type="checkbox" checked="checked"  onclick="boxclick(this,'mployee__MF_Recruitment_JobApplication__c')" />                               
+			                                </td>
+			                                <td>
+			                                    <label for="applicationbox">Show Applications</label>
+			                                </td>
+			                              </tr>
+			                            </table>
+			                                            
+			                        </div>
+			                        
+			                    </div>
+			    
+			                
+			            </section>
+			            
+			            <section class="tab-pane section contact" id="contact">             
+			                <div class="row">
+			                    <div class="col-md-12">
+			                        <table class="table datatable table-condensed ">
+			                            <thead>             
+			                                <tr>
+			                                    <th><apex:outputText value="{!$ObjectType.MF_Recruitment_JobApplication__c.Fields.Candidate__c.label}"/></th>
+			                                    <th><apex:outputText value="{!$ObjectType.MF_Recruitment_JobApplication__c.Fields.State__c.label}"/></th>
+			                                    <th><apex:outputText value="{!$ObjectType.MF_Recruitment_JobApplication__c.Fields.DateStart__c.label}"/></th>
+			                                    <th><apex:outputText value="{!$ObjectType.MF_Recruitment_JobApplication__c.Fields.DateEnd__c.label}"/></th>
+			                                    <th><apex:outputText value="{!$ObjectType.MF_Recruitment_JobApplication__c.Fields.DaysSinceDateStart__c.label}"/></th>                                                  
+			                                </tr>
+			                            </thead>
+			                            <tbody>
+			                                <apex:repeat value="{!item.mployee__Job_Applications__r}" var="item">
+			                                <tr>
+			                                    <td><apex:outputField value="{!item.candidate__r.NameFull__c}"/></td>
+			                                    <td><apex:outputField value="{!item.State__c}"/></td>
+			                                    <td><apex:outputField value="{!item.DateStart__c}"/></td>
+			                                    <td><apex:outputField value="{!item.DateEnd__c}"/></td>
+			                                    <td><apex:outputField value="{!item.DaysSinceDateStart__c}"/></td>
+			                                </tr>
+			                                </apex:repeat>
+			                            </tbody>
+			                        
+			                        
+			                        </table>
+			                    </div>
+			                </div>              
+			            </section>      
+			        </apex:outputpanel>
+				</div>
+				</div>
+        	</div>       
+    
+		</apex:define>
+		
+    </apex:composition>
+</apex:page>

@@ -1,0 +1,65 @@
+<apex:page id="logoutPage"			
+		   docType="html-5.0"
+		   controller="mployee.SiteClass"            
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+           title="{!$Label.site.site_login}">  
+
+
+	<apex:composition template="SiteTemplate{!siteSettings.template.name}">
+  	<apex:define name="javascript">
+  		<script type="text/javascript">
+  			$('[id$=username]').attr('disabled', 'disabled');			
+  		</script>
+  		
+                	
+  	</apex:define>
+  	<apex:define name="css">
+  		<apex:stylesheet value="{!URLFOR($Resource.templateBase,'assets/css/pages/signin.css')}"/>
+  	</apex:define>
+  	
+    <apex:define name="body">    	
+    	<div class="account-container stacked">	
+			<div class="content clearfix">
+			
+				<apex:form id="loginForm" forceSSL="true">		
+					<h1>Uitloggen</h1>		
+					
+					<div class="login-fields">
+						<apex:messages styleClass="alert alert-info" />
+						<p>Weet u zeker dat u wilt uitloggen?</p>
+						
+						<div class="field">
+							
+							<apex:outputLabel value="{!$Label.site.username}" for="username"/>
+							<input type="text" class="form-control input-lg username-field" id="username" value="{!user.authUserName__c}" disabled="disabled"/>
+							
+							
+						</div> <!-- /field -->
+						
+						
+						
+					</div> <!-- /login-fields -->
+					
+					<div class="login-actions">
+						
+						
+						<apex:commandButton action="{!logout}" value="Uitloggen" id="loginButton" styleClass="login-action btn btn-primary"/>
+						
+					</div> <!-- .actions -->			
+					
+					
+				</apex:form>
+			</div>
+		</div>
+		
+		
+		
+		
+		
+	</apex:define>
+  </apex:composition>
+</apex:page>

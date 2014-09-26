@@ -1,0 +1,621 @@
+<apex:page id="profileRegister" 
+           docType="html-5.0" 
+           controller="mployee.SiteProfileRegisterController"
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+           language="{!language}"
+>
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+    
+    	<apex:define name="javascript">
+    		<apex:includeScript value="{!URLFOR($Resource.mployeeSite,'assets/js/plugins/validate/jquery.validate.js')}"  />
+    		<apex:includeScript value="{!URLFOR($Resource.mployeeSite,'assets/js/localization/validate/messages_'+language+'.js')}"  />
+    		
+    		<apex:includeScript value="{!URLFOR($Resource.mployeeSite,'assets/js/plugins/fileinput/bootstrap.js')}"  />
+    		
+    		<apex:includeScript value="{!URLFOR($Resource.mployeeSite,'assets/js/plugins/typeahead/typeahead-0.9.3.min.js')}"  />
+    		
+    		<script type="text/javascript">
+   				function inputChanged(oFile){
+               	
+                	if(oFile.files[0] != null){               	
+                	
+	                	var fileSize = oFile.files[0].size;
+	                	console.log('file size in bytes: '+fileSize);
+	                	
+	                	if(fileSize>5242880){
+	                		fileSize = humanFileSize(fileSize,1024);
+	                		// show gritter
+	                		var template = jQuery.validator.format("{!$Label.SITE_PROFILE_ATTACHMENT_TO_BIG_MSG_TEXT}");
+	                		//j$.gritter.add({
+				            //    title: '{!$Label.SITE_PROFILE_ATTACHMENT_TO_BIG_MSG_TITLE}',
+				        	//	text: template(fileSize),            
+				            //    sticky: false
+				            //});	                		
+	                		$(oFile).parents('.fileupload').fileupload('clear');	                		
+	                	}
+	                }                
+                }
+                
+                
+                function humanFileSize(bytes, si) {
+				    var thresh = si ? 1000 : 1024;
+				    if(bytes < thresh) return bytes + ' B';
+				    var units = si ? ['kB','MB','GB','TB','PB','EB','ZB','YB'] : ['KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+				    var u = -1;
+				    do {
+				        bytes /= thresh;
+				        ++u;
+				    } while(bytes >= thresh);
+				    return bytes.toFixed(1)+' '+units[u];
+				};
+            	$(document).ready(function(){
+            	
+            		
+					
+					$('[id$=registerForm]').validate({					
+						debug: false,
+						rules:{
+							
+							email:	{ required:true, email: true },
+							
+	                        "{!$Component.profileRegister.siteTemplate.registerForm.passwordConfirm}":{                                    
+	                            equalTo: $('[id$=password]')
+	                        },
+							"{!$Component.profileRegister.siteTemplate.registerForm.username}":{
+								required:true,
+								email: true,
+	                            remote:{
+	                            	url: 'services/apexrest/mployee/validateUsername',
+	                            	data:{
+	                            		username:function(){
+	                            			return $('[id$=username]').val();	                            			
+	                            		}
+	                            	}
+	                            }
+							}    	
+						},
+						messages:{
+							"{!$Component.profileRegister.siteTemplate.registerForm.username}":{	                    		
+	                    		remote: '{!$Label.FORM_VALIDATE_FIELD_USERNAME_INUSE_MSG}'
+	                    	}
+						},
+						errorClass: "help-inline",
+						errorElement: "span",
+						highlight:function(element, errorClass, validClass) {
+							$(element).parents('.form-group').removeClass('has-success').addClass('has-error');
+						},
+						unhighlight: function(element, errorClass, validClass) {
+							$(element).parents('.form-group').removeClass('has-error').addClass('has-success');
+						},
+						invalidHandler: function(event, validator) {
+						    // 'this' refers to the form
+						    var errors = validator.numberOfInvalids();
+						    if (errors) {
+						    	var message;
+						    	if(errors == 1){						    		
+						    		message = '{!$Label.SITE_PROFILE_REGISTER_VALIDATE_ERROR_MSG}';
+						    	} else{
+						    		var templateErrorPlural = jQuery.validator.format("{!$Label.SITE_PROFILE_REGISTER_VALIDATE_ERROR_PLURAL_MSG}");
+						    		message = templateErrorPlural(errors);
+						    	}
+						    	
+						        $("div.error span").html(message);
+							    $("div.error").show();
+							    
+						    	//j$.gritter.add({
+				                	//title: 'Errors',
+				        			//text: message,            
+				                	//sticky: false
+				            //	});
+						    } else {
+						    	$("div.error").hide();
+							}
+						}
+					});
+					
+					
+					$('.industry-typeahead').typeahead({
+						name: 'industry',
+						prefetch: 'services/apexrest/mployee/ta/industry.json',						
+					  	limit: 10                                                                   
+					});
+					
+                });               	
+        	</script>
+    	</apex:define>
+    	
+    	<apex:define name="css">
+    		<apex:stylesheet value="{!URLFOR($Resource.mployeeSite,'assets/css/plugins/typeahead/typeahead.css')}"/>
+    		<apex:stylesheet value="{!URLFOR($Resource.mployeeSite,'assets/css/plugins/fileinput/bootstrap.css')}"/>
+    		<style>
+	    		.error{
+	    			color: #B94A48;
+	    		}
+	    		.modal-body{
+					color: #333333;
+				}
+    		</style>
+    	</apex:define>
+    
+        <apex:define name="body">
+        	
+        	<apex:pageMessages />
+        	<apex:messages />
+        	
+            <apex:message for="" styleClass="alert alert-info list-unstyled"  />
+           
+            
+            <div class="container">
+            
+            	
+            	<apex:dynamicComponent componentValue="{!pageHeader}" />
+                <div class="row">
+                    <div class="col-lg-12">
+                        <apex:form id="registerForm" styleClass="form-horizontal col-md-12" forceSSL="true" enctype="multipart/form-data">                        	
+                        	
+                        	<div class="form-group">
+						    	<div class="{!siteSettings.form.labelStyleClass}"></div>
+
+						    	<div class="{!siteSettings.form.inputStyleClass}">
+						    		<apex:commandLink immediate="true" rendered="{!siteConfig.linkedInEnabled}" styleClass="btn btn-default"  action="{!SiteAuth}">
+					                	<apex:param name="serviceName" value="LinkedIn" assignTo="{!service}"/>
+					                	<i class="fa fa-linkedin"/>&nbsp;
+					                	<apex:outputText value="{!$Label.SITE_PROFILE_REGISTER_WITH_VARIABLE}">
+					                		<apex:param value="LinkedIn"/>
+					                	</apex:outputText>
+					                </apex:commandLink>
+					                &nbsp;
+					                <apex:commandLink immediate="true" rendered="{!siteConfig.xingEnabled}" styleClass="btn btn-default"  action="{!SiteAuth}">
+					                	<apex:param name="serviceName" value="Xing" assignTo="{!service}"/>
+					                	<i class="fa fa-xing"/>&nbsp;
+					                	<apex:outputText value="{!$Label.SITE_PROFILE_REGISTER_WITH_VARIABLE}">
+					                		<apex:param value="Xing"/>
+					                	</apex:outputText>
+					                </apex:commandLink>
+					                &nbsp; 
+						    	</div>
+						    </div>
+                        	
+                        	
+	                    	
+	                    	<fieldset>	                    		
+	                    		<legend><span class="hidden-xs"><apex:outputText value="{!$Label.SITE_PROFILE_LEGEND_LOGIN_DETAILS}"/></span></legend>
+	                    		
+	                    		<div class="form-group">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$Label.site.username}" for="username"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">							      
+								      <apex:input type="email" value="{!profile.credentials.userName}" id="username" styleClass="form-control required" html-placeholder="{!$Label.site.username}"  />
+								    </div>
+							  	</div>
+								<div class="form-group">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$Label.site.password}" for="password"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								      <apex:inputSecret value="{!profile.credentials.password}" html-minlength="6"  id="password" styleClass="form-control required" html-placeholder="{!$Label.site.password}" />
+								    </div>
+							  	</div>
+							  	<div class="form-group">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$Label.site.confirm_password}" for="passwordConfirm"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								      <apex:inputSecret value="{!profile.credentials.passwordConfirm}" html-minlength="6" id="passwordConfirm" styleClass="form-control required" html-placeholder="{!$Label.site.confirm_password}" />
+								    </div>
+							  	</div>
+	                    	</fieldset>
+	                    	
+	                    	<fieldset>
+                    			<legend><span class="hidden-xs"><apex:outputText value="{!$Label.SITE_PROFILE_LEGEND_PERSONAL}"/></span></legend>
+                    			
+                    			<div class="form-group">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.Gender__c.label}" for="mployee__Gender__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">								      
+								    	<apex:selectList styleClass="form-control required" style="height:30px;" value="{!profile.gender}" size="1"> 
+			        						<apex:selectOptions value="{!profile.genders}"/>
+			        					</apex:selectList>  
+								    </div>
+							  	</div>
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.NameFirst__c.label}" for="firstName"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputText value="{!profile.firstName}" id="firstName" styleClass="form-control" required="true" html-placeholder="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.NameFirst__c.label}" />
+								    </div>
+							  	</div>
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.NameLast__c.label}" for="lastName"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputText value="{!profile.lastName}" id="lastName" styleClass="form-control required" html-placeholder="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.NameLast__c.label}" />
+								    </div>
+							  	</div>
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.BirthDate__c.label}" for="dateOfBirthDay"/>
+								    <div class="row">
+										<div class="col-xs-2">
+											<apex:input type="number" html-minlength="1" html-maxlength="2" html-min="1" html-max="31" id="dateOfBirthDay" value="{!profile.dateOfBirth.day}" styleClass="form-control required digits" html-placeholder="{!$Label.GLOBAL_DAY}"/>
+										</div>
+										<div class="col-xs-2">
+											<apex:input type="number" html-minlength="1" html-maxlength="2" html-min="1" html-max="12" value="{!profile.dateOfBirth.month}" id="dateOfBirthMonth" styleClass="form-control required digits" html-placeholder="{!$Label.GLOBAL_MONTH}"/>
+										</div>
+										<div class="col-xs-2">											
+											<apex:input type="number" html-minlength="4" html-maxlength="4" html-min="1900" html-max="2014" value="{!profile.dateOfBirth.year}" id="dateOfBirthYear" styleClass="form-control required digits" html-placeholder="{!$Label.GLOBAL_YEAR}"/>
+										</div>
+										<div class="col-xs-2">
+											<apex:outputText rendered="false" value="FORMAT_DATE_DD_MM_YYYY"/>
+											<apex:outputText value="dd-mm-yyyy"/>
+										</div>
+									</div>								    
+							  	</div>
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.BirthPlace__c.label}" for="birthPlace"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputText value="{!profile.birthPlace}" id="birthPlace" styleClass="form-control required" html-placeholder="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.BirthPlace__c.label}" />
+								    </div>
+							  	</div>
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.Nationality__c.label}" for="Nationality__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputField id="Nationality__c" styleClass="form-control required" value="{!candidate.Nationality__c}"/>
+								    </div>
+							  	</div>
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.Education__c.label}" for="Education__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputField value="{!candidate.Education__c}" id="Education__c" styleClass="form-control required" html-placeholder="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.Education__c.label}" />
+								    </div>
+							  	</div>
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.CurrentEmployer__c.label}" for="CurrentEmployer__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputField value="{!candidate.CurrentEmployer__c}" id="CurrentEmployer__c" styleClass="form-control" html-placeholder="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.CurrentEmployer__c.label}" />
+								    </div>
+							  	</div>
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.Industry__c.label}" for="industry"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputText value="{!profile.industry}" id="industry" styleClass="form-control industry-typeahead" html-placeholder="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.industry__c.label}" />
+								    </div>
+							  	</div>							  	 
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.ProfileMailNewVacancies__c.label}" for="ProfileMailNewVacancies__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputField value="{!candidate.ProfileMailNewVacancies__c}" id="ProfileMailNewVacancies__c" styleClass="form-control" />
+								    </div>
+							  	</div>
+							  	
+							  	<div class="form-group hidden-xs">
+				                	<apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label"/>
+				                	<div class="{!siteSettings.form.inputStyleClass}">
+					                	<div class="row">										
+											<div class=" col-xs-6">
+												<apex:outputLabel styleClass="control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.Q_SalaryCurrent__c.label}" for="Q_SalaryCurrent__c"/>
+											</div>
+											<div class=" col-xs-3">
+												<apex:outputLabel styleClass="control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.Q_SalaryCurrentPeriod__c.label}" for="Q_SalaryCurrentPeriod__c"/>
+											</div>
+											<div class=" col-xs-3">
+												<apex:outputLabel styleClass="control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.Q_SalaryCurrentGrossNet__c.label}" for="Q_SalaryCurrentGrossNet__c"/>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div class="form-group">									
+									<apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.Q_SalaryCurrent__c.label}"/>
+									<div class="{!siteSettings.form.inputStyleClass}">
+										<div class="row">
+											<div class="col-xs-6">
+												<div class="input-group">
+													<span class="input-group-addon"><i class="fa fa-euro"/></span>												
+													<apex:inputField id="Q_SalaryCurrent__c" styleClass="form-control " value="{!candidate.Q_SalaryCurrent__c}"/>
+												</div>
+											</div>
+											<div class="col-xs-3">
+												<apex:inputField id="Q_SalaryCurrentPeriod__c" styleClass="form-control " value="{!candidate.Q_SalaryCurrentPeriod__c}"/>
+											</div>
+											<div class="col-xs-3">
+												<apex:inputField id="Q_SalaryCurrentGrossNet__c" styleClass="form-control " value="{!candidate.Q_SalaryCurrentGrossNet__c}"/>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.TravelReadiness__c.label}" for="TravelReadiness__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputField value="{!candidate.TravelReadiness__c}" id="TravelReadiness__c" styleClass="form-control" />
+								    </div>
+							  	</div>
+							  	
+                    		</fieldset>
+                    		
+                    		<fieldset>
+                    			<legend><span class="hidden-xs"><apex:outputText value="{!$Label.SITE_PROFILE_LEGEND_CONTACT}"/></span></legend>
+                    			
+                    			<apex:repeat value="{!profile.addresses.values}" var="address" id="address">
+									<apex:outputPanel rendered="{!IF(address.addressType == 'home',true,false)}"/>									
+		
+									<div class="form-group">				                        
+				                        <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.AddressStreet__c.label}" for="addressStreet"/>
+				                        <div class="{!siteSettings.form.inputStyleClass}">                            
+				                            <apex:inputText id="addressStreet" styleClass="form-control required" value="{!address.street}"/>		                            
+				                        </div>
+				                    </div>
+				                    	
+									<div class="form-group">
+				                        <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.AddressZip__c.label} - {!$ObjectType.MF_Recruitment_Candidate__c.Fields.AddressCity__c.label}" for="addressPostalCode"/>                        
+				                        <div class="{!siteSettings.form.inputStyleClass}">
+				                        <div class="row">
+											<div class="col-xs-4">
+												<apex:inputText id="addressPostalCode" styleClass="form-control required" value="{!address.postalCode}"/>
+											</div>
+											<div class="col-xs-8">
+												<apex:inputText id="addressCity" styleClass="form-control required" value="{!address.city}"/>
+											</div>
+										</div>
+										</div>
+				                    </div>
+				                    	
+									<div class="form-group">
+			                        	<apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.AddressCountryCode__c.label}" for="mployee__AddressCountryCode__c"/>
+			                         	<div class="{!siteSettings.form.inputStyleClass}">	                         		
+			                         		<apex:inputField id="mployee__AddressCountryCode__c" styleClass="form-control" value="{!candidate.AddressCountryCode__c}"/>	                         		
+			                         	</div>
+			                  		</div>
+				                </apex:repeat>
+                    			
+				                <apex:repeat value="{!profile.emailAddresses.values}" var="emailAddress" id="emailAddress">
+					                <div class="form-group">            
+				                        <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$Label.site.email}" for="email"/>            
+				                        <div class="{!siteSettings.form.inputStyleClass}">
+				                            <apex:inputText styleClass="required email form-control" id="email" value="{!emailAddress.email}"/>
+				                            
+				                        </div>
+				                    </div>
+				                </apex:repeat>				                
+				                
+				                <div class="form-group hidden-xs">
+				                	<apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label"/>
+				                	<div class="{!siteSettings.form.inputStyleClass}">
+					                	<div class="row">										
+											<div class=" col-xs-3">
+												<apex:outputLabel styleClass="control-label" value="{!$Label.FORM_FIELD_COUNTRYCODE_LABEL}"/>
+											</div>
+											<div class=" col-xs-3">
+												<apex:outputLabel styleClass="control-label" value="{!$Label.FORM_FIELD_AREACODE_LABEL}"/>
+											</div>
+											<div class=" col-xs-6">
+												<apex:outputLabel styleClass="control-label" value="{!$Label.FORM_FIELD_NUMBER_PLUS_EXTENSION_LABEL}"/>
+											</div>
+										</div>
+									</div>
+								</div>
+								
+								<apex:repeat value="{!profile.phoneNumbers.values}" var="phone" id="phone">
+								<div class="form-group">									
+									<apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!IF(phone.phoneType == 'home',$Label.MF_RECRUITMENT_CANDIDATE_FIELD_PHONE_HOME_LABEL,$Label.MF_RECRUITMENT_CANDIDATE_FIELD_PHONE_MOBILE_LABEL)}"/>
+									<div class="{!siteSettings.form.inputStyleClass}">
+										<div class="row">
+											<div class="col-xs-3">
+												<div class="input-group">
+													<span class="input-group-addon">+</span>												
+													<apex:input type="number" html-minlength="1" html-maxlength="4" html-min="1" id="phoneCountryCode" styleClass="form-control digits " value="{!phone.countryCode}"/>
+												</div>
+											</div>
+											<div class="col-xs-3">
+												<apex:input type="number" html-minlength="1" html-maxlength="4" html-min="1" id="phoneAreaCode" styleClass="form-control digits " value="{!phone.areaCode}" />
+											</div>
+											<div class="col-xs-6">
+												<apex:input type="number" html-minlength="6" html-maxlength="10" html-min="1"  id="phonephoneNumber" styleClass="form-control phone_{!phone.phoneType}"  value="{!phone.phoneNumber}"/>
+											</div>
+										</div>
+									</div>
+								</div>
+								</apex:repeat>
+								
+							  	
+                    		</fieldset>
+                    		
+                    		<fieldset>
+                    			<legend><span class="hidden-xs"><apex:outputText value="{!$Label.SITE_PROFILE_LEGEND_AVAILABILITY}"/></span></legend>
+                    			
+                    			<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.StateAvailability__c.label}" for="StateAvailability__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+								    	<apex:inputField value="{!candidate.StateAvailability__c}" id="StateAvailability__c" styleClass="form-control" html-placeholder="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.StateAvailability__c.label}" />
+								    </div>
+							  	</div>
+							  	
+							  	<div class="form-group">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.MF_Recruitment_Candidate__c.Fields.Q_DateAvailable__c.label}" for="Q_DateAvailable__c"/>
+								    <div class="row">
+										<div class="col-xs-2">
+											<apex:input type="number" html-minlength="1" html-maxlength="2" html-min="1" html-max="31" id="Q_DateAvailable__c" value="{!profile.availability.dateStart.day}" styleClass="form-control required digits" html-placeholder="{!$Label.GLOBAL_DAY}"/>
+										</div>
+										<div class="col-xs-2">
+											<apex:input type="number" html-minlength="1" html-maxlength="2" html-min="1" html-max="12" value="{!profile.availability.dateStart.month}" styleClass="form-control required digits" html-placeholder="{!$Label.GLOBAL_MONTH}"/>
+										</div>
+										<div class="col-xs-2">											
+											<apex:input type="number" html-minlength="4" html-maxlength="4" html-min="2014" value="{!profile.availability.dateStart.year}" styleClass="form-control required digits" html-placeholder="{!$Label.GLOBAL_YEAR}"/>
+										</div>
+										<div class="col-xs-2">
+											<apex:outputText rendered="false" value="FORMAT_DATE_DD_MM_YYYY"/>
+											<apex:outputText value="dd-mm-yyyy"/>
+										</div>
+									</div>								    
+							  	</div>
+							  	
+							</fieldset>
+                    		
+                    		<fieldset>                    			
+                    			<legend><span class="hidden-xs"><apex:outputText value="{!$Label.SITE_PROFILE_LEGEND_UPLOAD}"/></span></legend>
+                    				
+                    				<apex:outputpanel styleClass="row" rendered="true" layout="block">
+                    					<div class="col-md-4">
+                    						<h3><apex:outputText value="{!$Label.SITE_PROFILE_REGISTER_FORM_ATTACHMENT_HEADER}"/></h3>
+                    						<p><apex:outputText value="{!$Label.SITE_PROFILE_REGISTER_FORM_ATTACHMENT_TEXT}" /></p>
+                    					</div>
+                    				</apex:outputpanel>
+                    				
+                    				<apex:outputpanel styleClass="row" rendered="true" layout="block">
+                    					
+                    					<div class="col-md-4">
+                    						<h3><apex:outputText value="Profiel Photo"/></h3>
+                    						<div class="fileinput fileinput-new" data-provides="fileinput">
+												<div class="fileinput-new thumbnail" style="width: 200px; height: 150px;">
+													<apex:image id="avatar" styleClass="img-thumbnail" rendered="true" style="height:100px" url="{!URLFOR($Resource.templateBootstrap, 'assets/img/avatar_male_dark_200x200.png' )}"/>												    
+												</div>
+												<div class="fileinput-preview fileinput-exists thumbnail" style="max-width: 200px; max-height: 150px;"></div>
+												<div>
+												    <span class="btn btn-default btn-file">
+												    	<span class="fileinput-new"><apex:outputText value="{!$Label.GLOBAL_ACTION_SELECT_FILE}" /></span>
+												    	<span class="fileinput-exists"><apex:outputText value="{!$Label.GLOBAL_ACTION_CHANGE}" /></span>												    	
+												    	<apex:inputFile id="upload" value="{!profilePhoto.attachment.Body}" filename="{!profilePhoto.attachment.name}"/>
+												    	
+												    </span>
+												    <a href="#" class="btn btn-default fileinput-exists" data-dismiss="fileinput"><apex:outputText value="{!$Label.GLOBAL_ACTION_REMOVE}" /></a>
+												</div>
+											</div>
+											                    					
+                    					</div>
+                    					
+                    					<div class="col-md-8">
+                    					<apex:repeat id="attachments-panels" value="{!newAttachments}" var="item">
+                    						<h3><apex:outputText value="{!item.filetype.label}"/></h3>
+                    						<div class="fileinput fileinput-new" data-provides="fileinput">
+												<div class="input-group">
+												    <div class="form-control uneditable-input span3" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i> <span class="fileinput-filename"></span></div>
+												    <span class="input-group-addon btn btn-default btn-file">
+												    	<span class="fileinput-new"><apex:outputText value="{!$Label.GLOBAL_ACTION_SELECT_FILE}" /></span>
+												    	<span class="fileinput-exists"><apex:outputText value="{!$Label.GLOBAL_ACTION_CHANGE}" /></span>
+												    	<apex:inputFile value="{!item.attachment.body}" filename="{!item.attachment.name}"/>
+												    </span>
+												    <a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput"><apex:outputText value="{!$Label.GLOBAL_ACTION_REMOVE}" /></a>
+												</div>
+											</div>
+		                    					
+		                    			</apex:repeat>
+                    					</div>
+                    				
+                    				</apex:outputpanel>
+                    				
+                    				                    				
+                    				
+                    				<apex:outputpanel styleClass="row" rendered="false" layout="block">
+                    					<div class="col-md-8">
+                    					
+                    						<div class="row">
+		                    					<apex:repeat id="attachments-block" value="{!newAttachments}" var="item">
+		                    					<div class="col-md-6">
+		                    						<h3><apex:outputText value="{!item.filetype.label}"/></h3>
+		                    						<apex:inputFile value="{!item.attachment.body}" filename="{!item.attachment.name}"/>
+		                    						<apex:inputText value="{!item.attachment.description}" html-placeholder="{!$ObjectType.Attachment.Fields.Description.label}"/>
+		                    					</div>
+		                    					</apex:repeat>		                    					
+		                    				</div>
+                    					
+                    					</div>
+                    					<div class="col-md-4">
+                    						
+                    					</div>
+                    				
+                    				</apex:outputpanel>
+                    			
+                    				<apex:outputpanel styleClass="row" rendered="false" layout="block">
+                    					<div class="col-md-8">
+                    					
+		                   					<apex:repeat id="attachments" value="{!newAttachments}" var="item">
+										  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">									    
+											    <div class="col-sm-12">
+													<div class="col-xs-3">
+														<apex:selectList styleClass="form-control required" style="height:30px;" value="{!item.filetype.value}" size="1" id="attachmentNew"> 
+						        						<apex:selectOptions value="{!filetypeOptions}"/>
+						        					</apex:selectList> 
+													</div>
+													<div class="col-xs-5">											
+														<apex:inputFile value="{!item.attachment.body}" filename="{!item.attachment.name}" styleClass="form-control"/>
+													</div>
+													<div class="col-xs-4">
+														<apex:inputText value="{!item.attachment.description}" styleClass="form-control" html-placeholder="{!$ObjectType.Attachment.Fields.Description.label}"/>
+													</div>											
+												</div>								    
+										  	</apex:outputpanel>
+										  	</apex:repeat>
+		                   				</div>
+                    				
+	                    				<div class="col-md-4">
+	                    					DESC
+	                    				</div>                    			
+                    			</apex:outputpanel>
+                    			
+                    		</fieldset>
+                    		
+                    		<div class="form-group">
+						    	<div class="{!siteSettings.form.labelStyleClass}"></div>
+
+						    	<div class="{!siteSettings.form.inputStyleClass}">
+						    		
+						    		<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">
+						    			<apex:outputText value="{!$Label.SITE_PROFILE_REGISTER_FORM_BTN_REGISTER}" />
+						    		</button>
+						    		
+						    	</div>
+						    </div>
+						    
+						    <!--Start  Modal -->
+							<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+								<div class="modal-dialog">
+									<div class="modal-content">
+									  <div class="modal-header">
+									    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+									    <h4 class="modal-title"><apex:outputText value="{!$Label.SITE_PROFILE_REGISTER_FORM_TERMS_HEADER}" /></h4>
+									  </div>
+									  <div class="modal-body">
+									  	
+									  		<apex:outputText value="{!$Label.SITE_PROFILE_REGISTER_FORM_TERMS_DESC}" escape="false"/>
+									  		
+									  		<label class="checkbox">      						
+					      						<apex:inputCheckbox styleClass="required" value="{!profile.acceptTermConditions}" id="acceptTermConditions"/>
+					      						<apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__ProfileAcceptTermConditions__c.label}" />
+					      						<apex:outputLabel for="acceptTermConditions" styleClass="help-inline"/>
+					    					</label>
+					    					
+					    					<label class="checkbox">
+					      						<apex:inputField value="{!candidate.mployee__ProfileMailNewVacancies__c}" id="mployee__ProfileMailNewVacancies__c"/>
+					      						<apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.Fields.mployee__ProfileMailNewVacancies__c.label}" />
+					    					</label>
+					    					
+					    					<div class="error"><span/></div>
+									  	
+									  </div>
+									  <div class="modal-footer">
+									  	
+									  	
+									  	
+										<apex:commandButton styleClass="btn btn-primary" action="{!registerUser}" value="{!$Label.SITE_PROFILE_REGISTER_FORM_BTN_CONFIRM}"  id="submit"/>	
+									    
+									    
+									    
+									  </div>
+									</div><!-- /.modal-content -->
+								</div><!-- /.modal-dialog -->
+							</div><!-- /.modal -->
+						    
+						    <!-- End Modal  -->
+	                    	
+	                    	
+                        </apex:form>
+                        
+                        
+                        
+                    </div>
+                </div>
+				
+
+			</div>
+            
+            
+            
+        </apex:define>
+    </apex:composition>
+</apex:page>

@@ -1,0 +1,236 @@
+<apex:page standardController="kognoz1__Invoice2_Template__c" extensions="kognoz1.InvoiceTemplateEditorController" tabStyle="kognoz1__Invoice2_Template__c" title="New Invoice Template">
+
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-json-2.2.js')}"></script> 
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+
+    <script type="text/javascript">
+    $(function(){
+        var html='{!$Api.Partner_Server_URL_220}';
+        $("input[id$=serverUrl]").val(html);
+        $("#errorInfoPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Processing information'
+        });
+    });
+
+    function displayNextResults()
+    {
+        var isError = $("input[id*=errorInController]").val();
+        if(isError=="true")
+        {
+            $("span[id*=errorPanel]").empty();
+            var integrityCheckJsonObjStr = $("input[id*=integrityCheckJSONContField]").val();
+        
+            if(integrityCheckJsonObjStr)
+            {
+                var isServerEnabled = $("input[id$=isServerEnabledContField]").val();
+                var integrityCheckJsonObj = JSON.parse(integrityCheckJsonObjStr);
+                for(var idx=0; idx< integrityCheckJsonObj.length;idx++)
+                {
+                    var missingObjects = integrityCheckJsonObj[idx].missingObjects;
+                    var missingFields = integrityCheckJsonObj[idx].missingFields;
+                    var missingRelationships = integrityCheckJsonObj[idx].missingRelationships;
+                    
+                    var missingObjectsUl = "<ul>";
+                    if(missingObjects.length>0)
+                    {
+                        for(var i=0; i<missingObjects.length; i++)
+                        {
+                            missingObjectsUl+="<li>"+missingObjects[i].objName+"</li>";
+                        }
+                    }
+                    missingObjectsUl+="</ul>";
+                    
+                    var missingFieldsTableRows = "";
+                    if(missingFields.length>0)
+                    {
+                        for(var j=0; j<missingFields.length;j++)
+                        {
+                            var missingFieldsObj = missingFields[j].objName;
+                            var objFields = missingFields[j].fields;
+                            for(var k=0; k<objFields.length;k++)
+                            {
+                                if(k==0)
+                                    missingFieldsTableRows+="<tr><td>"+missingFieldsObj+"</td><td>"+objFields[k].fieldName+"</td><td>"+objFields[k].fieldType+"</td></tr>";
+                                else
+                                    missingFieldsTableRows+="<tr><td style=\"text-align:center;\">-\"-</td><td>"+objFields[k].fieldName+"</td><td>"+objFields[k].fieldType+"</td></tr>";
+                            
+                            }
+                        }
+                    }
+                    var missingRelationshipsRows = "";
+                    if(missingRelationships.length>0)
+                    {
+                        for(var k=0; k<missingRelationships.length; k++)
+                        {
+                            var lookup = missingRelationships[k].lookup;
+                            var obj = missingRelationships[k].obj;
+                            missingRelationshipsRows+="<tr><td>"+obj+"</td><td>"+lookup+"</td></tr>"
+                        }
+                    }
+                    var processingInfoHtml = "";
+                    if(missingObjects.length>0)
+                    {
+                         processingInfoHtml+="<p>The following objects are missing from your org:</p>"+missingObjectsUl;
+                         processingInfoHtml+="<p>Restore the missing objects to continue.</p>"
+                    }
+                    if(missingRelationships.length>0)
+                    {
+                        if(missingObjects.length>0)
+                            processingInfoHtml+="<hr/>";
+                        var missingRelationshipsTbl = '<table cellpadding="3" cellspacing="0" border="1" >'+
+                                                '<th class="ifsthBack">Object name</th><th class="ifsthBack">Lookup to object</th>'+
+                                                missingRelationshipsRows+'</table>';
+                         processingInfoHtml+="<p>The following object relationships are missing from your org:</p>"+missingRelationshipsTbl;
+                         processingInfoHtml+="<p>Restore the missing relationships to continue.</p>"
+                    }
+                    if(missingFields.length>0)
+                    {
+                        var missingFieldsTbl = '<table cellpadding="3" cellspacing="0" border="1" >'+
+                                                '<th class="ifsthBack">Object name</th><th class="ifsthBack">Field name</th><th class="ifsthBack">Field type</th>'+
+                                                missingFieldsTableRows+'</table>';
+                        if(missingObjects.length>0 || missingRelationships.length>0)
+                            processingInfoHtml+="<hr/>";
+							processingInfoHtml+="<p>The automatic customization of the <strong>Invoice</strong> and <strong>Invoice Line Item</strong> objects could not be carried out because one of the following reasons:"
+                                                +"</p>"
+	                                             +"<ul>"
+	                                             +"<li>Your Salesforce edition does not allow the use of the required API</li>"
+	                                             +"<li>The automatic customization cannot be applied to your org</li>"
+	                                             +"</ul>"
+												+"<p>"
+												+" Follow these steps to manually customize the <strong>Invoice</strong> and <strong>Invoice Line Items</strong> objects to proceed:"
+	                                            +"</p>"
+	                                            +"<p>Customization of <strong>Invoice</strong> object (Invoice2__c)</p>"
+	                                             +"<ol>"
+	                                             +"<li>Click Your Name | Setup</li>"
+	                                             +"<li>Click App Setup | Create | Objects</li>"
+	                                             +"<li>In the Custom Objects page, click <strong>Invoice</strong></li>"
+	                                             +"<li>Scroll down to the Custom Fields and Relationships, and click the New button on that section</li>"
+	                                             +"<li>Create a new custom field for every entry in the table below where <strong>Object name</strong> is Invoice2__c, using the <strong>Field type</strong> and <span style=\"text-decoration:underline;\">exact <strong>Field name</strong></span> for that entry</li>"
+	                                             +"</ol>"
+	                                            +"<p>Customization of <strong>Invoice Line Item</strong> object (Line_Item_2__c)</p>"
+	                                             +"<ol>"
+	                                             +"<li>Click App Setup | Create | Objects</li>"
+	                                             +"<li>In the Custom Objects page, click <strong>Invoice Line Item</strong></li>"
+	                                             +"<li>Scroll down to the Custom Fields and Relationships, and click the New button on that section</li>"
+	                                             +"<li>Create a new custom field for every entry in the table below where <strong>Object name</strong> is Line_Item_2__c, using the <strong>Field type</strong> and <span style=\"text-decoration:underline;\">exact <strong>Field name</strong></span> for that entry</li>"
+	                                             +"</ol>";
+                            processingInfoHtml+=missingFieldsTbl+"<br/><br/>";
+                    }
+                    $("span[id*=errorPanel]").html(processingInfoHtml);                   
+                }
+                
+            }
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+            $("#nextStatMsg").css("display","none");
+            $("#errorInfoPanel").dialog("open");
+        }
+        else
+        {
+            redirectToNewInvoiceTemplateChoice();
+        }       
+    }
+
+    function displayNextInProgress()
+    {
+        var radioChecked;
+        $("input[type=radio]").each(function(){
+            if($(this).attr("checked")==true)
+                radioChecked = $(this).val();
+        });
+        $("#nextStatMsg").css("display","block");
+        if(radioChecked=="scratch")
+            $("#nextMsg").html("Starting off with a blank canvas ...");
+        else
+            $("#nextMsg").html("Fetching templates gallery ...");
+    }
+    
+    </script>
+
+    <apex:sectionHeader subtitle="New Invoice Template" title="Invoice Template Edit" help="{!ifsHelpUrl}"/>
+    <apex:form >
+        <apex:pageMessages id="pageErrorMessages"/>
+        <apex:outputPanel layout="block" rendered="{!AND(OR(isRead),NOT(isEdit))}" >
+            <p> Inssufficient privileges to access this invoice template. Contact your System Administrator.</p>
+        </apex:outputPanel>
+        <apex:outputPanel styleClass="ifsWizardBlock ifsTertiaryPalette" layout="block" rendered="{!AND(isRead,isEdit,isCreate)}"> 
+            <div class="ifsWizardTitle ifsTertiaryPalette">         
+                    <div class="ifsRightTitle">Step 1 of 3</div> 
+                    <h2>Step 1: Select using a predefined template or starting off with a blank canvas</h2>
+            </div>
+            <div class="ifsBody " style="background-color: #FFFFFF"> 
+                  <div class="ifsWizardHeader" style="background-color: #F8F8F8"> 
+                      <div class="ifsTopButtons" style="white-space: nowrap;"> 
+                        <apex:commandButton value="Cancel" action="{!cancel}" title="Cancel new invoice template"/>
+                        <apex:actionStatus onstart="displayNextInProgress();" onstop="displayNextResults();" id="nextStatus"/>  
+                        <apex:commandButton value="Next" action="{!nextNewTemplateChoices}"  status="nextStatus" rerender="errorInController,errorBagJSONContField,integrityCheckJSONContField,pageErrorMessages,isServerEnabledContField"  title="Go to create new invoice template"/>     
+                      </div>
+                  </div> 
+                  <br/>
+                  <apex:selectRadio value="{!newTemplateMethodChoice}" layout="pageDirection">
+                    <apex:selectOptions value="{!newTemplateMethods}" />
+                  </apex:selectRadio>
+            </div>
+        </apex:outputPanel> 
+        <apex:inputText value="{!sfdcServerUrl}" id="serverUrl" style="display:none" />
+        <apex:inputText value="{!integrityCheckJSON}" id="integrityCheckJSONContField" style="display:none"/>
+        <apex:inputText value="{!isError}" id="errorInController" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+        <apex:inputText value="{!isServerEnabled}" id="isServerEnabledContField" style="display:none"/>
+        <!-- ###########################################
+        
+                ERROR HANDLING MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="errorInfoPanel" style="display:none;">
+            <apex:outputPanel id="errorPanel">
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                ACTION STATUS IN PROGRESS
+        
+         ###############################################-->
+        <div id="nextStatMsg" class="statusPopup">
+            <div  class="popupStatus1" >
+            </div>
+            <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+                <div style="text-align:center;margin-top:15px;" > 
+                    <table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+                        <tr>
+                            <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+                            <td><span id="nextMsg" style="z-index:153;"></span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ###########################################
+
+        <!-- ###########################################
+        
+                ACTION FUNCTIONS
+        
+         ###############################################-->
+        <apex:actionFunction action="{!redirectToNewInvoiceTemplateChoice}" name="redirectToNewInvoiceTemplateChoice" />  
+    </apex:form>
+</apex:page>

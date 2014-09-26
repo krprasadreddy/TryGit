@@ -1,0 +1,35 @@
+<apex:page id="home" 
+           docType="html-5.0" 
+           controller="mployee.SiteClass"
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"            
+>
+    
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+        <apex:define name="body">
+            
+           
+            
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                    	<c:siteMod_VacanciesSearch />
+                    </div>
+                </div>
+            </div>
+            
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">                    	
+                    	<c:siteMod_Vacancies layout="filter-default" />
+                    	                        
+                    </div>
+                </div>
+            </div>
+            
+        </apex:define>
+    </apex:composition>
+</apex:page>

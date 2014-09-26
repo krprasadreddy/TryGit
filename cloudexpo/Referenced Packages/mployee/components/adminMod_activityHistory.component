@@ -1,0 +1,116 @@
+<apex:component id="activityHistory"
+	layout="none"
+	controller="mployee.com_ActivityHistoryController"
+>
+
+	<apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/js/libs/jquery-1.10.2.min.js')}"  />
+    <apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/js/plugins/gritter/jquery.gritter.min.js')}"  />
+    <apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/css/plugins/gritter/jquery.gritter.css')}"/>
+
+	<style>
+	    a.btn,a.btn:hover{
+	        text-decoration: none;
+	    }    
+    </style>
+    
+    <script type="text/javascript">
+    	function showGritter(result){
+        		$.gritter.add({
+	            	title:	result.state,
+	        		text:	result.message,            
+	                sticky: false
+	            });
+        	}
+    	
+    	function deleteActivityHistory(elem,id,isTask){
+    	
+    		mployee.com_ActivityHistoryController.deleteActivity(id,isTask,function(result, event){
+           		if (event.status) {		                
+	                console.log(result.message);
+	                console.log(result.state);
+	                showGritter(result);
+	                $(elem).parent().parent().fadeTo(600, 0, function () { 
+				        $(this).remove();
+				    });	                		                
+	                
+	            } else if (event.type === 'exception') {
+	                document.getElementById("responseErrors").innerHTML = event.message;
+	            } else {
+	                document.getElementById("responseErrors").innerHTML = event.message;
+	            } 
+	        }, 
+	        {escape: true}
+		    );
+    		
+    		$(elem).parent().parent().fadeTo(600, 0, function () {
+		        $(this).remove();
+		    });
+		    return false;
+    	
+    	}
+    	
+    	
+    </script>
+										
+	<apex:outputPanel layout="block" rendered="{!IF(config.layout =='default',true, false)}">		
+		
+		<apex:pageBlock title="{!$ObjectType.ActivityHistory.labelPlural}" id="pageBlock"> 
+		
+			<apex:pageBlockButtons location="top" id="pageBlockButtons" rendered="{!IF(config.params['showButtons'] =='1',true, false)}">        
+	            
+	            <apex:outputLink value="{!URLFOR($Action.Activity.LogCall,null,[what_id=$CurrentPage.parameters.id,retURL=$CurrentPage.parameters.id,who_id=candidate.mployee__Contact__c])}"
+	            	styleClass="btn " target="_blank"
+	            	rendered="{!IF(config.params['showButtonLogCall'] =='1',true, false)}">	            	
+	            	<apex:outputText value="{!$Label.GLOBAL_ACTION_LOG_A_CALL}" />
+	            </apex:outputLink>	            
+	            &nbsp;
+	            <apex:outputLink styleClass="btn " target="_blank" value="{!URLFOR($Action.Activity.SendEmail,$CurrentPage.parameters.id)}" rendered="{!IF(config.params['showButtonSendEmail'] =='1',true, false)}">            	
+	            	<apex:param name="p3_lkid" value="{!$CurrentPage.parameters.id}" />
+	            	<apex:param name="p2_lkid" value="{!candidate.mployee__Contact__c}" />
+	            	<apex:param name="retURL" value="{!$CurrentPage.parameters.id}" />	            	
+	            	<apex:outputText value="{!$Label.GLOBAL_ACTION_SEND_A_EMAIL}" />
+	            </apex:outputLink>
+	            
+	        </apex:pageBlockButtons>
+	        
+	        <apex:outputPanel layout="block" rendered="{!OR(ISNULL(items),items.size=0)}">
+	            <apex:outputText value="{!$Label.GLOBAL_MSG_NO_RECORDS_TO_DISPLAY}"/>	            
+            </apex:outputPanel> 
+	        
+	        <apex:pageBlockTable value="{!items}" var="item" id="pageBlockTableSort" rendered="{!!OR(ISNULL(items),items.size=0)}"> 
+	            <apex:column styleClass="actionColumn" headerValue="{!$Label.GLOBAL_ACTION_LABEL}" id="action">
+	                <apex:outputLink target="_blank" styleClass="actionLink" value="/{!item.handler['id']}/e?retURL=/{!$CurrentPage.parameters.id}" id="action_edit">
+	                	<apex:outputText value="{!$Label.GLOBAL_ACTION_EDIT}" /> 
+	                </apex:outputLink>
+	                
+	                
+	                &nbsp;|&nbsp;
+	                <a href="#" class="actionLink" onclick="deleteActivityHistory(this,'{!item.handler['id']}','{!item.handler['IsTask']}');" >
+	                	<apex:outputText value="{!$Label.GLOBAL_ACTION_DEL}" />
+	                </a>
+	                
+	                
+	            </apex:column>            
+	            <apex:column HeaderValue="{!$ObjectType.ActivityHistory.fields.subject.Label}">            	
+	            	<apex:outputLink target="_blank" styleClass="actionLink" value="/{!item.handler['id']}?retURL=/{!$CurrentPage.parameters.id}" id="action_view">
+	            		<apex:outputText value="{!item.handler['Subject']}" />
+	            	</apex:outputLink>
+	            </apex:column> 
+	            <apex:column value="{!item.handler['WhoId']}"/>
+	            <apex:column value="{!item.handler['WhatId']}"/>
+	            <apex:column value="{!item.handler['IsTask']}"/>
+	            <apex:column value="{!item.handler['ActivityDate']}"/>
+	            <apex:column value="{!item.handler['OwnerId']}"/>
+	            <apex:column value="{!item.handler['LastModifiedDate']}"/>
+	            <apex:column value="{!item.handler['CreatedDate']}"/>
+	        </apex:pageBlockTable>
+	        
+	        
+		
+		
+		</apex:pageBlock>
+	
+	</apex:outputPanel>
+	
+	
+</apex:component>

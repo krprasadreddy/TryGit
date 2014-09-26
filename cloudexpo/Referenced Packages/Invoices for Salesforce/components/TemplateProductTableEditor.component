@@ -1,0 +1,1513 @@
+<apex:component controller="kognoz1.Invoice2TemplateTable">
+<style type="text/css"> 
+	.tableContainer{text-align:left;}
+	.bringFront{z-index:100;}	
+</style>
+<script type="text/javascript" >
+
+	$(function(){
+
+		$("#productTableEditorCancelBtn").click(function(event) {
+			selectedColumnsArray = $.evalJSON($.toJSON(prevselectedColumnsArray));
+			$('.selectedField').each(function(index) {
+				$(this).removeClass('selectedField');
+				$(this).addClass('selectableField');
+				$('#selectable').append($(this).clone().removeClass('ui-selected'));
+				$(this).remove();
+			});
+
+			$(prevselectedColumnsArray).each(function(){
+				var field = this.field;	
+				var selColumnArray = $.grep($('.selectableField'),function(obj){return $(obj).attr("idfield")==field;});
+			   	if(selColumnArray.length>0)
+			   	{
+			   		var selColumn = selColumnArray[0];
+					$(selColumn).removeClass('selectableField');
+					$(selColumn).addClass('selectedField');
+					$('#choosen').append($(selColumn).clone().removeClass('ui-selected'));
+					$(selColumn).remove();
+				}
+			
+			});
+			$("select[id=ptCellHeightSelector]").val(prevCellHeight);
+			sortAvailableColumns();
+			generateLabelAlignWidthTable();
+			initColsAlignment();
+			initPTProperties();
+			previewTable();			
+
+			$("#prodsTable").removeClass('ui-selected');
+			$("#prodsTable").children('.imgsDiv').children('img').addClass('hideEditBt');
+			$("#prodsTable").children('.imgsDiv').children('img').removeClass('showEditBt');
+
+			$("#productTableEditor").dialog("close");
+		});
+		
+		$("#productTableEditorDoneBtn").click(function(event) {
+
+			var editorMode = $("#productTableEditor").dialog("option","dialogMode");
+			if(editorMode=="createNewItem")
+			{
+				if(!pageWidthExceeded)
+				{
+					if(selectedColumnsArray.length > 0)
+					{
+						productsTableCounter++;
+
+						var topMargin = parseInt($("#mainContainer").css("margin-top").replace("px",""));
+						var leftMargin = parseInt($("#mainContainer").css("margin-left").replace("px",""));
+						var topPos = $("#mainContainer").position().top + topMargin;
+						var leftPos = $("#mainContainer").position().left + leftMargin;
+						var tableContainerStyle = "cursor:pointer;";//z-index:"+productsTableCounter+";";
+						tableContainerStyle = 'position: absolute; top: '+topPos+'px; left:'+leftPos+'px;'+tableContainerStyle;
+						$("#mainContainer").append('<div id="prodsTable"  style="'+tableContainerStyle+'" ></div>');
+						
+						var editorTable = $("#tableTest").html();
+						var canvasTable = $(editorTable).clone();
+						$(canvasTable).attr("id","productTable"+productsTableCounter);
+						$("#prodsTable").append($(canvasTable));
+						$("#prodsTable").css("width",$(canvasTable).width());
+						$("#prodsTable").css("height",$(canvasTable).height());
+		
+						var imgsrc = $("#deleteEditorItemImg").attr("src");
+						var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+						var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+						$("#prodsTable").append(imgNode);
+						
+						$("#prodsTable").click(function() {
+							$('.ui-selected').each(function(index){
+								$(this).removeClass('ui-selected');
+								$(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+								$(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+							});
+							$(this).addClass('ui-selected');
+							$(this).children('.imgsDiv').children('img').addClass('showEditBt');
+							$(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+							var zindex = calculateMaxZIndex();
+							$(this).css("z-index",zindex);
+						});
+
+						var zindex = calculateMaxZIndex();
+						$("#prodsTable").css("z-index",zindex);
+						
+						$("#prodsTable").draggable({
+							containment: 'parent',
+							grid: [1, 1], 
+							stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable],div[id^=lineElement]" 
+						});
+						
+						var tblModel = $("input[id=ptTableType]").val();
+						var borderColor = $("input[id=ptBorderColor]").val();
+						var cellHeight = $("select[id=ptCellHeightSelector]").val();
+						var headFontWeight = $("#ptHeadFontWeight").val();
+						var headFontStyle = $("#ptHeadFontStyle").val();
+						var headTextAlign = $("#ptHeadTextAlign").val();
+						var headFontSize = $("select[id=ptHeaderFontSizeSelect]").val();
+						var headFontFamily = $("#ptHeaderFontFamilySelect").val();
+						var headBackColor = $("input[id=ptHeadBackColor]").val();
+						var headColor = $("input[id=ptHeadColor]").val();
+						var bodyFontWeight = $("#ptBodyFontWeight").val();
+						var bodyFontStyle = $("#ptBodyFontStyle").val();
+						var bodyFontSize = $("#ptBodyFontSizeSelect").val();
+						var bodyFontFamily = $("#ptBodyFontFamilySelect").val();
+						var bodyBackColor = $("input[id=ptBodyBackColor]").val();
+						var bodyColor = $("input[id=ptBodyColor]").val();
+						prevselectedColumnsArray = $.evalJSON($.toJSON(selectedColumnsArray));
+						prevCellHeight = $("select[id=ptCellHeightSelector]").val();
+						$("#prodsTable").dblclick(function() {
+							$("input[id=ptBorderColor]").val(borderColor);
+							$("input[id=ptTableType]").val(tblModel);
+							$("select[id=ptCellHeightSelector]").val(cellHeight);
+							$("#ptHeadFontWeight").val(headFontWeight);
+							$("#ptHeadFontStyle").val(headFontStyle);
+							$("#ptHeadTextAlign").val(headTextAlign);
+							$("select[id=ptHeaderFontSizeSelect]").val(headFontSize);
+							$("#ptHeaderFontFamilySelect").val(getFontFamilyValue($.trim(headFontFamily)));
+							$("input[id=ptHeadBackColor]").val(headBackColor);
+							$("input[id=ptHeadColor]").val(headColor);
+							$("#ptBodyFontWeight").val(bodyFontWeight);
+							$("#ptBodyFontStyle").val(bodyFontStyle);
+							$("#ptBodyFontSizeSelect").val(bodyFontSize);
+							$("#ptBodyFontFamilySelect").val(getFontFamilyValue($.trim(bodyFontFamily)));
+							$("input[id=ptBodyBackColor]").val(bodyBackColor);
+							$("input[id=ptBodyColor]").val(bodyColor);
+							sortAvailableColumns();
+							generateLabelAlignWidthTable();
+							initColsAlignment();
+							initPTProperties();
+							previewTable();			
+							$("#productTableEditor").dialog("option","dialogMode","editExistingItem");
+							$("#productTableEditor").dialog("option","selectorId",$(this).attr("id"));
+							$("#productTableEditor").dialog("open");
+						});
+						$("#prodsTable").addClass("ui-selected");
+						$("#prodsTable").children('.imgsDiv').children('img').addClass('showEditBt');
+						$("#prodsTable").children('.imgsDiv').children('img').removeClass('hideEditBt');
+			
+						// close the dialog
+						$("#productTableEditor").dialog("close");
+					}
+					else
+					{
+						window.alert("The table has no columns.\nAdd columns or cancel.");
+					}
+					
+				}
+				else
+				{
+					window.alert("The table exceeds the page width.\nReduce the columns width or remove columns.");
+				}
+
+			}
+			else
+			{
+				var selectorId = $("#productTableEditor").dialog("option","selectorId");
+				if(!pageWidthExceeded)
+				{
+					if(selectedColumnsArray.length > 0)
+					{
+						var editorTable = $("#tableTest").html();
+						var canvasTable = $(editorTable).clone();
+						$(canvasTable).attr("id","productTable"+productsTableCounter);
+						$("#prodsTable").empty();
+						$("#prodsTable").append($(canvasTable));
+						var imgsrc = $("#deleteEditorItemImg").attr("src");
+						var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+						var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+						$("#prodsTable").append(imgNode);
+						$("#prodsTable").css("width",$(canvasTable).width());
+						$("#prodsTable").css("height",$(canvasTable).height());
+		
+						$("#prodsTable").unbind("dblclick");
+						var tblModel = $("input[id=ptTableType]").val();
+						var borderColor = $("input[id=ptBorderColor]").val();
+						var cellHeight = $("select[id=ptCellHeightSelector]").val();
+						var headFontWeight = $("#ptHeadFontWeight").val();
+						var headFontStyle = $("#ptHeadFontStyle").val();
+						var headTextAlign = $("#ptHeadTextAlign").val();
+						var headFontSize = $("select[id=ptHeaderFontSizeSelect]").val();
+						var headFontFamily = $("#ptHeaderFontFamilySelect").val();
+						var headBackColor = $("input[id=ptHeadBackColor]").val();
+						var headColor = $("input[id=ptHeadColor]").val();
+						var bodyFontWeight = $("#ptBodyFontWeight").val();
+						var bodyFontStyle = $("#ptBodyFontStyle").val();
+						var bodyFontSize = $("#ptBodyFontSizeSelect").val();
+						var bodyFontFamily = $("#ptBodyFontFamilySelect").val();
+						var bodyBackColor = $("input[id=ptBodyBackColor]").val();
+						var bodyColor = $("input[id=ptBodyColor]").val();
+						prevselectedColumnsArray = $.evalJSON($.toJSON(selectedColumnsArray));
+						prevCellHeight = $("select[id=ptCellHeightSelector]").val();
+						$("#prodsTable").dblclick(function() {
+							$("input[id=ptBorderColor]").val(borderColor);
+							$("input[id=ptTableType]").val(tblModel);
+							$("select[id=ptCellHeightSelector]").val(cellHeight);
+							$("#ptHeadFontWeight").val(headFontWeight);
+							$("#ptHeadFontStyle").val(headFontStyle);
+							$("#ptHeadTextAlign").val(headTextAlign);
+							$("select[id=ptHeaderFontSizeSelect]").val(headFontSize);
+							$("#ptHeaderFontFamilySelect").val(getFontFamilyValue($.trim(headFontFamily)));
+							$("input[id=ptHeadBackColor]").val(headBackColor);
+							$("input[id=ptHeadColor]").val(headColor);
+							$("#ptBodyFontWeight").val(bodyFontWeight);
+							$("#ptBodyFontStyle").val(bodyFontStyle);
+							$("#ptBodyFontSizeSelect").val(bodyFontSize);
+							$("#ptBodyFontFamilySelect").val(getFontFamilyValue($.trim(bodyFontFamily)));
+							$("input[id=ptBodyBackColor]").val(bodyBackColor);
+							$("input[id=ptBodyColor]").val(bodyColor);
+							sortAvailableColumns();
+							generateLabelAlignWidthTable();
+							initColsAlignment();
+							initPTProperties();
+							previewTable();			
+							$("#productTableEditor").dialog("option","dialogMode","editExistingItem");
+							$("#productTableEditor").dialog("option","selectorId",$(this).attr("id"));
+							$("#productTableEditor").dialog("open");
+						});
+
+						$("#prodsTable").removeClass('ui-selected');
+						$("#prodsTable").children('.imgsDiv').children('img').addClass('hideEditBt');
+						$("#prodsTable").children('.imgsDiv').children('img').removeClass('showEditBt');
+			
+						// close the dialog
+						$("#productTableEditor").dialog("close");
+					}
+					else
+					{
+						window.alert("The table has no columns.\nAdd columns or cancel.");
+					}
+				}
+				else
+				{
+					window.alert("The table exceeds the page width.\nReduce the columns width or remove columns.");
+				}
+			
+			}
+
+		});
+		
+		$("#selColumnBtn").click(function() {
+			$('.selectableField').each(function(index) {
+				if ($(this).hasClass('ui-selected'))
+				{
+					$(this).removeClass('selectableField');
+					$(this).addClass('selectedField');
+					$('#choosen').append($(this).clone().removeClass('ui-selected'));
+					$(this).remove();
+					
+					var selColItem = new selectedColClass();
+					if ($(this).hasClass('opLineItem'))
+						selColItem.type = 'OpportunityLineItem';
+					else
+						selColItem.type = 'PricebookEntry';
+					selColItem.field = $(this).attr("idfield");
+					selColItem.label = $(this).html();
+					selColItem.width = 3;
+					selColItem.alignment = 'left';
+					selColItem.order = selectedColumnsArray.length+1;
+					selColItem.fieldType = $(this).attr("fieldType"); 
+					selColItem.fieldPrecision = $(this).attr("fieldPrecision"); 
+					selColItem.fieldScale = $(this).attr("fieldScale"); 
+					selColItem.fieldLength = $(this).attr("fieldLength"); 
+					selectedColumnsArray.push(selColItem);
+				}
+			});
+			sortAvailableColumns();
+			generateLabelAlignWidthTable();
+			previewTable();			
+			
+		});
+		
+		$("#unselColumnBtn").click(function() {
+			$('.selectedField').each(function(index) {
+				if ($(this).hasClass('ui-selected'))
+				{
+					$(this).removeClass('selectedField');
+					$(this).addClass('selectableField');
+					$('#selectable').append($(this).clone().removeClass('ui-selected'));
+					$(this).remove();
+					
+					var objIdField = $(this).attr("idfield");
+					selectedColumnsArray = $.grep(selectedColumnsArray,function(obj){return obj.field!=objIdField;});
+					selectedColumnsArray = selectedColumnsArray.sort(function(a,b){return ((a.order < b.order) ? -1 : (a.order > b.order) ? 1 : 0);});
+					var idx = 0;
+					$(selectedColumnsArray).each(function() {
+						idx++;
+						this.order = idx;
+					});
+				}
+			});
+			sortAvailableColumns();
+			generateLabelAlignWidthTable();			
+			previewTable();			
+		});
+		
+		$("#upColumnBtn").click(function(){
+			$('.selectedField').each(function(index) {
+				if ($(this).hasClass('ui-selected')){
+					upSelected($(this).index());
+					sortSelectedColumns();
+				}
+			});	
+			sortAvailableColumns();
+			generateLabelAlignWidthTable();			
+			previewTable();			
+		});
+		
+		
+		$("#downColumnBtn").click(function(){
+			var toDown = new Array();
+			$('.selectedField').each(function(index) {
+				if ($(this).hasClass('ui-selected')){
+					toDown.push($(this).index());
+					
+				}
+			});	
+
+			var max = $(toDown).size();
+			for (var i = max; i > 0; i--)
+			{
+				downSelected(toDown[i - 1]);
+			}
+			sortSelectedColumns();
+			generateLabelAlignWidthTable();			
+			previewTable();			
+		});
+		
+		$("img[id=ptBorderColorIcon]").ColorPicker({
+			onSubmit: function(hsb, hex, rgb, colorPckr) {
+				var hexColor = '#'+hex+'';
+				$("#ptBorderColor").val(hexColor);
+				$(colorPckr).ColorPickerHide();
+				previewTable();
+			},
+			onBeforeShow: function (colorPckr) {
+				var bordercolor = $("#ptBorderColor").val();
+				if(bordercolor.charAt(0)=="#")
+					bordercolor = $.trim(bordercolor.replace("#",""));
+				else
+					bordercolor = $.trim(RGBtoHEX(bordercolor).replace("#",""));
+				$(this).ColorPickerSetColor(bordercolor);
+			},
+		});
+
+		$("#ptCellHeightSelector").change(function(){
+			previewTable();
+		});
+
+		$("#ptHeaderFontSize").click( function(){
+			if($("#ptHeaderFontSizeSelect").css("display")=="none")
+				$("#ptHeaderFontSizeSelect").css("display","block");
+			else		
+				$("#ptHeaderFontSizeSelect").css("display","none");
+			$("#ptHeaderFontSizeSelect").css("position","absolute");		
+		});
+		
+		$("#ptHeaderFontSizeSelect").click(function() {
+			previewTable();
+			$("#ptHeaderFontSizeSelect").css("display","none");		
+		});
+		
+		$("#ptHeaderFontFamily").click( function(){
+			if($("#ptHeaderFontFamilySelect").css("display")=="none")
+				$("#ptHeaderFontFamilySelect").css("display","block");
+			else		
+				$("#ptHeaderFontFamilySelect").css("display","none");
+			$("#ptHeaderFontFamilySelect").css("position","absolute");		
+		});
+
+		$("#ptHeaderFontFamilySelect").click(function() {
+			previewTable();
+			$("#ptHeaderFontFamilySelect").css("display","none");		
+		});
+		
+		$("img[id=ptHeaderBackColorIcon]").ColorPicker({
+			onSubmit: function(hsb, hex, rgb, colorPckr) {
+				var hexColor = '#'+hex+'';
+				$("input[id=ptHeadBackColor]").val(hexColor);
+				$(colorPckr).ColorPickerHide();
+				previewTable();
+			},
+			onBeforeShow: function (colorPckr) {
+				var headbackcolor = $("input[id=ptHeadBackColor]").val();
+				if(headbackcolor.charAt(0)=="#")
+					headbackcolor = $.trim(headbackcolor.replace("#",""));
+				else
+					headbackcolor = $.trim(RGBtoHEX(headbackcolor).replace("#",""));
+				$(this).ColorPickerSetColor(headbackcolor);
+			},
+		});
+
+		$("img[id=ptHeaderColorIcon]").ColorPicker({
+			onSubmit: function(hsb, hex, rgb, colorPckr) {
+				var hexColor = '#'+hex+'';
+				$("input[id=ptHeadColor]").val(hexColor);
+				$(colorPckr).ColorPickerHide();
+				previewTable();
+			},
+			onBeforeShow: function (colorPckr) {
+				var headcolor = $("input[id=ptHeadColor]").val();
+				if(headcolor.charAt(0)=="#")
+					headcolor = $.trim(headcolor.replace("#",""));
+				else
+					headcolor = $.trim(RGBtoHEX(headcolor).replace("#",""));
+				$(this).ColorPickerSetColor(headcolor);
+			},
+		});
+ 
+		$("#ptBodyFontSize").click( function(){
+			if($("#ptBodyFontSizeSelect").css("display")=="none")
+			{
+				$("#ptBodyFontSizeSelect").css("display","block");
+			}
+			else
+			{
+				$("#ptBodyFontSizeSelect").css("display","none");
+			}
+			$("#ptBodyFontSizeSelect").css("position","absolute");		
+		});
+		$("#ptBodyFontSizeSelect").click(function() {
+			$("#ptBodyFontSizeSelect").css("display","none");		
+			previewTable();
+		});
+		
+		$("#ptBodyFontFamily").click( function(){
+			if($("#ptBodyFontFamilySelect").css("display")=="none")
+				$("#ptBodyFontFamilySelect").css("display","block");
+			else		
+				$("#ptBodyFontFamilySelect").css("display","none");
+			$("#ptBodyFontFamilySelect").css("position","absolute");		
+		});
+		$("#ptBodyFontFamilySelect").click(function() {
+			$("#ptBodyFontFamilySelect").css("display","none");		
+			previewTable();
+		});
+		
+		$("img[id=ptBodyBackColorIcon]").ColorPicker({
+			onSubmit: function(hsb, hex, rgb, colorPckr) {
+				var hexColor = '#'+hex+'';
+				$("input[id=ptBodyBackColor]").val(hexColor);
+				$(colorPckr).ColorPickerHide();
+				previewTable();
+			},
+			onBeforeShow: function (colorPckr) {
+				var bodybackcolor = $("input[id=ptBodyBackColor]").val();
+				if(bodybackcolor.charAt(0)=="#")
+					bodybackcolor = $.trim(bodybackcolor.replace("#",""));
+				else
+					bodybackcolor = $.trim(RGBtoHEX(bodybackcolor).replace("#",""));
+				$(this).ColorPickerSetColor(bodybackcolor);
+			},
+		});
+
+		$("img[id=ptBodyColorIcon]").ColorPicker({
+			onSubmit: function(hsb, hex, rgb, colorPckr) {
+				var hexColor = '#'+hex+'';
+				$("input[id=ptBodyColor]").val(hexColor);
+				$(colorPckr).ColorPickerHide();
+				previewTable();
+			},
+			onBeforeShow: function (colorPckr) {
+				var bodycolor = $("input[id=ptBodyColor]").val();
+				if(bodycolor.charAt(0)=="#")
+					bodycolor = $.trim(bodycolor.replace("#",""));
+				else
+					bodycolor = $.trim(RGBtoHEX(bodycolor).replace("#",""));
+				$(this).ColorPickerSetColor(bodycolor);
+			},
+		});
+		/*
+			Utilities
+		*/
+
+		$("#selectable").selectable();
+		$("#choosen").selectable();
+		
+		$("#RevenueSchedulesNote").dialog({
+				modal: true, 
+				autoOpen: false,
+				width: 550,
+				height:'auto',
+				title:'Revenue Schedules Note'
+		});
+		
+		
+		$("div[id=productTableEditor]").click(function(e){
+			if(e.target.id!="ptHeaderFontSize" && e.target.id!="ptHeaderFontFamily" && e.target.id!="ptBodyFontSize" && e.target.id!="ptBodyFontFamily")
+			{
+				$("#ptHeaderFontFamilySelect").css('display', 'none');
+				$("#ptHeaderFontSizeSelect").css('display', 'none');
+				$("#ptBodyFontFamilySelect").css('display', 'none');
+				$("#ptBodyFontSizeSelect").css('display', 'none');
+			}
+		});
+		
+		
+	}); // ready end
+
+
+	function sortAvailableColumns()
+	{
+		var oppLineItemFields = $("#selectable div[class*=opLineItem]");
+		var pbookEntryFields = $("#selectable div[class*=priceBEntry]");
+		$("#selectable").empty();
+		
+		var opLineItemListitems = oppLineItemFields; 
+		opLineItemListitems.sort(function(a, b) {
+		   var compA = $(a).html().toUpperCase();
+		   var compB = $(b).html().toUpperCase();
+		   return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
+		})
+		var pbookEntryListitems = pbookEntryFields; 
+		pbookEntryListitems.sort(function(a, b) {
+		   var compA = $(a).html().toUpperCase();
+		   var compB = $(b).html().toUpperCase();
+		   return (compA < compB) ? -1 : (compA > compB) ? 1 : 0;
+		})
+		$("#selectable").append('<div class="objectTitle">&nbsp;OpportunityLineItem</div>');
+		$(opLineItemListitems).each(function(){$("#selectable").append($(this));})	
+		$("#selectable").append('<div class="objectTitle">&nbsp;PricebookEntry</div>');
+		$(pbookEntryListitems).each(function(){$("#selectable").append($(this));})	
+	}
+
+
+
+	function selectedColClass() {}  
+	var selectedColumnsArray = new Array(); 
+	var prevselectedColumnsArray = new Array(); 
+	var prevCellHeight = "10.0";
+	var pageWidthExceeded = false;
+		
+	function upSelected(pos){
+		if (pos > 0){
+			var aparent= $("#choosen");
+			var a = $("#choosen").children()[pos];
+			var b = $("#choosen").children()[pos - 1];
+		    $(a).insertBefore($(b));
+	    }    
+	}
+	
+	function downSelected(pos){
+		if (pos < $("#choosen").children().size() - 1){
+			var aparent= $("#choosen");
+			var a = $("#choosen").children()[pos + 1];
+			var b = $("#choosen").children()[pos];
+		    $(a).insertBefore($(b));
+	    }    
+	}
+
+	function displayTableWidthMessage(flag)
+	{
+		if(flag)
+		{
+			$("#tableWidthMsg").html("Table width:");
+			$('#tableWidthMsg').css("font-size","0.75em");
+			$("#tableWidthMsg").css("color","grey");
+			$('#colsConfWidthSum').css("display","inline");
+			$('#colsConfWidthSum').css("font-size","0.75em");
+			$("#colsConfWidthSum").css("color","grey");
+		
+		}
+		else
+		{
+			$('#tableWidthMsg').html('Table exceeded page width');
+			$('#tableWidthMsg').css("font-size","0.75em");
+			$('#tableWidthMsg').css("color","red");
+			$('#tableWidthMsg').css("padding-left","7px");
+			$('#colsConfWidthSum').css("display","none");
+			$('#colsConfWidthSum').css("font-size","0.75em");
+			$("#colsConfWidthSum").css("color","grey");
+		
+		}
+	}
+	
+	function increment(bt){
+		var maxTableWidth = parseFloat($("#mainContainer").width()) / 20;
+		var widthSum = parseFloat($('#colsConfWidthSum').html()) + 0.5;
+		if (widthSum <= maxTableWidth)
+		{
+			var val = $(bt).parent().siblings().children('#inc_dec_num').html();
+			val = parseFloat(val) + 0.5;
+			$(bt).parent().siblings().children('#inc_dec_num').html(val);
+			$('#colsConfWidthSum').html(widthSum);
+			var fieldRef = $(bt).parent().siblings().children('#inc_dec_num').attr("field");
+			var selColObj = $.grep(selectedColumnsArray,function(o){return o.field==fieldRef;});
+			selColObj[0].width = val;
+			displayTableWidthMessage(true);
+			pageWidthExceeded = false;
+			
+		}
+		else
+		{
+			displayTableWidthMessage(false);
+			pageWidthExceeded = true;
+		}
+	}
+	
+	function decrement(bt){
+		var val = $(bt).parent().siblings().children('#inc_dec_num').html();
+		var widthSum = parseFloat($('#colsConfWidthSum').html());
+		if (val> 1){
+			val = parseFloat(val) - 0.5;
+			widthSum = widthSum - 0.5;
+			$('#colsConfWidthSum').html(widthSum);
+			$(bt).parent().siblings().children('#inc_dec_num').html(val);
+			var maxTableWidth = parseFloat($("#mainContainer").width()) / 20;
+			if(maxTableWidth>=widthSum)
+			{
+				displayTableWidthMessage(true);
+				pageWidthExceeded = false;
+			}
+			else
+			{
+				displayTableWidthMessage(false);
+				pageWidthExceeded = true;
+			}
+			var fieldRef = $(bt).parent().siblings().children('#inc_dec_num').attr("field");
+			var selColObj = $.grep(selectedColumnsArray,function(o){return o.field==fieldRef;});
+			selColObj[0].width = val;
+		}
+	}
+
+	function sortSelectedColumns()
+	{
+		var idx=0;
+		$('#choosen').children().each(function(){
+			idx++;
+			var fieldRef = $(this).attr("idfield");
+			var selColObj = $.grep(selectedColumnsArray,function(o){return o.field==fieldRef;});
+			selColObj[0].order = idx;
+		});
+		selectedColumnsArray = selectedColumnsArray.sort(function(a,b){return ((a.order < b.order) ? -1 : (a.order > b.order) ? 1 : 0);});
+	}
+
+	function updateLabel(inp)
+	{
+		var fieldRef = $(inp).parent().attr("field");
+		var selColObj = $.grep(selectedColumnsArray,function(o){return o.field==fieldRef;});
+		// remove unwanted characters (Beris)
+		var label = $(inp).val();
+		label = label.replace(/[\"\'<>]/g,"");
+		$(inp).val(label);
+		selColObj[0].label = $(inp).val();
+	
+	}
+
+
+	function setColumnAlign(btn, alignType){
+		var parentDiv = $(btn).parent("td").parent("tr").parent("tbody").parent("table").parent("div");
+		var fieldRef = $(parentDiv).attr("field")
+		$(btn).parent().siblings().children().css("border-width","0px");
+		$(btn).css("border","1px solid #1797C0");
+		var selColObj = $.grep(selectedColumnsArray,function(o){return o.field==fieldRef;});
+		selColObj[0].alignment = alignType;
+	}
+
+	function setPTTableModel(btn,model) 
+	{
+		$("input[id=ptTableType]").val(model);
+		$("input[id^=modelButton]").each(function(){ $(this).css("border-width","0px");});
+		$(btn).css("border","2px solid grey");
+	}
+
+	function setHeaderFontWeight()
+	{
+		if($("#theTable th").css("font-weight")=="400" || $("#theTable th").css("font-weight")=="normal")
+		{
+			$("#theTable th").css("font-weight","bold");
+			$("#ptHeadFontWeight").val("bold");
+			$("#headerFontWeight").css("border-width","1px");
+		}
+		else
+		{
+			$("#theTable th").css("font-weight","normal");
+			$("#ptHeadFontWeight").val("normal");
+			$("#headerFontWeight").css("border-width","0px");
+		}
+	
+	}
+
+	function setHeaderFontStyle()
+	{
+		if($("#theTable th").css("font-style")=="normal")
+		{
+			$("#theTable th").css("font-style","italic");
+			$("#ptHeadFontStyle").val("italic");
+			$("#headerFontStyle").css("border-width","1px");
+		}
+		else
+		{
+			$("#theTable th").css("font-style","normal");
+			$("#ptHeadFontStyle").val("normal");
+			$("#headerFontStyle").css("border-width","0px");
+		}
+	
+	}
+
+	function setHeaderTextAlign(align)
+	{
+		$("#ptHeadTextAlign").val(align);
+		switch(align)
+		{
+			case "left":
+				$("#headerAlignleft").css("border","1px solid #1797C0");
+				$("#headerAlignleft").siblings().css("border-width","0px");
+				break;
+			case "center":
+				$("#headerAligncenter").css("border","1px solid #1797C0");
+				$("#headerAligncenter").siblings().css("border-width","0px");
+				break;
+			case "right":
+				$("#headerAlignright").css("border","1px solid #1797C0");
+				$("#headerAlignright").siblings().css("border-width","0px");
+				break;
+		}	
+	}
+
+
+	function setBodyFontWeight()
+	{
+		if($("#theTable tr[id=row1]").css("font-weight")=="400" || $("#theTable tr[id=row1]").css("font-weight")=="normal")
+		{
+			$("#theTable tr").css("font-weight","bold");
+			$("#ptBodyFontWeight").val("bold");
+			$("#bodyFontWeight").css("border-width","1px");
+		}
+		else
+		{
+			$("#theTable tr").css("font-weight","normal");
+			$("#ptBodyFontWeight").val("normal");
+			$("#bodyFontWeight").css("border-width","0px");
+		}
+	
+	}
+
+	function setBodyFontStyle()
+	{
+		if($("#theTable tr[id=row1]").css("font-style")=="normal")
+		{
+			$("#theTable tr").css("font-style","italic");
+			$("#ptBodyFontStyle").val("italic");
+			$("#bodyFontStyle").css("border-width","1px");
+		}
+		else
+		{
+			$("#theTable tr").css("font-style","normal");
+			$("#ptBodyFontStyle").val("normal");
+			$("#bodyFontStyle").css("border-width","0px");
+		}
+	
+	}
+
+
+	function initColsAlignment()
+	{
+		$(selectedColumnsArray).each(function(idx){
+			var colTxtAlignment = this.alignment;
+			var txtAlignTbl = $.grep($(".ptColAlignTbl"),function(o){return $(o).attr("index")==idx;});
+			var txtAlignBtns = $(txtAlignTbl).find("input");
+			switch(colTxtAlignment)
+			{
+				case "left":
+					$(txtAlignBtns).each(function(i){
+						if(i==0)
+							$(this).css("border","1px solid #1797C0");
+						else
+							$(this).css("border-width","0px");
+					});
+					break;
+				case "center":
+					$(txtAlignBtns).each(function(i){
+						if(i==1)
+							$(this).css("border","1px solid #1797C0");
+						else
+							$(this).css("border-width","0px");
+					});
+					break;
+				case "right":
+					$(txtAlignBtns).each(function(i){
+						if(i==2)
+							$(this).css("border","1px solid #1797C0");
+						else
+							$(this).css("border-width","0px");
+					});
+					break;
+			}
+		});
+	}
+
+	function initPTProperties()
+	{
+		var cmodel = $("input[id=ptTableType]").val();
+		$("input[id^=modelButton]").each(function(){ $(this).css("border-width","0px");});
+		var btn = $.grep($("input[id^=modelButton]"),function(o){return $.trim($(o).attr("model"))==$.trim(cmodel);});
+		$(btn).css("border","2px solid grey");
+		
+		if($.trim($("#ptHeadFontWeight").val())=="bold")
+			$("#headerFontWeight").css("border-width","1px");
+		else
+			$("#headerFontWeight").css("border-width","0px");
+		
+		if($.trim($("#ptHeadFontStyle").val())=="italic")
+			$("#headerFontStyle").css("border-width","1px");
+		else
+			$("#headerFontStyle").css("border-width","0px");
+			
+		var headTextAlign = $.trim($("#ptHeadTextAlign").val());
+		setHeaderTextAlign(headTextAlign);
+
+		if($.trim($("#ptBodyFontWeight").val())=="bold")
+			$("#bodyFontWeight").css("border-width","1px");
+		else
+			$("#bodyFontWeight").css("border-width","0px");
+		
+		if($.trim($("#ptBodyFontStyle").val())=="italic")
+			$("#bodyFontStyle").css("border-width","1px");
+		else
+			$("#bodyFontStyle").css("border-width","0px");
+
+	}
+
+
+	function initNewPTProperties()
+	{
+		$("input[id=ptTableType]").val("model1");
+		$("#modelButton1").css("border","2px solid grey")	
+		$("input[id=ptBorderColor]").val("#000000");
+		$("select[id=ptCellHeightSelector]").val("10.0");
+		
+		$("#ptHeadFontWeight").val("normal");
+		$("#ptHeadFontStyle").val("normal");
+		$("#ptHeadTextAlign").val("left");
+		$("select[id=ptHeaderFontSizeSelect]").val("9px");
+		$("#ptHeaderFontFamilySelect").val("Arial, Helvetica, sans-serif");
+		$("input[id=ptHeadBackColor]").val("#FFFFFF");
+		$("input[id=ptHeadColor]").val("#000000");
+		
+		$("#ptBodyFontWeight").val("normal");
+		$("#ptBodyFontStyle").val("normal");
+		$("#ptBodyFontSizeSelect").val("9px");
+		$("#ptBodyFontFamilySelect").val("Arial, Helvetica, sans-serif");
+		$("input[id=ptBodyBackColor]").val("#FFFFFF");
+		$("input[id=ptBodyColor]").val("#000000");
+	
+	}
+	
+	function generateLabelAlignWidthTable()
+	{
+		if(selectedColumnsArray.length > 0)
+		{
+			$("#colsConf").empty();
+			$("#colsConf").css("border","1px solid lightgrey");
+			var tableHtml = '<table cellspacing="0" cellpadding="0" border="0" width="100%" style="table-layout: fixed; border-collapse: collapse;>'+
+								'<colgroup span="4" >'+
+									'<col width="60px">'+
+									'<col width="120px">'+
+									'<col width="50px">'+
+									'<col width="60px">'+
+								'</colgroup>'+
+								'<tbody>'+
+									'<tr>'+
+										'<td style="text-align:center;font-size:0.8em;font-weight:bold;">Name</td>'+
+										'<td style="text-align:center;font-size:0.8em;font-weight:bold;">Label</td>'+
+										'<td style="text-align:center;font-size:0.8em;font-weight:bold;">Width(cm)</td>'+
+										'<td style="text-align:center;font-size:0.8em;font-weight:bold;">Text Align</td>'+
+									'</tr>'+
+								'</tbody>'+
+							   '</table>';
+
+			var dynTableHtml = '<div style="overflow-y:auto;height:110px">'+
+								'<table cellspacing="0" cellpadding="0" border="0" width="100%" style="table-layout:fixed;border-collapse:collapse;">'+
+									'<colgroup span="4" >'+
+										'<col width="60px">'+
+										'<col width="120px">'+
+										'<col width="50px">'+
+										'<col width="60px">'+
+									'</colgroup>'+
+									'<tbody>';
+			var trVar = '';
+			var widthSum = 0;  
+			var addBtnSrc = $("#addBtnIcon").attr("src");
+			var deleteBtnSrc = $("#deleteBtnIcon").attr("src");
+			var alignLeftImgSrc = $("#alignleftImage").attr("src");
+			var alignCenterImgSrc = $("#aligncenterImage").attr("src");
+			var alignRightImgSrc = $("#alignrightImage").attr("src");
+			$(selectedColumnsArray).each(function(index){
+				 var tdLabel = '<td width="20%" idField="'+this.field+'" objType="'+this.type+'" style="font-size: 0.8em;">'+this.field+'</td>';
+				 var tdActualLabel = '<td  field="'+this.field+'"><input value="'+this.label+'" style="font-size: 0.8em;;" type="text" onchange="updateLabel(this);previewTable()"/></td>';
+				 var tdWidth = '<td ><div id="inc_dec">'+
+				'<table border="0" cellpadding="0" cellspacing="0" width="100%"><tr>'+	
+				'<td style="padding-left:2px;padding-right:2px;"><div id="inc_dec_num" style="width:25px; float:left; text-align:center" field="'+this.field+'">'+this.width+'</div></td>'+
+				'<td><input type="image" src="'+deleteBtnSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="decrement(this); previewTable();" title="Decrease Width" /></td>'+
+				'<td><input type="image" src="'+addBtnSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="increment(this); previewTable();" title="Increase Width" /></td>'+
+				'</tr></table></div></td>';
+				var alignLeft;
+				var alignCenter;
+				var alignRight;
+				switch(this.alignment)
+				{
+					case "left":
+						alignLeft = '<input id="ptColLeftAlign" type="image" src="'+alignLeftImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;border:1px solid #1797C0;" onclick="setColumnAlign(this, \'left\');previewTable();" title="Left Align" />';
+						alignCenter = '<input id="ptColCenterAlign" type="image" src="'+alignCenterImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="setColumnAlign(this, \'center\');previewTable();" title="Center Align" />';
+						alignRight = '<input id="ptColRightAlign" type="image" src="'+alignRightImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="setColumnAlign(this, \'right\');previewTable();" title="Right Align" />';
+						break;
+					case "center":
+						alignLeft = '<input id="ptColLeftAlign" type="image" src="'+alignLeftImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="setColumnAlign(this, \'left\');previewTable();" title="Left Align" />';
+						alignCenter = '<input id="ptColCenterAlign" type="image" src="'+alignCenterImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;border:1px solid #1797C0;" onclick="setColumnAlign(this, \'center\');previewTable();" title="Center Align" />';
+						alignRight = '<input id="ptColRightAlign" type="image" src="'+alignRightImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="setColumnAlign(this, \'right\');previewTable();" title="Right Align" />';
+						break;
+					case "right":
+						alignLeft = '<input id="ptColLeftAlign" type="image" src="'+alignLeftImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="setColumnAlign(this, \'left\');previewTable();" title="Left Align" />';
+						alignCenter = '<input id="ptColCenterAlign" type="image" src="'+alignCenterImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;" onclick="setColumnAlign(this, \'center\');previewTable();" title="Center Align" />';
+						alignRight = '<input id="ptColRightAlign" type="image" src="'+alignRightImgSrc+'" style="background-color: transparent; background-repeat: no-repeat;border:1px solid #1797C0;" onclick="setColumnAlign(this, \'right\');previewTable();" title="Right Align" />';
+						break;
+				
+				}
+				var tdTxtAlign = '<td><div class="alignDiv" style="text-align: center;" field="'+this.field+'">'+
+				'<table class="ptColAlignTbl" index="'+index+'" border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td>'+alignLeft+'</td><td>'+alignCenter+'</td><td>'+alignRight+'</td></tr></table></div></td>';
+				trVar = '<tr>'+tdLabel+tdActualLabel+tdWidth+tdTxtAlign+'</tr>';
+				dynTableHtml+=trVar;
+				widthSum = widthSum + parseFloat(this.width);
+			});
+			dynTableHtml+='</tbody></table></div>';
+			tableHtml += dynTableHtml; 
+			$("#colsConf").html(tableHtml);
+			var maxTableWidth = parseFloat($("#mainContainer").width()) / 20;
+			$('#colsConfWidthSum').html(widthSum);
+			if (maxTableWidth >= widthSum)
+			{
+				displayTableWidthMessage(true);
+				pageWidthExceeded = false;
+			}			
+			else
+			{
+				displayTableWidthMessage(false);
+				pageWidthExceeded = true;
+			}			
+		}
+		else
+		{
+			$('#tableWidthMsg').empty();
+			$('#colsConfWidthSum').empty();
+			$("#colsConf").css("border","none");
+			$("#colsConf").html('<span style="font-size:0.8em; color:grey;">No columns selected</span>');
+		}
+	}
+
+
+
+	function previewTable(){
+		if(!pageWidthExceeded)
+		{
+			var trHeader = '';
+			var trDummy = '';
+			var totalWidth = 0;
+			var columns = '';
+	
+			var headerFontWeight = $("#ptHeadFontWeight").val();
+			var headerFontStyle = $("#ptHeadFontStyle").val();
+			var headTextAlign = $("#ptHeadTextAlign").val();
+			var headFontSize = $("select[id=ptHeaderFontSizeSelect]").val();
+			var headFontFamily = $("#ptHeaderFontFamilySelect").val();
+			var headBackColor = $("input[id=ptHeadBackColor]").val(); 
+			var headColor = $("input[id=ptHeadColor]").val(); 
+
+			var bodyFontWeight = $("#ptBodyFontWeight").val();
+			var bodyFontStyle = $("#ptBodyFontStyle").val();
+			var bodyFontSize = $("#ptBodyFontSizeSelect").val();
+			var bodyFontFamily = $("#ptBodyFontFamilySelect").val();
+			var bodyBackColor = $("input[id=ptBodyBackColor]").val();
+			var bodyColor = $("input[id=ptBodyColor]").val();
+
+			var bodyTdStyle = 'font-weight:'+bodyFontWeight+';font-style:'+bodyFontStyle+';font-size:'+bodyFontSize+';font-family:'+bodyFontFamily+';background-color:'+bodyBackColor+';color:'+bodyColor+';';
+
+			var cellHeight = $("select[id=ptCellHeightSelector]").val();
+			var tblBorderColor = $("#ptBorderColor").val(); 
+			var classTable = $("input[id=ptTableType]").val();
+			$(selectedColumnsArray).each(function(index){
+				var colAuxiliar = '<COL >';
+				columns = columns + colAuxiliar;
+				var colWidth = parseFloat(this.width) * 20 ;
+				totalWidth = totalWidth + colWidth;
+
+				var colWidthCss;
+				if($.trim(classTable)=='model1' || $.trim(classTable)=='model5')
+				{
+					var cWidth = colWidth-1;
+					colWidthCss = 'width:'+cWidth+'px;';
+				}
+				else if($.trim(classTable)=='model4' || $.trim(classTable)=='model6')
+				{
+					var cWidth;
+					if(index==0 || index==$(selectedColumnsArray).size()-1)
+						cWidth = colWidth-1;
+					else
+						cWidth = colWidth;
+					colWidthCss = 'width:'+cWidth+'px;';
+				}
+				else
+					colWidthCss = 'width:'+colWidth+'px;';
+				 
+				var th = '<th idField="'+this.field+'" objType="'+this.type+'" fieldType="'+this.fieldType+'" fieldPrecision="'+this.fieldPrecision+'"  fieldScale="'+this.fieldScale+'" fieldLength="'+this.fieldLength+'"  style="'+colWidthCss+';border-color:'+tblBorderColor+';font-weight:'+headerFontWeight+';font-style:'+headerFontStyle+';text-align:'+headTextAlign+';font-size:'+headFontSize+';font-family:'+headFontFamily+';background-color:'+headBackColor+';color:'+headColor+';overflow:hidden; white-space:nowrap;vertical-align:middle;">'+this.label+'</th>';
+				trHeader = trHeader + th;
+				trDummy = trDummy + '<td style="white-space:nowrap;overflow:hidden;vertical-align:middle;'+bodyTdStyle+'text-align:'+this.alignment+';border-color:'+tblBorderColor+';"> sample </td>';
+			});
+			trHeader = '<tr id="tHeader" style="border-color:'+tblBorderColor+'; height:'+cellHeight+'px;">'+trHeader+'</tr>';
+			trDummy1 = '<tr id="row1" style="'+bodyTdStyle+';border-color:'+tblBorderColor+';height:'+cellHeight+'px;">'+trDummy+'</tr>';
+			trDummy2 = '<tr id="row2" style="'+bodyTdStyle+';border-color:'+tblBorderColor+';height:'+cellHeight+'px;">'+trDummy+'</tr>';
+			trDummy3 = '<tr id="row3" style="'+bodyTdStyle+';border-color:'+tblBorderColor+';height:'+cellHeight+'px;">'+trDummy+'</tr>';
+
+			var table = '<table id="theTable" cellpadding="0" class="'+classTable+'"style="position:absolute;border-collapse: collapse; table-layout:fixed;border-color:'+tblBorderColor+';" width="'+totalWidth+'px">'+columns+trHeader+trDummy1+trDummy2+trDummy3+'</table>';
+			$("#tableTest").empty();
+			$("#tableTest").append(table);
+			var fontsize = parseFloat($("#tableTest").children('table').find('#row1').css("font-size").replace('pt', ''));// * 2;
+			$("#tableTest").children('table').find('#row1').css("font-size", fontsize);
+		}
+	
+	}
+
+	function PopupRevenueScheduleNote()
+	{
+		$("#RevenueSchedulesNote").dialog("open");
+	}
+</script>
+<style type="text/css">
+
+.model1 { border-collapse:collapse;}
+.model1 th {border-style: solid;border-width:1px;}
+.model1 tr {border-style: solid;border-width:1px;}
+.model1 td {border-style: solid;border-width:1px;}
+.model2 {border-collapse:collapse; } 
+.model3s { border-collapse: collapse;}
+.model3s tr { border-top-style:solid; border-bottom-style:solid; border-width:1px;}
+.model3 { border-collapse: collapse; border-width:1px;}
+.model3 *#tHeader { border-top-style: solid ; border-top-width:1px;border-bottom-style: solid ;border-bottom-width:1px; }
+.model3 *#row3 { border-bottom-style: solid ;border-bottom-width:1px; }
+.model4  { border-collapse: collapse; border-style: solid;border-width:1px; }
+.model4 *#tHeader {border-bottom-style: solid ;border-bottom-width:1px; }
+.model4 *#row3 { border-bottom-style: solid ;border-bottom-width:1px; }
+.model5 { border-collapse: collapse;border-top-style:solid;border-bottom-style:solid;border-width:1px;}
+.model5 th { border-left-style: solid; border-right-style:solid;border-width:1px;} 
+.model5 tr { border-left-style: solid; border-right-style:solid;border-width:1px;} 
+.model5 td { border-left-style: solid; border-right-style:solid;border-width:1px;} 
+.model6 { border-collapse: collapse;border-style:solid;border-width:1px;}
+.model6 tbody { border-top-style: solid;border-width:1px;}
+.model6 tr { border-top-style:solid; border-bottom-style:solid;border-width:1px;border-left-style: solid; border-right-style:solid;border-width:1px;}
+
+
+
+#columnsTab .ui-selected {
+	background-color: #D8D8D8;
+}
+
+.selectableField, .selectedField {
+	cursor:default;
+}
+
+#columnsTab .ui-selected {
+	background-color: #D8D8D8;
+}
+
+.objectTitle{font-weight:bold;font-style:italic;line-height:30px;}
+
+</style>
+
+
+<div id="productTableEditor" style="background-color:white; display: none;">
+		<div style="float:right;padding-bottom:5px">
+			<input id="productTableEditorCancelBtn" type="button" value="Cancel"/>
+			<input id="productTableEditorDoneBtn" type="button" value="Done"/>
+		</div>
+		
+		<div style ="font-size:0.93em;font-weight: normal;display:block;clear:both;border-top:solid thin;padding-top:5px">
+				
+			<center>
+			<div id="tableTabs">
+				<div id="Columns">
+					<div id="columnsTab">
+						<table>
+							<tr>
+								<th>
+									<span style="font-size:0.93em;font-weight: normal;">1. Select the invoice line items table's columns.</span>
+									<apex:outputPanel rendered="{!isRevenueScheduleEnabled}" style="text-decoration:underline;font-size:0.93em;font-weight: normal;cursor:pointer;" onclick="PopupRevenueScheduleNote();">(Revenue Schedules Note)</apex:outputPanel> 
+								</th>
+								<th>
+								   <table border="0" cellpadding="0" cellspacing="0">
+								   	<tr>
+								   		<td>
+											<span style="font-size:0.93em;font-weight: normal;">2. Set the columns label, width and alignment</span>
+								   		</td>
+								   		<td>
+											<span id="tableWidthDisplay" style="font-size:0.93em;font-weight: normal;">
+												<table border="0" cellpadding="0" cellspacing="0">
+													<tr>
+														<td id="tableWidthMsg" style="width: 100px;text-align:center;">
+														</td>
+														<td id="colsConfWidthSum">
+														</td>	
+													</tr>
+												</table>
+											
+											</span>								
+								   		</td>
+								   	</tr>
+								   </table>
+								</th>
+							</tr>
+							<tr>
+								<td>
+									<div id="tabs-1" style="height: 120px; ">
+										<table >
+											<tr>
+												<th style="text-align: center;">Available columns</th>
+												<th></th>
+												<th style="text-align: center;">Selected columns</th>
+											</tr>
+											<tr>
+												<td>
+													<div id="selectable" style="width:140px; height: 100px; overflow: auto; border-color: grey; border-style:solid; border-width: thin;text-align:left;"> 
+														<div class="objectTitle">&nbsp;OpportunityLineItem</div>
+														<apex:repeat value="{!lineItemFields}" var="li">
+															<div class="selectableField opLineItem" idField="{!li.fieldName}" fieldType="{!li.fieldType}" fieldPrecision="{!li.fieldPrecision}" fieldScale="{!li.fieldScale}" fieldLength="{!li.fieldLength}"> {!li.fieldLabel}</div>
+														</apex:repeat>
+														<div class="objectTitle">&nbsp;PricebookEntry</div>
+														<apex:repeat value="{!priceBEntryFields}" var="li">
+															<div class="selectableField priceBEntry" idField="{!li.fieldName}"  fieldType="{!li.fieldType}"  fieldPrecision="{!li.fieldPrecision}" fieldScale="{!li.fieldScale}" fieldLength="{!li.fieldLength}"> {!li.fieldLabel}</div>
+														</apex:repeat>
+													</div>
+												</td>
+												<td style="vertical-align: middle;">
+												<div style="width:43px; ">
+													<center>
+														<input type="button" id="selColumnBtn"  style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/arrow_rt.gif')}'); background-color: transparent; background-repeat: no-repeat; width: 27px; height: 20px; border-width: 0px; " title="Add" /> 
+														<br/>
+														<input type="button" id="unselColumnBtn" style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/arrow_lt.gif')}'); background-color: transparent; background-repeat: no-repeat; width: 27px; height: 20px; border-width: 0px; " title="Remove" /> 
+													</center>	
+												</div>
+												</td>
+												<td>
+													<div id="choosen" style="width:135px; height: 100px; overflow: auto; border-color: grey; border-style:solid; border-width: thin;text-align:left;"></div>
+												</td>
+												<td style="vertical-align: middle;">
+													<center>
+														<div style="width: 40px">
+															<input type="button" id="upColumnBtn" style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/arrow_up.gif')}'); background-color: transparent; background-repeat: no-repeat; width: 27px; height: 20px; border-width: 0px; " title="Move Up" /> 
+															<br />
+															<input type="button"  id="downColumnBtn" style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/arrow_dwn.gif')}'); background-color: transparent; background-repeat: no-repeat; width: 27px; height: 20px; border-width: 0px; margin-top:3px; " title="Move Down" /> 
+														</div>
+													</center>	
+												</td>
+											</tr>
+										</table>
+									</div>
+								</td>
+								<td>
+									<div id="tabs-2" style="height: 120px; width: 370px;">
+										<div id="colsConf" >  
+											<span style="font-size:0.8em; color:grey;">No columns selected</span>
+										</div>
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+			<hr ></hr>
+			</center>
+
+<!-- section styles -->			
+
+			<span style="font-size:0.93em;font-weight: normal;">3. Set the table&#39;s header and body styles</span>
+			<center>
+				<table id="tableAllProperties">
+					<tr>
+						<td>
+							<fieldset>
+								<legend style="font-weight:normal;font-size:0.84em">Header styles</legend>
+									<table id="tableHeaderProperties">
+										<tr>
+											<td attr="font-weight">
+												<input type="button" id="headerFontWeight" alt="Bold" onclick="setHeaderFontWeight(); previewTable();" 
+										  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/bold_icon.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+										  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Bold" />
+											</td>
+											<td attr="font-style">
+												<input type="button" id="headerFontStyle" alt="Italic" onclick="setHeaderFontStyle(); previewTable();" 
+										  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/italics_icon.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+										  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Italic" />
+											</td>
+											<td attr="text-align">
+										  		<table>
+										  			<tr>
+										  				<td>
+													  		<input type="button" id="headerAlignleft" alt="Left Align" onclick="setHeaderTextAlign('left'); previewTable();" class="HeaderAlignImage"
+													  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/left_align.gif')}'); background-color: transparent; background-repeat: no-repeat; width: 20px; height: 20px; border-width: 0px; " title="Left Align"/>
+										  				</td>
+										  				<td>
+													  		<input type="button" id="headerAligncenter" alt="Center Align" onclick="setHeaderTextAlign('center'); previewTable();" class="HeaderAlignImage"
+													  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/align_center_icon.gif')}'); background-color: transparent; background-repeat: no-repeat; width: 20px; height: 20px; border-width: 0px; " title="Center Align" />
+										  				</td>
+										  				<td>
+													  		<input type="button" id="headerAlignright" alt="Right Align" onclick="setHeaderTextAlign('right'); previewTable();" class="HeaderAlignImage"
+													  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/align_right.gif')}'); background-color: transparent; background-repeat: no-repeat; width: 20px; height: 20px; border-width: 0px; " title="Right Align" />
+										  				</td>
+										  			</tr>
+										  		</table>
+											</td>
+											<td attr="font-size">
+												<input type="button" id="ptHeaderFontSize" alt="Font Size" 
+											  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/font_size_icon.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+											  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0" title="Font Size" />
+													<select id="ptHeaderFontSizeSelect" size="11" style="display:none;"> 
+											  			<option value="6px">6px</option>
+											  			<option value="7px">7px</option>
+											  			<option value="8px">8px</option>
+											  			<option value="9px">9px</option>
+														<option value="10px">10px</option>
+														<option value="11px">11px</option>
+														<option value="12px">12px</option>
+														<option value="13px">13px</option>
+														<option value="15px">15px</option>
+														<option value="19px">19px</option>
+														<option value="22px">22px</option>
+														<option value="24px">24px</option>
+														<option value="26px">26px</option>
+													</select>
+											</td>
+											<td attr="font-family">
+												<input type="button" id="ptHeaderFontFamily" alt="Font Family" 
+										  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/font_icon.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+										  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0" title="Font Type" />
+												<select id="ptHeaderFontFamilySelect" style="display:none;" size="7">
+										  			<option value="Arial, Helvetica, sans-serif" style="font-family:Arial, Helvetica, sans-serif;">Arial</option>
+										  			<option value="Arial Narrow, Helvetica, sans-serif" style="font-family:Arial Narrow, Helvetica, sans-serif;">Arial Narrow</option>
+										  			<option value="Book Antiqua, serif" style="font-family:Book Antiqua, serif;">Book Antiqua</option>
+										  			<option value="Bookman Old Style, serif" style="font-family:Bookman Old Style, serif;">Bookman Old Style</option>
+										  			<option value="Calibri, sans-serif" style="font-family:Calibri, serif;">Calibri</option>
+										  			<option value="Comic Sans MS,cursive" style="font-family:Comic Sans MS, cursive;">Comic Sans MS</option>
+										  			<option value="Consolas,monospace" style="font-family:Consolas, monospace;">Consolas</option>
+										  			<option value="Courier New, Courier, monospace" style="font-family:Courier New, Courier, monospace;">Courier New</option>
+										  			<option value="Georgia, serif" style="font-family:Georgia, serif;">Georgia</option>
+										  			<option value="Helvetica, Arial, sans-serif" style="font-family:Helvetica, Arial, sans-serif;">Helvetica</option>
+										  			<option value="Lucida Sans, sans-serif" style="font-family:Lucida Sans, sans-serif;">Lucida Sans</option>
+										  			<option value="Palatino Linotype, serif" style="font-family:Palatino Linotype, serif;">Palatino Linotype</option>
+										  			<option value="Tahoma, serif" style="font-family:Tahoma, serif;">Tahoma</option>
+										  			<option value="Times New Roman, serif" style="font-family:Times New Roman, serif;">Times New Roman</option>
+										  			<option value="Trebuchet MS, sans-serif" style="font-family:Trebuchet MS, sans-serif;">Trebuchet MS</option>
+										  			<option value="Verdana, Arial, Helvetica, sans-serif" style="font-family:Verdana, Arial, Helvetica, sans-serif;">Verdana</option>
+										  			<option value="MS Gothic, monospace" style="font-family:MS Gothic, monospace;">MS Gothic</option>
+												</select>
+											</td>
+											<td attr="background-color">
+												<div style="width:20px; height:20px; background-color: #FFFFFF" >
+													<img alt="" id="ptHeaderBackColorIcon" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/background_color_icon.gif')}" title="Background Color" />
+												</div>
+											</td>
+											<td attr="color">
+												<div style="width:20px; height:20px; background-color: #000000" >
+													<img alt="" id="ptHeaderColorIcon" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/color_icon.gif')}" title="Font Color" />
+												</div>
+											</td>
+										</tr>				
+									</table>
+							</fieldset>
+						</td>
+					
+					<td>
+						<fieldset style="">
+							<legend style="font-weight:normal;font-size:0.84em">Body styles</legend>
+								<table id="tableBodyProperties">
+									<tr>
+										<td attr="font-weight">
+											<input type="button" id="bodyFontWeight" alt="Bold" onclick="setBodyFontWeight(); previewTable();" 
+									  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/bold_icon.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+									  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Bold" />
+										</td>
+										<td attr="font-style">
+											<input type="button" id="bodyFontStyle" alt="Italic" onclick="setBodyFontStyle(); previewTable();" 
+									  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/italics_icon.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+									  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0;border-style:solid;" title="Italic"/>
+										</td>
+										<td attr="font-size">
+											<input type="button" id="ptBodyFontSize" alt="Font Size" 
+										  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/font_size_icon.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+										  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0" title="Font Size" />
+												<select id="ptBodyFontSizeSelect" size="11" style="display: none;">
+										  			<option value="6px">6px</option>
+										  			<option value="7px">7px</option>
+										  			<option value="8px">8px</option>
+										  			<option value="9px">9px</option>
+													<option value="10px">10px</option>
+													<option value="11px">11px</option>
+													<option value="12px">12px</option>
+													<option value="13px">13px</option>
+													<option value="15px">15px</option>
+													<option value="19px">19px</option>
+													<option value="22px">22px</option>
+													<option value="24px">24px</option>
+													<option value="26px">26px</option>
+												</select>
+										</td>
+										<td attr="font-family">
+												<input type="button" id="ptBodyFontFamily" alt="Font Family" 
+										  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/font_icon.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+										  		width: 20px; height: 20px; border-width: 0px; border-color: #1797C0" title="Font Type" />
+												<select id="ptBodyFontFamilySelect" style="display:none;" size="7">
+										  			<option value="Arial, Helvetica, sans-serif" style="font-family:Arial, Helvetica, sans-serif;">Arial</option>
+										  			<option value="Arial Narrow, Helvetica, sans-serif" style="font-family:Arial Narrow, Helvetica, sans-serif;">Arial Narrow</option>
+										  			<option value="Book Antiqua, serif" style="font-family:Book Antiqua, serif;">Book Antiqua</option>
+										  			<option value="Bookman Old Style, serif" style="font-family:Bookman Old Style, serif;">Bookman Old Style</option>
+										  			<option value="Calibri, sans-serif" style="font-family:Calibri, serif;">Calibri</option>
+										  			<option value="Comic Sans MS,cursive" style="font-family:Comic Sans MS, cursive;">Comic Sans MS</option>
+										  			<option value="Consolas,monospace" style="font-family:Consolas, monospace;">Consolas</option>
+										  			<option value="Courier New, Courier, monospace" style="font-family:Courier New, Courier, monospace;">Courier New</option>
+										  			<option value="Georgia, serif" style="font-family:Georgia, serif;">Georgia</option>
+										  			<option value="Helvetica, Arial, sans-serif" style="font-family:Helvetica, Arial, sans-serif;">Helvetica</option>
+										  			<option value="Lucida Sans, sans-serif" style="font-family:Lucida Sans, sans-serif;">Lucida Sans</option>
+										  			<option value="Palatino Linotype, serif" style="font-family:Palatino Linotype, serif;">Palatino Linotype</option>
+										  			<option value="Tahoma, serif" style="font-family:Tahoma, serif;">Tahoma</option>
+										  			<option value="Times New Roman, serif" style="font-family:Times New Roman, serif;">Times New Roman</option>
+										  			<option value="Trebuchet MS, sans-serif" style="font-family:Trebuchet MS, sans-serif;">Trebuchet MS</option>
+										  			<option value="Verdana, Arial, Helvetica, sans-serif" style="font-family:Verdana, Arial, Helvetica, sans-serif;">Verdana</option>
+										  			<option value="MS Gothic, monospace" style="font-family:MS Gothic, monospace;">MS Gothic</option>
+												</select>
+										</td>
+										<td attr="background-color">
+											<div style="width:20px; height:20px; background-color: #FFFFFF" >
+												<img alt="" id="ptBodyBackColorIcon" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/background_color_icon.gif')}" title="Background Color" />
+											</div>
+										</td>
+										<td attr="color">
+											<div style="width:20px; height:20px; background-color: #000000" >
+												<img alt="" id="ptBodyColorIcon" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/color_icon.gif')}" title="Font Color" />
+											</div>
+										</td>
+									</tr>				
+								</table>
+							</fieldset>
+						</td>	
+					</tr>
+				</table>	
+			<hr />
+			</center>		
+
+
+<!-- section model -->			
+			<center>
+				<table style="width: 100%">
+				<tr>
+					<td>
+						<span style="font-size:0.93em;font-weight: normal; text-align: right;">4. Select the table type, border color, and cell height</span>
+					</td>
+				</tr>
+				</table>
+				
+				<table cellspacing="0" cellpadding="0">
+					<tr>
+						<td style="vertical-align:top;" width="40%">
+							<fieldset style="padding: 1pt; font-family: inherit; font-weight: normal;">
+								<legend style="font-weight:normal;font-size:0.84em">Table type</legend>
+								<table id="tableModel" style="width: 60%;">
+									<tr>
+										<td>
+										<input type="button" model="model1" id="modelButton1" alt="" onclick="setPTTableModel(this, 'model1'); previewTable();" 
+									  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model1.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+									  		width: 38px; height: 38px; border-width: 0px; border-color: #1797C0" title="Grid" />
+										</td>
+										<td>
+										<input type="button" model="model2" id="modelButton2" alt="" onclick="setPTTableModel(this, 'model2'); previewTable();" 
+									  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model2.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+									  		width: 38px; height: 38px; border-width: 0px; border-color: #1797C0" title="Normal" />
+										</td>
+										<td>
+										<input type="button" model="model3" id="modelButton3" alt="" onclick="setPTTableModel(this, 'model3'); previewTable();" 
+									  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model3.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+									  		width: 38px; height: 38px; border-width: 0px; border-color: #1797C0" title="List" />
+										</td>
+										<td>
+										<input type="button" model="model4" id="modelButton4" alt="" onclick="setPTTableModel(this, 'model4'); previewTable();" 
+									  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model4.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+									  		width: 38px; height: 38px; border-width: 0px; border-color: #1797C0" title="Contemporary" />
+										</td>
+										<td>
+										<input type="button" model="model5" id="modelButton5" alt="" onclick="setPTTableModel(this, 'model5'); previewTable();" 
+									  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model5.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+									  		width: 38px; height: 38px; border-width: 0px; border-color: #1797C0" title="Columns" />
+										</td>
+										<td>
+										<input type="button" model="model6" id="modelButton6" alt="" onclick="setPTTableModel(this, 'model6'); previewTable();" 
+									  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/model6.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+									  		width: 38px; height: 38px; border-width: 0px; border-color: #1797C0" title="Simple" />
+										</td>
+									</tr>
+								</table>
+							</fieldset>						
+						</td>
+						<td width="10%"></td>
+						<td style="vertical-align:top;">
+							<fieldset style="padding: 4pt;font-family: inherit; font-weight: normal;">
+								<legend style="font-weight:normal;font-size:0.84em">Border color</legend>
+									<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/color_icon.gif')}" style="display:block;margin-left:15px;" id="ptBorderColorIcon" title="Table Border Color" />
+							</fieldset>
+						</td>
+						<td width="10%"></td>
+						<td style="vertical-align:top;">
+							<fieldset style="padding: 4pt; font-family: inherit; font-weight: normal;">
+								<legend style="font-weight:normal;font-size:0.84em">Cell height</legend>
+									<select id="ptCellHeightSelector" size="1">
+										<option value="10.0">0.5 cm</option>
+										<option value="20.0">1.0 cm</option>
+										<option value="30.0">1.5 cm</option>
+										<option value="40.0">2.0 cm</option>
+										<option value="50.0">2.5 cm</option>
+										<option value="60.0">3.0 cm</option>
+									</select> 
+							</fieldset>
+						</td>
+					</tr>
+				</table>
+				<hr />
+			</center>
+
+			
+			<div id="previewDiv">
+			<span style="font-size:0.93em;font-weight: normal">5. Preview table</span>
+				<div style="overflow-y:auto;min-height:230px;position:relative;">
+					<div style="position:absolute;left:25%;">
+						<table>
+							<tr>
+								<td>
+									<div id="tableTest" style="height: 100px;;margin-top:20px;">
+					
+									</div>
+								</td>
+							</tr>
+						</table>
+					</div>	
+				</div>
+			</div>
+		</div>
+
+	<apex:form >
+		<input id="ptTableType" style="display:none"/>
+		<input id="ptBorderColor" style="display:none"/>
+		<input id="ptHeadFontWeight" style="display:none"/>
+		<input id="ptHeadFontStyle" style="display:none"/>
+		<input id="ptHeadTextAlign" style="display:none"/>
+		<input id="ptHeadBackColor" style="display:none"/>
+		<input id="ptHeadColor" style="display:none"/>
+
+		<input id="ptBodyFontWeight" style="display:none"/>
+		<input id="ptBodyFontStyle" style="display:none"/>
+		<input id="ptBodyBackColor" style="display:none"/>
+		<input id="ptBodyColor" style="display:none"/>
+
+
+	</apex:form>
+</div>
+<div id="RevenueSchedulesNote" style="background-color:white;display: none;">
+	<div style="margin-bottom:10px;">
+			When your opportunity products use Revenue Schedules, use the following
+			mappings between the Schedule and OpportunitylineItem fields to select
+			the invoice items table columns for the schedule items:
+	 </div>
+	 <table cellspacing="0" cellpadding="4" border="1">
+	 	<thead style="font-weight:700;">
+	 		<tr>
+	 			<td>Schedule Field</td>
+	 			<td>OpportunitylineItem Field</td>
+	 		</tr>
+	 	</thead>
+	 	<tbody>
+	 		<tr>
+	 			<td style="font-family:'Courier New', Courier, monospace;">Schedule Date</td>
+	 			<td style="font-family:'Courier New', Courier, monospace;">Date</td>
+	 		</tr>
+	 		<tr>
+	 			<td style="font-family:'Courier New', Courier, monospace;">Revenue</td>
+	 			<td style="font-family:'Courier New', Courier, monospace;">Unit Price, List Price, Sales Price, Subtotal, or Total Price</td>
+	 		</tr>
+	 		<tr>
+	 			<td style="font-family:'Courier New', Courier, monospace;">Quantity</td>
+	 			<td style="font-family:'Courier New', Courier, monospace;">Quantity</td>
+	 		</tr>
+	 		<tr>
+	 			<td style="font-family:'Courier New', Courier, monospace;">Comment</td>
+	 			<td style="font-family:'Courier New', Courier, monospace;">Line Description</td>
+	 		</tr>
+	 	</tbody>
+	 </table>
+	 <div style="margin-top:10px;">
+	 	For example, select the OpportunitylineItem <span style="font-family:'Courier New', Courier, monospace;">TotalPrice</span>
+	 	 column to display the Schedule <span style="font-family:'Courier New', Courier, monospace;">Revenue</span>
+	 	 when the invoice item corresponds to a revenue schedule recognition.
+	 </div>
+	 <div style="margin-top:10px;">
+	 	Note that your invoice items can be a mix of opportunity products scheduled and not scheduled.
+	 	The mapping in the table applies to the scheduled items.
+	 </div>
+	 
+</div>
+
+
+</apex:component>

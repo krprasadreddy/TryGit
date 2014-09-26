@@ -1,0 +1,117 @@
+<apex:component id="siteMod_navbar"
+	controller="mployee.com_siteMod_navbarController"
+>
+
+	<style>
+		body {
+			padding-top: 70px;
+		}	
+		
+		.navbar .divider-vertical {
+			height: 50px;
+			margin: 0 9px;
+			border-right: 1px solid #ffffff;
+			border-left: 1px solid #f2f2f2;
+		}
+		.navbar-inverse .divider-vertical {
+			border-right-color: #222222;
+			border-left-color: #111111;
+		}
+	
+	</style>
+	
+	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+	
+		<div class="container">
+		
+			<!-- Brand and toggle get grouped for better mobile display -->
+		    <div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+					<span class="sr-only">{!$Label.SITE_MOD_NAVBAR_TOGGLE_NAVIGATION}</span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<apex:outputlink rendered="{!showSiteName}" value="{!$Site.CurrentSiteUrl}" styleClass="navbar-brand">
+					{!$Site.Name}
+				</apex:outputlink>
+		      
+		    </div>
+		    
+			<!-- Collect the nav links, forms, and other content for toggling -->
+		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+				
+				<ul class="nav navbar-nav navbar-right">
+				
+					<apex:outputPanel rendered="{!!isLogedin}" layout="none">	
+					
+						<apex:outputPanel rendered="{!IF($CurrentPage.Name =='mployee__SiteLogin',false,true)}" layout="none">					
+							<li><a href="{!$Page.SiteLogin}"><span class="fa fa-sign-in"></span>&nbsp;{!$Label.site.login_button}</a></li>
+							<li class="divider-vertical"/>
+						</apex:outputPanel>
+						
+						<apex:outputPanel rendered="{!IF($CurrentPage.Name =='mployee__SiteProfileRegister',false,true)}" layout="none">
+							<li><a href="{!$Page.SiteProfileRegister}"><span class="fa fa-pencil"></span>&nbsp;&nbsp;{!$Label.SITE_MOD_NAVBAR_REGISTER}</a></li>
+							<li class="divider-vertical"/>	
+						</apex:outputPanel>
+					
+						
+						<li class="dropdown">
+						    <a class="dropdown-toggle" data-toggle="dropdown" href="javscript:;">
+						        <i class="fa fa-globe"/>&nbsp;&nbsp;{!$Label.GLOBAL_LANGUAGE_TOGGLE}
+					        <b class="caret"></b>
+					      	</a>
+						    <ul class="dropdown-menu">						      
+						        <li>
+			                    	<apex:outputLink value="{!$CurrentPage.Name}" >		                    		
+				                    	<apex:param name="lang" value="en" />{!$Label.GLOBAL_LANGUAGES_EN_SHORT} 
+			                    	</apex:outputLink>
+			                   	</li>			                   	
+			                   	<li>
+			                    	<apex:outputLink value="{!$CurrentPage.Name}" >
+				                    	<apex:param name="lang" value="de"/>{!$Label.GLOBAL_LANGUAGES_DE_SHORT}
+			                    	</apex:outputLink>
+			                   	</li>			                   	
+			                   	<li>
+			                    	<apex:outputLink value="{!$CurrentPage.Name}" >
+				                    	<apex:param name="lang" value="nl"/>{!$Label.GLOBAL_LANGUAGES_NL_SHORT}
+			                    	</apex:outputLink>
+			                   	</li>
+						    </ul>
+					    </li>
+					</apex:outputPanel>
+					
+					<apex:outputPanel rendered="{!isLogedin}" layout="none">
+						
+						<li class="dropdown">
+							<a href="javscript:;" class="dropdown-toggle" data-toggle="dropdown">
+								<i class="fa fa-user"></i>&nbsp;&nbsp;{!candidateName}
+								<b class="caret"></b>
+							</a>
+							<ul class="dropdown-menu">
+								<li><a href="{!$Page.SiteProfile}"><i class="fa fa-user"/>&nbsp;&nbsp;{!$Label.SITE_MOD_NAVBAR_MY_PROFIEL}</a></li>
+								<li><a href="{!$Page.SiteProfile}"><i class="fa fa-cog"/>&nbsp;&nbsp;{!$Label.SITE_MOD_NAVBAR_MY_PROFIEL_SETTINGS}</a></li>
+								<li>
+									<apex:outputLink value="{!$Page.mployee__SiteProfileEdit}" >
+										<apex:param name="action" value="edit"/>
+										<apex:param name="object" value="account#account"/>
+										<i class="fa fa-globe"/>&nbsp;&nbsp;{!$Label.SITE_MOD_NAVBAR_LANGUAGE}
+									</apex:outputLink>
+								</li>
+								<li class="divider"></li>
+								<li><a href="{!$Page.SiteLogout}"><i class="fa fa-sign-out"/>&nbsp;&nbsp;{!$Label.site.logout}</a></li>
+							</ul>						
+						</li>
+						
+					</apex:outputPanel>
+				</ul>
+				
+		     
+		    </div><!-- /.navbar-collapse -->
+		
+		
+		</div>
+	
+	</nav>
+
+</apex:component>

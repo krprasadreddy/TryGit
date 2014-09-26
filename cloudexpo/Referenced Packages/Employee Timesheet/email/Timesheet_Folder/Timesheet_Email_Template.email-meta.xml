@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <name>Timesheet Email Template</name>
+    <style>none</style>
+    <subject>Timesheet for Approval needed</subject>
+    <textOnly>Hello,
+
+Please approve the Timesheet,{!Timesheet__c.Name}, by navigating to this link: {!Timesheet__c.Link}
+
+Thanks,
+
+----------</textOnly>
+    <type>custom</type>
+</EmailTemplate>

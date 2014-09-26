@@ -1,0 +1,14 @@
+<apex:page standardController="kognoz1__Billing_Condition__c" extensions="kognoz1.ChooseBillingConditionTypeController" showHeader="true" tabStyle="kognoz1__Configuration__c" title="Select Billing Rule Type">
+<apex:pageMessages /> 
+    <apex:sectionHeader title="New Billing Rule" subtitle="Select Billing Rule type" help="{!ifsHelpUrl}"/>
+    <p> Select a type for the new Billing Rule</p>
+    <apex:form >
+        <apex:pageBlock >
+            <apex:selectList value="{!selectedConditionType}" size="1" multiselect="false">
+                <apex:selectOptions value="{!condRecTypes}"/>
+            </apex:selectList><p/>
+            <apex:commandButton action="{!gotoconditionpage}" value="Continue"/>
+            <apex:commandButton action="{!cancel}" value="Cancel"/><p/>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

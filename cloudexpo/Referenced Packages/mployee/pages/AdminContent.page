@@ -1,0 +1,247 @@
+<apex:page controller="mployee.AdminContentController"
+	docType="html-5.0"
+	showHeader="false"
+	standardStylesheets="false"
+	cache="false"
+	applyBodyTag="false"
+	applyHtmlTag="false"	
+> 
+	
+	
+	
+	<apex:composition template="mployee__AdminTemplateAcme">
+	
+		<apex:define name="css">
+			<apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeSite,'assets/css/plugins/fileinput/bootstrap.css')}"/>
+		</apex:define>
+		
+		<apex:define name="javascript">
+			
+			<apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite,'assets/js/plugins/fileinput/bootstrap.js')}"  />
+		
+			<script type="text/javascript">	        	
+				$(document).ready(function(){		
+					
+				});
+			</script>
+		
+		</apex:define>
+		
+		<apex:define name="header-menu"> 
+			<c:AdminPageHeader rendered="true" AppMenuItemList="{!AppMenuItemList}" selectedApp="{!app}" sfdcBaseURL="{!sfdcBaseURL}" />
+		</apex:define>
+		
+		<apex:define name="sidebar-left">			
+			<c:adminMod_menu />
+		</apex:define>
+		
+		<apex:define name="content">
+		
+			<div class="row">
+				<div class="col-lg-10">
+					<div class="box">
+						<div class="box-header">
+							<h2><i class="fa fa-edit"></i><span class="break"></span>Wizard</h2>
+							<div class="box-icon">
+								<a href="form-wizard.html#" class="btn-setting"><i class="fa fa-wrench"></i></a>
+								<a href="form-wizard.html#" class="btn-minimize"><i class="fa fa-chevron-up"></i></a>
+								<a href="form-wizard.html#" class="btn-close"><i class="fa fa-times"></i></a>
+							</div>
+						</div>
+						<div class="box-content">
+							<h3><apex:outputField value="{!item.Name}" /></h3>
+							<apex:form id="adminform" styleClass="form-horizontal" >
+							
+								<ul class="nav tab-menu nav-tabs">
+								  <li class="active"><a href="#general" data-toggle="tab">Details</a></li>
+								  <li><a href="#images" data-toggle="tab">Images</a></li>
+								  <li><a href="#publishing" data-toggle="tab">Options</a></li>
+								  <li><a href="#attrib-basic" data-toggle="tab">attrib-basic</a></li>	
+								  <li><a href="#metadata" data-toggle="tab">metadata</a></li>
+								  
+								</ul>
+									 
+								<div class="tab-content">
+									<div class="tab-pane active" id="general">
+										<apex:outputpanel styleClass="form-group" layout="block">						    
+										    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.name.Label}" for="name"/>
+										    <div class="col-sm-8">
+												<apex:inputField value="{!item.Name}" id="name" styleClass="form-control"/>
+										    </div>
+									  	</apex:outputpanel>
+									  	<apex:outputpanel styleClass="form-group" layout="block">						    
+										    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.mployee__category__c.Label}" for="mployee__category__c"/>
+										    <div class="col-sm-8">
+												<apex:inputField value="{!item.mployee__category__c}" id="mployee__category__c" styleClass="form-control"/>
+										    </div>
+									  	</apex:outputpanel>
+									  	<apex:outputpanel styleClass="form-group" layout="block">						    
+										    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.mployee__introtext__c.Label}" for="mployee__introtext__c"/>
+										    <div class="col-sm-8">
+												<apex:inputTextarea richText="true" value="{!item.mployee__introtext__c}" id="mployee__introtext__c" styleClass="form-control"/>
+										    </div>
+									  	</apex:outputpanel>
+									  	<apex:outputpanel styleClass="form-group" layout="block">						    
+										    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.mployee__fulltext__c.Label}" for="mployee__fulltext__c"/>
+										    <div class="col-sm-8">
+												<apex:inputTextarea richText="true" value="{!item.mployee__fulltext__c}" id="mployee__fulltext__c" styleClass="form-control"/>
+										    </div>
+									  	</apex:outputpanel>
+									</div><!-- /general -->
+									
+									<div class="tab-pane" id="publishing">
+									
+										<div class="row-fluid">
+											<div class="col-md-6">
+												<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.mployee__alias__c.Label}" for="alias__c"/>
+												    <div class="col-sm-8">
+														<apex:inputField value="{!item.mployee__alias__c}" id="alias__c" styleClass="form-control"/>
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.Id.Label}" for="Id"/>
+												    <div class="col-sm-8">
+														<apex:inputField value="{!item.Id}" id="Id" styleClass="form-control"/>
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.CreatedById.Label}" for="CreatedById"/>
+												    <div class="col-sm-8">
+														<apex:inputField value="{!item.CreatedById}" id="CreatedById" styleClass="form-control"/>
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.CreatedDate.Label}" for="CreatedDate"/>
+												    <div class="col-sm-8">
+														<apex:inputField value="{!item.CreatedDate}" id="CreatedDate" styleClass="form-control"/>
+												    </div>
+											  	</apex:outputpanel>											
+											</div>
+											
+											<div class="col-md-6">
+												<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.mployee__published__c.Label}" for="mployee__published__c"/>
+												    <div class="col-sm-8">
+														<apex:inputField value="{!item.mployee__published__c}" id="mployee__published__c" styleClass="form-control"/>
+												    </div>
+											  	</apex:outputpanel>
+											
+												<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.mployee__publish_up__c.Label}" for="mployee__publish_up__c"/>
+												    <div class="col-sm-8">
+														<apex:inputField showDatePicker="false" type="datetime" value="{!item.mployee__publish_up__c}" id="mployee__publish_up__c" styleClass="form-control"/>
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.mployee__publish_down__c.Label}" for="mployee__publish_down__c"/>
+												    <div class="col-sm-8">
+														<apex:inputField showDatePicker="false" type="datetime" value="{!item.mployee__publish_down__c}" id="mployee__publish_down__c" styleClass="form-control"/>
+												    </div>
+											  	</apex:outputpanel>
+											  	
+											</div>
+											
+										</div>
+										
+									</div><!-- /publishing -->
+									
+									<div class="tab-pane" id="attrib-basic">
+										attrib-basic
+										
+										
+									</div><!-- /attrib-basic -->
+									
+									<div class="tab-pane" id="images">
+										<apex:commandLink action="{!save}" styleClass="btn btn-default" value="Save" />
+										
+										<div class="row">
+										
+                    					<apex:repeat id="attachments-panels" value="{!images}" var="image">
+                    						<div class="col-md-3">
+                    						<h3><apex:outputText value="Image Photo"/></h3>
+                    						<div class="fileinput fileinput-new" data-provides="fileinput">
+												<div class="fileinput-new thumbnail" style="width: 200px; height: 150px;">
+													
+													<apex:image styleClass="img-thumbnail" rendered="{!ISNULL(image.Id)}" style="height:100px" url="{!URLFOR($Resource.mployee__mployeeSite, 'assets/img/avatar_male_dark_200x200.png' )}"/>
+			                						<apex:image styleClass="img-thumbnail" rendered="{!!ISNULL(image.Id)}" style="height:100px" url="{!URLFOR($Action.Attachment.Download, image.Id)}"  />
+													
+												    
+												</div>
+												<div class="fileinput-preview fileinput-exists thumbnail" style="max-width: 200px; max-height: 150px;"></div>
+												<div>
+												    <span class="btn btn-default btn-file">
+												    	<span class="fileinput-new"><apex:outputText value="{!$Label.GLOBAL_ACTION_SELECT_FILE}" /></span>
+												    	<span class="fileinput-exists"><apex:outputText value="{!$Label.GLOBAL_ACTION_CHANGE}" /></span>												    	
+												    	<apex:inputFile id="upload" value="{!image.Body}" filename="{!image.name}"/>
+												    	
+												    </span>
+												    <a href="#" class="btn btn-default fileinput-exists" data-dismiss="fileinput"><apex:outputText value="{!$Label.GLOBAL_ACTION_REMOVE}" /></a>
+												</div>
+											</div>
+		                    				</div>	
+		                    			</apex:repeat>
+                    					
+                    					</div>
+                    					
+                    					<div class="row">
+                    					
+                    					<apex:repeat id="newImage-panels" value="{!newImages}" var="newImage">
+                    						<div class="col-md-3">
+                    						<h3><apex:outputText value="Image Photo"/></h3>
+                    						<div class="fileinput fileinput-new" data-provides="fileinput">
+												<div class="fileinput-new thumbnail" style="width: 200px; height: 150px;">
+													
+													<apex:image styleClass="img-thumbnail" rendered="{!ISNULL(newImage.Id)}" style="height:100px" url="{!URLFOR($Resource.mployee__mployeeSite, 'assets/img/avatar_male_dark_200x200.png' )}"/>
+			                						<apex:image styleClass="img-thumbnail" rendered="{!!ISNULL(newImage.Id)}" style="height:100px" url="{!URLFOR($Action.Attachment.Download, newImage.Id)}"  />
+													
+												    
+												</div>
+												<div class="fileinput-preview fileinput-exists thumbnail" style="max-width: 200px; max-height: 150px;"></div>
+												<div>
+												    <span class="btn btn-default btn-file">
+												    	<span class="fileinput-new"><apex:outputText value="{!$Label.GLOBAL_ACTION_SELECT_FILE}" /></span>
+												    	<span class="fileinput-exists"><apex:outputText value="{!$Label.GLOBAL_ACTION_CHANGE}" /></span>												    	
+												    	<apex:inputFile id="upload" value="{!newImage.Body}" filename="{!newImage.name}"/>
+												    	
+												    </span>
+												    <a href="#" class="btn btn-default fileinput-exists" data-dismiss="fileinput"><apex:outputText value="{!$Label.GLOBAL_ACTION_REMOVE}" /></a>
+												</div>
+											</div>
+		                    				</div>	
+		                    			</apex:repeat>
+                    					</div>
+                    					
+										
+									</div><!-- /images -->
+									
+									<div class="tab-pane" id="metadata">
+										<apex:outputpanel styleClass="form-group" layout="block">						    
+										    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.mployee__metadesc__c.Label}" for="mployee__metadesc__c"/>
+										    <div class="col-sm-8">
+												<apex:inputField value="{!item.mployee__metadesc__c}" id="mployee__metadesc__c" styleClass="form-control"/>
+										    </div>
+									  	</apex:outputpanel>
+									  	<apex:outputpanel styleClass="form-group" layout="block">						    
+										    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Content__c.Fields.mployee__metakey__c.Label}" for="mployee__metakey__c"/>
+										    <div class="col-sm-8">
+												<apex:inputField value="{!item.mployee__metakey__c}" id="mployee__metakey__c" styleClass="form-control"/>
+										    </div>
+									  	</apex:outputpanel>
+									</div><!-- /metadata -->
+								
+								</div><!-- /tab-content -->
+							
+							</apex:form>
+							<div class="clearfix"/>
+						
+						</div><!-- /box-content -->
+					</div><!-- /box -->
+				</div><!-- /col-lg-12 -->
+			</div><!-- /row -->
+		</apex:define>
+	
+	</apex:composition>
+	
+	
+</apex:page>

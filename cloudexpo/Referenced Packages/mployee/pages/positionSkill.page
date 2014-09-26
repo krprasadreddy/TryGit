@@ -1,0 +1,37 @@
+<apex:page standardcontroller="mployee__positionSkill__c" id="positionSkill" tabStyle="mployee__positionSkill__c" >
+
+	<apex:variable var="item" value="{!mployee__positionSkill__c}" />
+	
+	<apex:sectionHeader title="{!$ObjectType.mployee__positionSkill__c.Label}" subtitle="{!item.Name}"/>
+
+	
+    
+        	
+        	
+        
+       
+	<apex:form id="adminform" >        
+        <apex:pageBlock mode="edit" id="pageBlock">
+        	<apex:pageBlockButtons >
+                <apex:commandButton action="{!save}" value="{!$Label.GLOBAL_ACTION_SAVE}"/>
+                <apex:commandButton action="{!cancel}" value="{!$Label.GLOBAL_ACTION_CANCEL}"/>
+            </apex:pageBlockButtons>
+          
+            
+            <apex:pageBlockSection title="information" columns="1" id="pageBlockSection">
+                
+                <apex:inputField value="{!item.mployee__Position__c}"/>
+                <apex:inputField value="{!item.Name}" id="liberySkill" styleClass="skills typeahead"/>                   
+                    
+                <c:adminMod_AutoComplete autocomplete_textbox="liberySkill" />    
+                    
+                
+                <apex:inputField value="{!item.mployee__proficiency__c}" id="proficiency"/>
+                <apex:inputField value="{!item.mployee__years__c}" id="years"/>
+                
+            </apex:pageBlockSection>
+            
+        </apex:pageBlock>
+    </apex:form>
+	
+</apex:page>

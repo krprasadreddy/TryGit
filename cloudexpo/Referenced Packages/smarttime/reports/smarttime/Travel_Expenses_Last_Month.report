@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <columns>
+        <field>Account.Customer_Projects__r$Name</field>
+    </columns>
+    <columns>
+        <field>Account.Customer_Projects__r.Travel_Expenses__r$Name</field>
+    </columns>
+    <columns>
+        <field>Account.Customer_Projects__r.Travel_Expenses__r$Service_Provider__c</field>
+    </columns>
+    <columns>
+        <field>Account.Customer_Projects__r.Travel_Expenses__r$Date_of_Expense__c</field>
+    </columns>
+    <columns>
+        <field>Account.Customer_Projects__r.Travel_Expenses__r$Net_amount__c</field>
+    </columns>
+    <columns>
+        <field>Account.Customer_Projects__r.Travel_Expenses__r$Gross_amount__c</field>
+    </columns>
+    <description>Displays Travel Expenses for the last Month</description>
+    <format>Summary</format>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>Account$Name</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <name>Travel Expenses Last Month</name>
+    <params>
+        <name>co</name>
+        <value>1</value>
+    </params>
+    <reportType>Accounts_with_Projects_with_Travel_Expenses__c</reportType>
+    <scope>organization</scope>
+    <showDetails>true</showDetails>
+    <sortColumn>Account.Customer_Projects__r$Name</sortColumn>
+    <sortOrder>Asc</sortOrder>
+    <timeFrameFilter>
+        <dateColumn>Account.Customer_Projects__r.Travel_Expenses__r$Date_of_Expense__c</dateColumn>
+        <interval>INTERVAL_LASTMONTH</interval>
+    </timeFrameFilter>
+</Report>

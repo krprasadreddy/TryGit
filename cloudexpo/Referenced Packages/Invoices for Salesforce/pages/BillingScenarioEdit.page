@@ -1,0 +1,623 @@
+<apex:page standardController="kognoz1__Configuration__c" extensions="kognoz1.BillingScenarioEditController" tabStyle="kognoz1__Configuration__c" title="Billing Scenario Edit">
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+    
+    <style type="text/css">
+        .labelCol12
+        {
+            width:54%;
+            text-align:right;
+            padding-left:2px;
+            padding-right:20px;
+            padding-top:2px;
+            padding-bottom:2px;         
+            color: #4A4A56;
+            font-size: 91%;
+            font-weight:normal;
+            font-family: Arial,Helvetica,sans-serif;
+        }
+        .dataCol12{
+            width:46%;
+        }
+    </style>
+    
+    <script type="text/javascript">
+
+         var numberOfOrgWideEmailAddresses = 0;
+         var numberOfInvoiceTemplates = 0;
+         var numberOfSalesTerms = 0;
+         $(function(){
+            if($("input[id$=useDefTemplate]").attr("checked"))
+            {
+                $("select[id$=defTemplate]").removeAttr("disabled");
+                $("div[id$=defTempReq]").removeClass("ifsRequiredBlockDisabled");
+                $("div[id$=defTempReq]").addClass("ifsRequiredBlock");
+                $("input[id$=overrideTemplate]").attr("disabled","");
+            }
+            else
+            {
+                $("select[id$=defTemplate]").attr("disabled","disabled");
+                $("div[id$=defTempReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=defTempReq]").addClass("ifsRequiredBlockDisabled");
+                $("input[id$=overrideTemplate]").attr("disabled","disabled");
+            }
+
+            if($("input[id$=useDefSalesTerms]").attr("checked"))
+            {
+                $("select[id$=defSalesTerms]").removeAttr("disabled");
+                $("div[id$=defTermReq]").removeClass("ifsRequiredBlockDisabled");
+                $("div[id$=defTermReq]").addClass("ifsRequiredBlock");
+                $("input[id$=overrideSalesTerms]").attr("disabled","");
+            }
+            else
+            {
+                $("select[id$=defSalesTerms]").attr("disabled","disabled");
+                $("div[id$=defTermReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=defTermReq]").addClass("ifsRequiredBlockDisabled");
+                $("input[id$=overrideSalesTerms]").attr("disabled","disabled");
+            }
+
+            if($("input[id$=invoicesPreProc]").attr("checked"))
+            {
+                $("select[id$=preprocClass]").removeAttr("disabled");
+                $("div[id$=preProcReq]").removeClass("ifsRequiredBlockDisabled");
+                $("div[id$=preProcReq]").addClass("ifsRequiredBlock");
+            }
+            else
+            {
+                $("select[id$=preprocClass]").attr("disabled","disabled");
+                $("div[id$=preProcReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=preProcReq]").addClass("ifsRequiredBlockDisabled");
+            }
+
+            if($("input[id$=postToExtSys]").attr("checked"))
+            {
+                $("select[id$=postingClass]").removeAttr("disabled");
+                $("div[id$=postReq]").removeClass("ifsRequiredBlockDisabled");
+                $("div[id$=postReq]").addClass("ifsRequiredBlock");
+            }
+            else
+            {
+                $("select[id$=postingClass]").attr("disabled","disabled");
+                $("div[id$=postReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=postReq]").addClass("ifsRequiredBlockDisabled");
+            }
+
+            $("select[id$=orgWideEmailAddress]").each(function(){
+                if($(this).val()!=null)
+                    numberOfOrgWideEmailAddresses++;
+            });
+            
+            if(numberOfOrgWideEmailAddresses>0)
+            {
+                if($("input[id$=useOrgWideEmail]").attr("checked"))
+                    $("select[id$=orgWideEmailAddress]").removeAttr("disabled");
+                else
+                    $("select[id$=orgWideEmailAddress]").attr("disabled","disabled");
+            }
+            else
+            {
+                $("select[id$=orgWideEmailAddress]").attr("disabled","disabled");
+                $("input[id$=useOrgWideEmail]").attr("disabled","disabled");
+            }
+            
+            $("select[id$=defTemplate]").each(function(){
+                if($(this).val()!=null)
+                    numberOfInvoiceTemplates++;
+            });
+            
+            if(numberOfInvoiceTemplates>0)
+            {
+                if($("input[id$=useDefTemplate]").attr("checked"))
+                {
+                    $("select[id$=defTemplate]").removeAttr("disabled");
+	                $("div[id$=defTempReq]").removeClass("ifsRequiredBlockDisabled");
+	                $("div[id$=defTempReq]").addClass("ifsRequiredBlock");
+	                $("input[id$=overrideTemplate]").attr("disabled","");
+                }
+                else
+                {
+                    $("select[id$=defTemplate]").attr("disabled","disabled");
+	                $("div[id$=defTempReq]").removeClass("ifsRequiredBlock");
+	                $("div[id$=defTempReq]").addClass("ifsRequiredBlockDisabled");
+	                $("input[id$=overrideTemplate]").attr("disabled","disabled");
+                }
+            }
+            else
+            {
+                $("select[id$=defTemplate]").attr("disabled","true");
+                $("input[id$=useDefTemplate]").attr("disabled","disabled");
+                $("div[id$=defTempReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=defTempReq]").addClass("ifsRequiredBlockDisabled");
+                $("input[id$=overrideTemplate]").attr("disabled","disabled");
+            }
+
+            $("select[id$=defSalesTerms]").each(function(){
+                if($(this).val()!=null)
+                    numberOfSalesTerms++;
+            });
+
+            if(numberOfSalesTerms>0)
+            {
+                if($("input[id$=useDefSalesTerms]").attr("checked"))
+                {
+                    $("select[id$=defSalesTerms]").removeAttr("disabled");
+	                $("div[id$=defTermReq]").removeClass("ifsRequiredBlockDisabled");
+	                $("div[id$=defTermReq]").addClass("ifsRequiredBlock");
+	                $("input[id$=overrideSalesTerms]").attr("disabled","");
+                }
+                else
+                {
+                    $("select[id$=defSalesTerms]").attr("disabled","disabled");
+	                $("div[id$=defTermReq]").removeClass("ifsRequiredBlock");
+	                $("div[id$=defTermReq]").addClass("ifsRequiredBlockDisabled");
+	                $("input[id$=overrideSalesTerms]").attr("disabled","disabled");
+                }
+            }
+            else
+            {
+                $("select[id$=defSalesTerms]").attr("disabled","true");
+                $("input[id$=useDefSalesTerms]").attr("disabled","disabled");
+                $("div[id$=defTermReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=defTermReq]").addClass("ifsRequiredBlockDisabled");
+                $("input[id$=overrideSalesTerms]").attr("disabled","disabled");
+            }
+
+
+            updateInvoiceNumberProperties();
+            updateEmailTypeProperties()
+            
+         });
+         
+         function setDefTemplateStat(ctl)
+         {
+            if($(ctl).attr("checked"))
+            {
+                $("select[id$=defTemplate]").removeAttr("disabled");
+                $("div[id$=defTempReq]").removeClass("ifsRequiredBlockDisabled");
+                $("div[id$=defTempReq]").addClass("ifsRequiredBlock");
+                $("input[id$=overrideTemplate]").attr("disabled","");
+            }
+            else
+            {
+                $("select[id$=defTemplate]").attr("disabled","disabled");
+                $("div[id$=defTempReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=defTempReq]").addClass("ifsRequiredBlockDisabled");
+                $("input[id$=overrideTemplate]").attr("checked","");
+                $("input[id$=overrideTemplate]").attr("disabled","disabled");
+            }
+         }
+
+         function setDefSalesTermsStat(ctl)
+         {
+            if($(ctl).attr("checked"))
+            {
+                $("select[id$=defSalesTerms]").removeAttr("disabled");
+                $("div[id$=defTermReq]").removeClass("ifsRequiredBlockDisabled");
+                $("div[id$=defTermReq]").addClass("ifsRequiredBlock");
+                $("input[id$=overrideSalesTerms]").attr("disabled","");
+            }
+            else
+            {
+                $("select[id$=defSalesTerms]").attr("disabled","disabled");
+                $("div[id$=defTermReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=defTermReq]").addClass("ifsRequiredBlockDisabled");
+                $("input[id$=overrideSalesTerms]").attr("checked","");
+                $("input[id$=overrideSalesTerms]").attr("disabled","disabled");
+            }
+         }
+
+         function setInvPreprocStat(ctl)
+         {
+            if($(ctl).attr("checked"))
+            {
+                $("select[id$=preprocClass]").removeAttr("disabled");
+                $("div[id$=preProcReq]").removeClass("ifsRequiredBlockDisabled");
+                $("div[id$=preProcReq]").addClass("ifsRequiredBlock");
+            }
+            else
+            {
+                $("select[id$=preprocClass]").attr("disabled","disabled");
+                $("div[id$=preProcReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=preProcReq]").addClass("ifsRequiredBlockDisabled");
+            }
+         }
+
+         function setPostingStat(ctl)
+         {
+            if($(ctl).attr("checked"))
+            {
+                $("select[id$=postingClass]").removeAttr("disabled");
+                $("div[id$=postReq]").removeClass("ifsRequiredBlockDisabled");
+                $("div[id$=postReq]").addClass("ifsRequiredBlock");
+            }
+            else
+            {
+                $("select[id$=postingClass]").attr("disabled","disabled");
+                $("div[id$=postReq]").removeClass("ifsRequiredBlock");
+                $("div[id$=postReq]").addClass("ifsRequiredBlockDisabled");
+            }
+         }
+
+         function setOrgWideEmailStat(ctl)
+         {
+            if($(ctl).attr("checked"))
+                $("select[id$=orgWideEmailAddress]").removeAttr("disabled");
+            else
+                $("select[id$=orgWideEmailAddress]").attr("disabled","disabled");
+         }
+         
+         function updateContRolePicklist()
+         {
+            updateContRoleOptions();
+         }
+
+        function displayUpdatingContRoles()
+        {
+          if($("#statusMsgContainer").css("display")=="none")
+          {
+              $("span[id=statusMsg]").html("Updating Contact Role Types ...");
+              $("#statusMsgContainer").css("display","block");
+          }
+        }
+    
+        function hideUpdatingContRoles()
+        {
+          $("#statusMsgContainer").css("display","none");
+        }
+
+        function updateInvoiceNumberProperties()
+        {
+        
+/*
+var selected2 = $('#myForm input[name="data\\[Payment\\]\\[value\\]"]').filter(':checked');
+var value2 = selected2.val();
+console.log(value2); 
+
+*/      
+            var invoiceNumberOptionSelected = $('input[id*="invoicenumberRadio"]').filter(":checked").val();
+            if(invoiceNumberOptionSelected=="global")
+            {
+                $("table[id$=localInvoiceNumberGrid]").css("display","none");
+                $("table[id$=globalInvoiceNumberGrid]").css("display","table");
+            }
+            else
+            {
+                $("table[id$=localInvoiceNumberGrid]").css("display","table");
+                $("table[id$=globalInvoiceNumberGrid]").css("display","none");
+            }
+        }
+         
+        function updateEmailTypeProperties()
+        {
+            var emailTypeOptionSelected = $('input[id*="emailtypeRadio"]').filter(":checked").val();
+            if(emailTypeOptionSelected=="internal")
+            {
+                $("div[id$=emailCustomerGrid]").css("display","none");
+                $("div[id$=emailInternalGrid]").css("display","block");
+                $("div[id$=contNameSection]").css("display","block");
+            }
+            else
+            {
+                $("div[id$=emailCustomerGrid]").css("display","block");
+                $("div[id$=emailInternalGrid]").css("display","none");
+                $("div[id$=contNameSection]").css("display","none");
+            }
+        }
+         
+    </script>
+    <style type="text/css">
+        .bsCustomInp{width:100%;}
+    </style>
+
+<apex:pageMessages /> 
+ <apex:form >   
+    <apex:sectionHeader title="Billing Scenario Edit" subtitle="New Billing Scenario" rendered="{!newBillingScenario==true}" help="{!ifsHelpUrl}"/>
+    <apex:sectionHeader title="Billing Scenario Edit" subtitle="Edit {!billingScenario.Name}" rendered="{!newBillingScenario==false}" help="{!ifsHelpUrl}"/>
+    <apex:pageBlock >
+        <apex:pageBlockButtons >
+            <apex:commandButton action="{!save}" value="Save"/>
+            <apex:commandButton action="{!cancel}" value="Cancel"/>
+        </apex:pageBlockButtons>
+        
+        <apex:pageBlockSection columns="1" collapsible="false">
+            <apex:outputPanel styleClass="requiredExampleOuter" layout="block" style="float:right;">
+                <apex:outputPanel styleClass="requiredExampleOuter">
+                    <apex:outputPanel styleClass="requiredExample">&nbsp;</apex:outputPanel>
+                </apex:outputPanel>
+                <apex:outputPanel styleClass="requiredMark">*</apex:outputPanel>
+                <apex:outputPanel styleClass="requiredText">= Required Information</apex:outputPanel>
+            </apex:outputPanel>
+        </apex:pageBlockSection>
+        
+        <!-- Information -->
+        <apex:pageBlockSection id="infoblock" title="Information" columns="1" collapsible="false">
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText id="emailTemplatePanel" value="Billing Scenario Name" />
+                <apex:outputPanel styleClass="requiredInput" layout="block">
+                    <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/>
+                    <apex:inputField value="{!billingScenario.Name}" />
+                </apex:outputPanel>
+            </apex:panelGrid> 
+            <apex:inputField value="{!billingScenario.kognoz1__Configuration_Description__c}" style="width:70%; height:70px; overflow-y:auto;"/>
+            <apex:inputField value="{!billingScenario.Active__c }"/>
+            <apex:outputField value="{!billingScenario.OwnerId}" />
+        </apex:pageBlockSection>
+
+        <!-- Opportunities or Account Invoicing-->
+        <apex:pageBlockSection title="Invoicing Type" columns="2"  collapsible="false">
+          <apex:selectRadio value="{!invoicingType}" layout="pageDirection" onclick="updateContRolePicklist();" style="margin-left:100px;">
+            <apex:selectOptions value="{!invoicingTypeOptions}" />
+          </apex:selectRadio>
+        </apex:pageBlockSection>
+
+        <!-- Invoice Number -->
+        <apex:pageBlockSection title="Invoice Number" columns="1"  collapsible="false">
+            <apex:inputField value="{!billingScenario.Keep_Invoice_Number__c }"/>
+            <apex:selectRadio value="{!invoiceNumberType}" layout="pageDirection" onclick="updateInvoiceNumberProperties();" style="margin-left:100px;" id="invoicenumberRadio">
+                <apex:selectOptions value="{!invoiceNumberOptions}" />
+            </apex:selectRadio>
+              
+           <apex:outputPanel id="invNumberPanels" layout="block">     
+                <apex:panelGrid columns="2" id="localInvoiceNumberGrid" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                    <apex:outputText value="Invoice Number Format" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="ifsRequiredBlock" layout="block" id="invnumberDispReq"/>
+                        <apex:inputField value="{!billingScenario.InvoiceNumber__c }" id="invoicenumberDispInp"/> 
+                    </apex:outputPanel>
+                    <apex:outputText value="Invoice Number Counter" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="ifsRequiredBlock" layout="block" id="invnumberCounterReq"/>
+                        <apex:inputField value="{!billingScenario.InvoiceStartNumber__c }" id="invoicenumberCounterInp"/>
+                    </apex:outputPanel>
+                </apex:panelGrid>
+                <apex:panelGrid columns="2" id="globalInvoiceNumberGrid" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                    <apex:outputText value="Global Invoice Number" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block" id="glbInvoiceNums">
+                        <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/>
+                        <apex:selectList value="{!selectedGlobalInvoiceNumber}" size="1" multiselect="false">
+                            <apex:selectOptions value="{!globalInvoiceNumberOptions}" />
+                        </apex:selectList>
+                    </apex:outputPanel>
+                </apex:panelGrid>
+            </apex:outputPanel> 
+        </apex:pageBlockSection>
+
+        <!-- Emailing Invoices -->
+        <apex:pageBlockSection title="Emaling Invoices" columns="1"  collapsible="false">
+            <apex:selectRadio value="{!emailingType}" layout="pageDirection" onclick="updateEmailTypeProperties();" style="margin-left:100px;" id="emailtypeRadio">
+                <apex:selectOptions value="{!emailingTypeOptions}" />
+            </apex:selectRadio>
+              
+            <apex:outputPanel layout="block" >
+                <apex:outputPanel layout="block" id="emailCustomerGrid">
+                    <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                        <apex:outputText value="Track Email Activity" />
+                        <apex:inputField value="{!billingScenario.Track_email_activity__c }"/>
+                        <apex:outputText value="Email Template" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                            <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/>
+                            <apex:selectList value="{!selectedEmailTemplate}" size="1" multiselect="false" style="width:40%">
+                                <apex:selectOptions value="{!emailTemplateOptions}" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:panelGrid>
+                    <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                        <apex:outputText value="Main Contact Role Type" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block" id="contRoles">
+                            <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/>
+                            <apex:selectList value="{!selectedContactRoleName}" size="1" multiselect="false">
+                                <apex:selectOptions value="{!contactRoleOptions}" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:panelGrid>
+                    <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                        <apex:outputText value="CC Contact Role Type" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block" id="cccontRoles">
+                            <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/>
+                            <apex:selectList value="{!selectedCCContactRoleName}" size="1" multiselect="false">
+                                <apex:selectOptions value="{!contactRoleOptions}" />
+                            </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:panelGrid>
+                    <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                        <apex:outputText value="CC Owner" />
+                        <apex:inputField value="{!billingScenario.CC_Sales_Owner__c }"/>
+                    </apex:panelGrid>
+                    <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                        <apex:outputText value="Additional Email Addresses" />
+                        <apex:outputPanel layout="block">
+                            <apex:inputText value="{!additionalEmailAddresses}" id="additionalEmailAddressrDispInp"/> 
+                        </apex:outputPanel>
+                    </apex:panelGrid>
+                    <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                        <apex:outputText value="Use Org Wide Email Address" />
+                        <apex:inputField value="{!billingScenario.Use_Org_Wide_Email_Address__c }" id="useOrgWideEmail" onclick="setOrgWideEmailStat(this);"/>
+                        <apex:outputText value="Org Wide Email Address" />
+                        <apex:outputPanel styleClass="requiredInput" layout="block">
+                           <apex:selectList value="{!selectedOrgWideEmailAddress}" size="1" multiselect="false" id="orgWideEmailAddress">
+                               <apex:selectOptions value="{!orgWideEmailOptions}" />
+                           </apex:selectList>
+                        </apex:outputPanel>
+                    </apex:panelGrid>
+                </apex:outputPanel>
+                <apex:outputPanel layout="block" id="emailInternalGrid">
+                <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                    <apex:outputText value="Internal Email Address" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="ifsRequiredBlock" layout="block" id="internalEmailAddressDispReq"/>
+                        <apex:inputField value="{!billingScenario.Internal_Email_Address__c }" id="internalEmailAddressrDispInp"/> 
+                    </apex:outputPanel>
+                    <apex:outputText value="Internal Email Subject" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="ifsRequiredBlock" layout="block" id="intEmailSubjectReq"/>
+                        <apex:inputField value="{!billingScenario.Internal_Email_Subject__c }" id="intEmailSubjectInp"/>
+                    </apex:outputPanel>
+                    <apex:outputText value="Internal Email Body" />
+                    <apex:outputPanel styleClass="requiredInput" layout="block">
+                        <apex:outputPanel styleClass="ifsRequiredBlock" layout="block" id="intEmailBodyReq"/>
+                        <apex:inputField value="{!billingScenario.Internal_Email_Body__c }" id="intEmailBodyInp" style="width:50%;"/>
+                    </apex:outputPanel>
+                </apex:panelGrid>
+                </apex:outputPanel>
+            </apex:outputPanel>
+        </apex:pageBlockSection>
+        
+        <!-- Contact Name -->
+        <apex:pageBlockSection title="Contact Name" columns="1"  collapsible="false" id="contNameSection">
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Main Contact Role Type" />
+                <apex:outputPanel styleClass="requiredInput" layout="block" id="contNameRoles">
+                    <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/> 
+                    <apex:selectList value="{!selectedContContactRoleName}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!contactRoleOptions}" />
+                    </apex:selectList>
+                </apex:outputPanel>
+            </apex:panelGrid>
+        </apex:pageBlockSection> 
+
+        <!-- Invoices Printout -->
+        <apex:pageBlockSection title="Printing Invoices" columns="1"  collapsible="false">
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Documents Printouts Folder" />
+                <apex:outputPanel styleClass="requiredInput" layout="block">
+                    <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/>
+                    <apex:selectList value="{!selectedDocsFolder}" size="1" multiselect="false">
+                        <apex:selectOptions value="{!documentFolderOptions}" />
+                    </apex:selectList>
+                </apex:outputPanel>
+            </apex:panelGrid>
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Printouts File Name" />
+                <apex:outputPanel styleClass="requiredInput" layout="block">
+                    <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/>
+                    <apex:inputField value="{!billingScenario.Printout_File_Name__c }"/>
+                </apex:outputPanel>
+            </apex:panelGrid>
+        </apex:pageBlockSection> 
+
+        <!-- Safeguard checks -->
+        <apex:pageBlockSection title="Invoices Creation Safeguard Checks" columns="1"  collapsible="false">
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Check Data" />
+                <apex:inputField value="{!billingScenario.Check_Missing_Data__c }"/>
+                <apex:outputText value="Check Out of Sync Invoices" />
+                <apex:inputField value="{!billingScenario.Check_Out_of_Sync_Invoices__c }"/>
+            </apex:panelGrid>
+        </apex:pageBlockSection>
+
+        <!-- History Tracking -->
+        <apex:pageBlockSection title="Invoices History Tracking" columns="1"  collapsible="false">
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Keep Invoices History" />
+                <apex:inputField value="{!billingScenario.Invoices_History_Tracking__c }"/>
+            </apex:panelGrid>
+        </apex:pageBlockSection>
+
+        <!-- Invoice line items sorting -->
+        <apex:pageBlockSection title="Invoice Line Items Sorting" columns="1"  collapsible="false">
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Group By Opportunity" />
+                <apex:inputField value="{!billingScenario.kognoz1__Group_By_Opportunity__c}"/>
+                <apex:outputText value="Sort Items By" />
+                <apex:outputPanel styleClass="requiredInput" layout="block">
+                   <apex:selectList value="{!selectedSortByField}" size="1" multiselect="false">
+                       <apex:selectOptions value="{!sortByFieldOptions}" />
+                   </apex:selectList>
+                </apex:outputPanel>
+            </apex:panelGrid>
+        </apex:pageBlockSection>
+
+        <!-- Default Invoice Templates -->
+        <apex:pageBlockSection title="Default Invoice Template" columns="1"  collapsible="false" >
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Use Default Template" />
+                <apex:inputField value="{!billingScenario.kognoz1__Use_Default_Invoice_Template__c}" id="useDefTemplate" onclick="setDefTemplateStat(this);"/>
+                <apex:outputText value="Default Invoice Template" />
+                <apex:outputPanel styleClass="requiredInput" layout="block">
+                    <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"  id="defTempReq" />
+                    <apex:selectList value="{!selectedDefaultInvoiceTemplate}" size="1" multiselect="false" id="defTemplate">
+                       <apex:selectOptions value="{!invoiceTemplateOptions}" />
+                   </apex:selectList>
+                </apex:outputPanel>
+                <apex:outputText value="Override Assigned Template" />
+                <apex:inputField value="{!billingScenario.kognoz1__Override_Assigned_Invoice_Template__c}" id="overrideTemplate" />
+            </apex:panelGrid>
+        </apex:pageBlockSection> 
+
+        <!-- Default Sales Terms -->
+        <apex:pageBlockSection title="Default Sales Terms" columns="1"  collapsible="false" >
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Use Default Sales Terms" />
+                <apex:inputField value="{!billingScenario.kognoz1__Use_Default_Sales_Terms__c}" id="useDefSalesTerms" onclick="setDefSalesTermsStat(this);"/>
+                <apex:outputText value="Default Sales Terms" />
+                <apex:outputPanel styleClass="requiredInput" layout="block">
+                    <apex:outputPanel styleClass="ifsRequiredBlock" layout="block"  id="defTermReq" />
+                    <apex:selectList value="{!selectedDefaultSalesTerms}" size="1" multiselect="false" id="defSalesTerms">
+                       <apex:selectOptions value="{!salesTermsOptions}" />
+                   </apex:selectList>
+                </apex:outputPanel>
+                <apex:outputText value="Override Assigned Sales Terms" />
+                <apex:inputField value="{!billingScenario.kognoz1__Override_Assigned_Sales_Terms__c}" id="overrideSalesTerms" />
+            </apex:panelGrid>
+        </apex:pageBlockSection> 
+
+        <!-- Invoices Preprocesing -->
+        <apex:pageBlockSection title="Invoices Preprocessing" columns="1"  collapsible="false" >
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Use Invoice Preprocessing" />
+                <apex:inputField value="{!billingScenario.Use_Invoice_Preprocessing__c }" id="invoicesPreProc" onclick="setInvPreprocStat(this);"/>
+                <apex:outputText value="Preprocessing Apex Class" />
+                <apex:outputPanel styleClass="requiredInput" layout="block">
+                    <apex:outputPanel styleClass="ifsRequiredBlock" layout="block" id="preProcReq" />
+                    <apex:selectList value="{!selectedPreprocessingClass}" size="1" multiselect="false" id="preprocClass">
+                       <apex:selectOptions value="{!preprocessingClassOptions}" />
+                   </apex:selectList>
+                </apex:outputPanel>
+            </apex:panelGrid>
+        </apex:pageBlockSection> 
+
+        <!-- Postings Information -->
+        <apex:pageBlockSection title="Invoices Posting to External Systems" columns="1"  collapsible="false">
+            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col">
+                <apex:outputText value="Use Invoice Posting" />
+                <apex:inputField value="{!billingScenario.Use_Invoice_Posting__c }" id="postToExtSys" onclick="setPostingStat(this);"/>
+                <apex:outputText value="Posting Apex Class" />
+                <apex:outputPanel styleClass="requiredInput" layout="block">
+                    <apex:outputPanel styleClass="ifsRequiredBlock" layout="block" id="postReq" />
+                   <apex:selectList value="{!selectedPostingClass}" size="1" multiselect="false" id="postingClass">
+                       <apex:selectOptions value="{!postingClassOptions}" />
+                   </apex:selectList>
+                </apex:outputPanel>
+            </apex:panelGrid>
+        </apex:pageBlockSection> 
+
+
+    </apex:pageBlock>
+    <apex:actionStatus onstart="displayUpdatingContRoles();" onstop="hideUpdatingContRoles();" id="contRolesStatus"/>
+    <apex:actionFunction action="{!updateContRoleOptions}" name="updateContRoleOptions" status="contRolesStatus" reRender="contRoles,cccontRoles" />
+       <!-- ###########################################
+       
+               ACTION STATUS
+       
+        ###############################################-->
+       <div id="statusMsgContainer" class="statusPopup" >
+        <div  class="popupStatus1" >
+        </div>
+           <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+            <div style="text-align:center;margin-top:15px;" > 
+                <table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+                    <tr>
+                        <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+                        <td><span id="statusMsg" style="z-index:153;"></span></td>
+                    </tr>
+                </table>
+               </div>
+           </div>
+       </div>
+
+ </apex:form>
+</apex:page>

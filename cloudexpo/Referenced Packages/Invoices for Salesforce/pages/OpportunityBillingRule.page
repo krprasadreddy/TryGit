@@ -1,0 +1,601 @@
+<apex:page controller="kognoz1.BillingRuleController" tabStyle="kognoz1__Configuration__c" title="Opportunity Billing Rule">
+<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+
+<apex:includeScript value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"/>
+
+<style type="text/css"> 
+    .brRows > td
+    {
+        vertical-align:middle;
+    }
+    
+    .containerClass
+    {
+        height:200px;
+        width:150px;
+        overflow:auto;
+        border:1px solid grey;
+        padding:2px;
+    }
+    
+    .fieldelementselected
+    {
+        background-color:#D8D8D8;
+    }
+    .expandableselected
+    {
+        background-color:#81BEF7;
+    }
+    .operatorsSelect
+    {
+        width: 180px;
+    }
+    .queryTableClass td
+    {
+        vertical-align:middle;
+    }
+    
+</style> 
+
+<script type="text/javascript" >
+    var oName = null;
+    var sobjectToTrace = null;
+    var sfieldToTrace = null;
+    var mapSobjectNameToSObjectCheckStat = new Array();
+    var containers = 0;
+    var maxParents = 3;
+
+    var describeSObjectsMap = new Array();
+    function describeSObject(){}
+    function describeSField(){}
+
+    $(function(){
+        $("#errorDlgBox").dialog({
+            position: 'center',
+            modal: true, 
+            autoOpen: false,
+            width: 600,
+            height:'auto',
+            title:"Processing Information"
+        });
+        var html='{!$Api.Partner_Server_URL_220}';
+        serverUrl.value = html;
+        var mapElement = new Object();
+        mapElement.SObjectName = 'Opportunity';
+        mapElement.SobjectCheckStat = 'tocheck';
+        mapSobjectNameToSObjectCheckStat.push(mapElement);
+            
+        loadObjectFieldsAndParents('Opportunity');
+        var arrayToCheck = new Array();
+        var continuechecking = false;
+            
+        $(".expandable").live("click", function(){
+            if ($(this).hasClass('expandableselected') == false)
+            {
+                $(this).parent().children().removeClass('expandableselected');
+                $(this).parent().children().removeClass('fieldelementselected');
+                $(this).addClass('expandableselected');
+                $(this).parent().parent().nextAll().remove();
+                loadObjectFieldsAndParents($(this).attr('objectName'));
+            }
+                
+        });
+
+        $(".fieldelement").live("click", function(){
+                $('.fieldelement').removeClass('fieldelementselected');
+                $(this).parent().children().removeClass('expandableselected');
+                $(this).addClass('fieldelementselected');
+                $(this).parent().parent().nextAll().remove();
+                getTrace();
+            
+                
+        });
+    });
+
+    function displayAddRemBillingRuleInProgress()
+    {
+         $("span[id=statusMsg]").html("Updating billing rules panel ...");
+         $("#operationStatus").css("display","block");
+    }
+
+    function hideAddRemBillingRuleInProgress()
+    {
+         $("#operationStatus").css("display","none");
+         var isError = $("input[id$=isError]").val();
+         if(isError=="true")
+         {
+            $("span[id*=errorPanel]").empty();
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+
+            $("#errorDlgBox").dialog("open");
+            
+         }
+    }
+
+    function displaySavingInProgress()
+    {
+         $("span[id=statusMsg]").html("Saving ...");
+         $("#operationStatus").css("display","block");
+    
+    }
+    
+    function hideSavingInProgress()
+    {
+         var isError = $("input[id$=isError]").val();
+         if(isError=="true")
+         {
+             $("span[id=statusMsg]").empty();
+             $("#operationStatus").css("display","none");
+
+            $("span[id*=errorPanel]").empty();
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+
+            $("#errorDlgBox").dialog("open");
+            
+         }
+         else
+         {
+            if($(".errorMsg").length > 0)
+            {
+                 $("span[id=statusMsg]").empty();
+                 $("#operationStatus").css("display","none");
+            }
+            else
+                redirectToBillingScenarioPage();
+         }          
+         
+    }
+
+    
+    function createObjectDescriptionObject(obj)
+    {
+        var newSObject = new describeSObject();
+        newSObject.objectName = obj;
+        newSObject.fields = new Array();
+        describeSObjectsMap.push(newSObject);
+    }
+
+    function createObjectDescriptionObjectFields(oName, fName, fLabel, fRef, fRelName, fType, fPrecision, fScale, fLength)
+    {
+        var realObjectName = oName.replace('[', '').replace(']', '');
+        var SObjectDescriptor = jQuery.grep(describeSObjectsMap, function(n, i){
+            if (n.objectName == realObjectName)
+            {
+                var newFields = new Array();
+                if ($(n).fields != null)
+                    newFields = $(n).fields;
+                var newField = new describeSField();
+                newField.name = fName;
+                newField.label = fLabel;
+                newField.relationshipName = fRelName;
+                newField.referenceTo = fRef;
+                newField.type = fType;
+                newField.precision = fPrecision;
+                newField.scale = fScale;
+                newField.length = fLength;
+                newFields.push(newField);
+                n.fields.push(newField);
+            }
+                    return (n.objectName == realObjectName);
+        });
+    }
+    
+
+    
+    function loadObjectFieldsAndParents(SObjectName)
+    {
+    
+        var SObjectDescriptor = new Array();
+        if (describeSObjectsMap != null)
+        {
+            SObjectDescriptor = jQuery.grep(describeSObjectsMap, function(n, i){
+                return (n.objectName == SObjectName);
+            });
+            if (SObjectDescriptor.length > 0)
+            {
+                $("#objectsTable tr").append($('<td class="mainFieldsPanel'+containers+'"><div sobj="'+SObjectName+'"class="containerClass" id=\"container'+containers+'\"></div></td>'));
+                var newdiv = document.getElementById('container'+containers);
+                containers = containers + 1;    
+                for (i = 0; i < SObjectDescriptor[0].fields.length; i++)
+                {
+                    var fieldDescriptor = SObjectDescriptor[0].fields[i]; //
+                    var selections = $('.expandableselected').size();
+                    var tds = $("#objectsTable").children().children().children().size();
+                    if(tds <= maxParents && selections <= (maxParents-1))
+                    {
+                        if(fieldDescriptor.type.toLowerCase() != 'reference')
+                        {
+                            $(newdiv).append('<span class="fieldelement" objecttype="'+fieldDescriptor.type+'" fieldPrecision="'+fieldDescriptor.precision+'" fieldScale="'+fieldDescriptor.scale+'" fieldLength="'+fieldDescriptor.length+'"  objectName="'+fieldDescriptor.name+'">'+fieldDescriptor.label+'</span><br />');
+                        }
+                        else
+                        {
+                            if(selections < (maxParents-1))
+                            {
+                                if(fieldDescriptor.relationshipName=="")
+                                    $(newdiv).append('<span class="expandable" relname="'+fieldDescriptor.relationshipName+'" fieldname="'+fieldDescriptor.name+'" objectName="'+fieldDescriptor.referenceTo+'">'+fieldDescriptor.referenceTo+' > </span><br />');
+                                else
+                                    $(newdiv).append('<span class="expandable" relname="'+fieldDescriptor.relationshipName+'" fieldname="'+fieldDescriptor.name+'" objectName="'+fieldDescriptor.referenceTo+'">'+fieldDescriptor.relationshipName+' > </span><br />');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    function getTrace()
+    {
+        var trace = 'Opportunity';
+        var tracenames = '';
+        var tracerelations = '';
+        var labelSelected = '';
+        var fieldLabel;
+        var parentAndField;
+        var fieldType;
+        var objType = '';
+        $.each($("#objectsTable tr").children(), function()
+        {
+            $.each($(this).find('span'), function()
+            {
+                if ($(this).hasClass('expandableselected') == true)
+                {
+                    if (trace == '')
+                        trace = $(this).attr('objectname');
+                    else
+                        trace = trace+'.'+$(this).attr('objectname');
+                    if (tracenames == '')
+                        tracenames = $(this).attr('fieldname');
+                    else    
+                        tracenames = tracenames+'.'+$(this).attr('fieldname');
+                    if (tracerelations == '')
+                        tracerelations = $(this).attr('relname');
+                    else    
+                        tracerelations = tracerelations+'.'+$(this).attr('relname');
+                    
+                }
+                else if ($(this).hasClass('fieldelementselected') == true)
+                {
+                    if (trace == '')
+                        trace = $(this).attr('objectname');
+                    else
+                        trace = trace+'.'+$(this).attr('objectname');
+                    if (tracenames == '')
+                        tracenames = $(this).attr('objectname');
+                    else    
+                        tracenames = tracenames+'.'+$(this).attr('objectname');
+                    if (tracerelations == '')
+                        tracerelations = $(this).attr('objectname');
+                    else
+                        tracerelations = tracerelations+'.'+$(this).attr('objectname');
+                    sobjectToTrace = $(this).parent().attr("sobj");
+                    sfieldToTrace = $(this).attr('objectname');
+                    labelSelected = $(this).html();
+                    if(labelSelected.indexOf(sobjectToTrace)==-1 && sobjectToTrace!="Opportunity")
+                        fieldLabel = sobjectToTrace+" "+labelSelected;
+                    else
+                        fieldLabel = labelSelected;
+                    parentAndField = sobjectToTrace+"."+sfieldToTrace;
+                    fieldType = $(this).attr('objecttype'); 
+                    fieldPrecision = $(this).attr('fieldPrecision'); 
+                    fieldScale = $(this).attr('fieldScale'); 
+                    fieldLength = $(this).attr('fieldLength'); 
+                    objType = mapTypesToFriendlyNames(fieldType);
+                }
+            });
+        });
+        
+        $("#objectsTable tr").append($('<td class="insertBox" style="padding-left:25px; padding-right:25px; padding-top:15px">'+ 
+                                '<center>'+
+                                'You have selected: <br /><br />'+
+                                '<span style="font-weight:bold">'+tracenames+'</span>'+
+                                'Type: '+objType+'<br />'+
+                                'Api Name: '+tracenames+'<br /><br />'+
+                                '<div id="traceContainer" lab="'+fieldLabel+'" style="display:none">'+trace+'</div><br />'+
+                                '<div id="tracenamesContainer" style="display:none">'+tracenames+'</div><br />'+
+                                '<div id="tracerelsContainer" style="display:none">'+tracerelations+'</div><br />'+
+                                '<input type="button" value="Cancel" onclick="cancelAddBillingRule()"/><input type="button" value="Add" onclick="addBillingRule(\''+fieldType+'\',\''+fieldPrecision+'\',\''+fieldScale+'\',\''+fieldLength+'\',\''+fieldLabel+'\',\''+parentAndField+'\',\''+tracerelations+'\' )"/></center></td>'));                                     
+        
+        
+    }
+    
+    function cancelAddBillingRule()
+    {
+        $("#objectsTable tr").children().each(function(){
+            if(!$(this).hasClass("mainFieldsPanel0"))
+                $(this).remove();
+        });
+        $(".expandableselected").each(function(){
+            $(this).removeClass("expandableselected");
+        });
+    }
+    
+    function addBillingRule(brType, precision, scale, length, label, trace, queryText)
+    {
+        $("input[id$=isError]").val("false");
+        if(brType=="Text")
+            brType = "string";
+        addBillingRuleSrv(brType.toLowerCase(),precision, scale, length, label, trace, queryText);
+    }
+
+    function cleanErrors()
+    {
+        $("input[id$=isError]").val("false");
+    }
+
+    function mapTypesToFriendlyNames(t)
+    {
+        
+        var ret = '';
+        if (t == 'datetime'){
+            ret = 'Date/Time';
+        }
+        else if (t == 'date'){
+            ret = 'Date'; 
+        }
+        else if (t == 'currency'){
+            ret = 'Currency';
+        }
+        else if (t == 'integer'){
+            ret = 'Integer';
+        }
+        else if (t == 'double'){
+            ret = 'Double';
+        }
+        else if (t == 'string'){
+            ret = 'Text';
+        }
+        else if (t == 'picklist'){
+            ret = 'Picklist';
+        }
+        else if (t == 'boolean'){
+            ret = 'Boolean';
+        }
+        else if (t == 'percent'){
+            ret = 'Percent';
+        }
+        return ret;
+    }
+
+    function checkBillingRules()
+    {
+        if ($("table[id$=billingRulesTable] tr").length == 0)
+        {
+            alert('The are no billing rules defined. Add one or more, or cancel.');
+            return false;
+        }
+        else
+            return true;
+    }
+
+    function validateBillingRules()
+    {
+        var validBillingRules = true;
+        $("table[id$=billingRulesTable] tr").each(function(){
+            var ctl = $(this).children("td[id$=variable]").children("input");
+            if($(ctl).attr("checked")==false)
+            {
+                var inpBox = $(this).children("td[id$=inputBox]").find("input");
+                var value = $(inpBox).val();
+                if(value=="")
+                {
+                    $(inpBox).parent().append('<div class="errorInp" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;"><strong>Error: </strong>You must enter a valid value or set the billing rule value to variable</div>');
+                    validBillingRules = false;
+                }
+            }
+        });
+        return validBillingRules;       
+    }
+    
+    function removeErrorMsgs()
+    {
+        $(".errorInp").each(function(){
+            $(this).remove();
+        });
+    }
+
+</script>
+    <apex:form >
+        <apex:sectionHeader title="Billing Scenario {!confName}" subtitle="Opportunity Billing Rules" help="{!ifsHelpUrl}"/>
+        <div class="ifsWizardBlock ifsTertiaryPalette" style="width:100%;margin-top:5px;">
+            <div class="ifsWizardTitle ifsTertiaryPalette">        
+                <h2>Define Billing Rules</h2>
+            </div>
+            <div class="ifsBody ">
+                <div class="ifsWizardHeader">
+                      <div class="ifsTopButtons" style="white-space: nowrap;">
+                                <apex:actionStatus id="savingBillingRules" onstart="displaySavingInProgress();" onstop="hideSavingInProgress();" /> 
+                                <apex:commandButton value="Save"  action="{!save}" status="savingBillingRules"  onclick="removeErrorMsgs();if(!checkBillingRules()) return false;if(!validateBillingRules()) return false;" reRender="isError,errorBagJSONContField,billingRulesPanel"/> 
+                                <apex:commandButton value="Cancel" action="{!cancel}" immediate="true"/>
+                      </div>
+                </div>
+            </div>  
+        </div>  
+
+        <p> 1. Select a field to create a billing rule and add it to the billing rule panel.</p>
+
+        <div class="ifsWizardBody">
+            <div>
+                <div class="ifsPageBlock ifsSecondaryPalette" style="border-bottom:1px solid #DBDBDB;border-top:1px solid #DBDBDB;">
+                    <div class="ifsBody">
+                        <table id="objectsTable" style="padding:10px;cursor:default;white-space:nowrap;">
+                            <tr>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <p style="margin-top:15px;"> 2. Define the billing rules logical operator and values once you have added all billing rules to the panel.</p>
+        <div class="ifsWizardBlock ifsTertiaryPalette" style="width:100%">
+            <div class="ifsWizardTitle ifsTertiaryPalette">        
+                <h2>Billing Rules panel</h2>
+            </div>
+        </div>
+        <div class="ifsWizardBody">
+            <div>
+                <div class="ifsPageBlock ifsSecondaryPalette" style="border-bottom:1px solid #DBDBDB;border-top:1px solid #DBDBDB;min-height:80px;">
+                    <div class="ifsBody">
+                         
+                        <apex:outputPanel layout="block" style="display:none;">
+                            <apex:inputField value="{!myBillingRule.kognoz1__Date__c}" />
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel id="billingRulesPanel" layout="block" style="margin-left:1%;margin-top:5px;">
+                                <apex:outputText value="No billing rules added yet" rendered="{!noOfBillingRules == 0}" style="font: 11px Arial,Helvetica,sans-serif; color:gray; padding: 10px;"/>  
+
+                                <apex:dataTable id="billingRulesTable" value="{!dispBillingRules}" var="dispBillingRule" cellspacing="3" cellpadding="1" rowClasses="brRows" >
+                                    <apex:column >
+                                        <apex:outputText value="{!dispBillingRule.billingRule.kognoz1__FieldLabel__c}" />
+                                    </apex:column>
+                                    <apex:column >
+                                        <apex:selectList value="{!dispBillingRule.billingRule.kognoz1__Operator__c}" size="1" multiselect="false">
+                                            <apex:selectOptions value="{!dispBillingRule.operatorValues}" />
+                                        </apex:selectList>
+                                    </apex:column>
+                                    <apex:column id="inputBox">
+                                            <!-- variable date  -->
+                                            <apex:inputField value="{!dispBillingRule.billingRule.kognoz1__Date__c}" styleClass="dateField"  rendered="{!dispBillingRule.billingRule.kognoz1__Type__c == 'date'}" /> 
+                                            <!--  variable datetime -->
+                                            <apex:inputField value="{!dispBillingRule.billingRule.kognoz1__Datetime__c}" styleClass="datetimeField" rendered="{!dispBillingRule.billingRule.kognoz1__Type__c == 'datetime'}" />
+                                            <!--  variable double -->
+                                            <apex:inputField value="{!dispBillingRule.billingRule.kognoz1__Double__c}" styleClass="doubleField" rendered="{!dispBillingRule.billingRule.kognoz1__Type__c == 'double'}" />
+                                            <!--  variable currency -->
+                                            <apex:inputField value="{!dispBillingRule.billingRule.kognoz1__Currency__c}" styleClass="currencyField" rendered="{!dispBillingRule.billingRule.kognoz1__Type__c == 'currency'}" />
+                                            <!--  variable percent -->
+                                            <apex:inputField value="{!dispBillingRule.billingRule.kognoz1__Percent__c}" styleClass="percentField" rendered="{!dispBillingRule.billingRule.kognoz1__Type__c == 'percent'}" />
+                                            <!--  variable integer -->
+                                            <apex:inputField value="{!dispBillingRule.billingRule.kognoz1__Integer__c}" styleClass="integerField" rendered="{!dispBillingRule.billingRule.kognoz1__Type__c == 'integer'}" />
+                                            <!--  variable string -->
+                                            <apex:inputField value="{!dispBillingRule.billingRule.kognoz1__Text__c}" styleClass="stringField" rendered="{!dispBillingRule.billingRule.kognoz1__Type__c == 'string'}" />
+                                            <!--  variable picklist -->
+                                            <apex:selectList value="{!dispBillingRule.billingRule.kognoz1__Value__c}" rendered="{!dispBillingRule.billingRule.kognoz1__Type__c == 'picklist'}" size="1" multiselect="false">
+                                                <apex:selectOptions value="{!dispBillingRule.pickListValues}"/>
+                                            </apex:selectList>
+                                            <!--  variable boolean -->
+                                            <apex:selectList value="{!dispBillingRule.billingRule.kognoz1__Value__c}" rendered="{!dispBillingRule.billingRule.kognoz1__Type__c == 'boolean'}" size="1" multiselect="false">
+                                                <apex:selectOptions value="{!dispBillingRule.pickListValues}"/>
+                                            </apex:selectList>
+                                    </apex:column>
+                                    <apex:column id="variable">
+                                            <apex:inputCheckbox value="{!dispBillingRule.billingRule.kognoz1__Variable__c}" id="variableBillingRule"/>
+                                    </apex:column>
+                                    <apex:column >
+                                            <apex:outputText value="Variable" />
+                                    </apex:column>
+                                    <apex:column >
+                                         <apex:commandLink id="removeLink"  action="{!removeBillingRule}" value="Remove"  onclick="cleanErrors();" immediate="true" reRender="isError,errorBagJSONContField,billingRulesPanel" status="addremoveBillingRule" style="color:#015BA7;text-decoration:none;font-weight:normal;">
+                                             <apex:param value="{!dispBillingRule.rulePosition}" name="rulePosition"/> 
+                                         </apex:commandLink>
+                                    </apex:column>
+                                </apex:dataTable>
+                        </apex:outputPanel>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+
+
+        <apex:inputText value="{!sfdcServerUrl}" id="serverUrl" style="display:none" />
+        <script type="text/javascript" >
+            var serverUrl = document.getElementById("{!$Component.serverUrl}");
+        </script>
+
+        <!-- ###########################################
+        
+                ACTION STATUS Msg container
+        
+         ###############################################-->
+        <apex:actionStatus id="addremoveBillingRule" onstart="displayAddRemBillingRuleInProgress();" onstop="hideAddRemBillingRuleInProgress();" />
+        <div id="operationStatus" class="statusPopup" >
+            <div  class="popupStatus1" >
+            </div>
+            <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+                <div style="text-align:center;margin-top:15px;" > 
+                    <table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+                        <tr>
+                            <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+                            <td><span id="statusMsg" style="z-index:153;"></span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+    <!-- #######################################################################
+        Communication with controller 
+     -->
+        <apex:inputText id="isError" value="{!isError}" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+        <apex:actionFunction action="{!redirectToBillingScenarioPage}" name="redirectToBillingScenarioPage" />  
+         <apex:actionFunction action="{!addBillingRule}" name="addBillingRuleSrv" reRender="isError,errorBagJSONContField,billingRulesPanel" immediate="true" status="addremoveBillingRule">
+            <apex:param name="billingRuleType" value=""/> 
+            <apex:param name="billingRulePrecision" value=""/> 
+            <apex:param name="billingRuleScale" value=""/> 
+            <apex:param name="billingRuleLength" value=""/> 
+            <apex:param name="billingRuleFieldLabel" value=""/> 
+            <apex:param name="billingRuleTrace" value=""/> 
+            <apex:param name="billingRuleQueryText" value=""/> 
+         </apex:actionFunction>    
+    <!--  ####################################################################### -->
+
+    <!-- #######################################################################
+        Error dialog box 
+     -->
+    <div id="errorDlgBox">
+        <apex:outputPanel id="errorPanel">
+        </apex:outputPanel>
+    </div>
+    <!--  ####################################################################### -->
+         
+
+
+    <div id="repeatPanel">
+        <apex:repeat value="{!objectsDescriptionConstructor}" var="o">
+            <apex:repeat value="{!o.Name}" var="n">
+            <script type="text/javascript" >
+                oName = '{!JSENCODE(n)}';
+                createObjectDescriptionObject(oName);
+            </script>   
+            </apex:repeat>
+            <apex:repeat value="{!o.fields}" var="f">
+            <script type="text/javascript" >
+                createObjectDescriptionObjectFields(oName, '{!JSENCODE(f.name)}', '{!JSENCODE(f.label)}', '{!JSENCODE(f.referenceTo)}', '{!JSENCODE(f.relName)}', '{!JSENCODE(f.typee)}', '{!JSENCODE(f.precision)}', '{!JSENCODE(f.scale)}',  '{!JSENCODE(f.length)}');
+            </script>
+            </apex:repeat>
+        </apex:repeat>
+    </div>  
+
+    </apex:form>
+
+
+</apex:page>

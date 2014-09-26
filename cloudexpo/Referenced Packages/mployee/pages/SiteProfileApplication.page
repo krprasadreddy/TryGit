@@ -1,0 +1,86 @@
+<apex:page id="profileApplication"
+           docType="html-5.0" 
+           controller="mployee.SiteProfileApplicationController" 
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+               
+>
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+        <apex:define name="body">
+        	<apex:messages />
+        	<div class="container">
+                <div class="row well">
+                	<apex:form styleClass="form-horizontal" id="adminform"> 
+                		
+                		<!-- Side Bar -->						
+						<ul class="nav {!siteSettings.navStyleClass} nav-stacked col-md-4 col-md-push-8">
+							<li class="nav-header hidden-phone">SELECT_TASK</li>							
+							<li><apex:commandLink action="{!saveNew}"><span class="glyphicon glyphicon-plus"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_NEW}"/></apex:commandLink></li>
+							<li><apex:commandLink action="{!saveClose}"><span class="glyphicon glyphicon-check"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_CLOSE}"/></apex:commandLink></li>                        
+                        	<li><apex:commandLink action="{!remove}"><span class="glyphicon glyphicon-trash"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_DELETE}"/></apex:commandLink></li>                        
+                        	<li><apex:commandLink action="{!cancel}"><span class="glyphicon glyphicon-remove"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_CANCEL}"/></apex:commandLink></li>
+						</ul>
+						
+	                    <div class="col-md-8 col-md-pull-4">
+	                    	
+	                    	<apex:dynamicComponent componentValue="{!pageHeader}" />
+						
+							<fieldset>
+	                    		<legend>
+	                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id == null,true,false)}">	
+	                    				<apex:outputText value="{!$Label.GLOBAL_ACTION_NEW_OBJECT}">
+	                    					<apex:param value="{!$ObjectType.mployee__MF_Recruitment_JobApplication__c.Label}"/> 
+	                    				</apex:outputText>
+	                    			</apex:outputPanel>
+	                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id != null,true,false)}">
+	                    				<apex:outputText value="{!item.mployee__Vacancy__r.mployee__Position__r.Name}"/>
+	                    				<i class="fa fa-map-marker"/>&nbsp;<apex:outputText value="{!item.mployee__Vacancy__r.position__r.LocationCity__c}"/>	                   
+	                    			</apex:outputPanel>	                    			 			
+	                    		</legend>
+	                    		
+	                    		<apex:outputPanel styleClass="form-group" rendered="false">	                    										    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.mployee__MF_Recruitment_JobApplication__c.Fields.Name.label}" for="name"/>
+								    <apex:outputPanel styleClass="{!siteSettings.form.inputStyleClass}">								    
+										<apex:inputField value="{!item.Name}" id="name" html-placeholder="{!$ObjectType.mployee__MF_Recruitment_JobApplication__c.Fields.Name.label}" styleClass="form-control required"/>
+								    </apex:outputPanel>
+							  	</apex:outputPanel>
+	                    		
+	                    		<apex:outputPanel styleClass="form-group">	                    										    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.mployee__MF_Organisation_Position__c.Fields.Name.label}" for="name"/>
+								    <apex:outputPanel styleClass="{!siteSettings.form.inputStyleClass}">								    
+										<p class="form-control-static">
+											<apex:outputField value="{!item.mployee__Vacancy__r.mployee__Position__r.Name}"/>
+										</p>										
+								    </apex:outputPanel>
+							  	</apex:outputPanel>
+							  	
+							  	<apex:outputPanel styleClass="form-group">	                    										    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.mployee__MF_Organisation_Position__c.Fields.LocationCity__c.label}" for="name"/>
+								    <apex:outputPanel styleClass="{!siteSettings.form.inputStyleClass}">								    
+										<p class="form-control-static">
+											<apex:outputField value="{!item.mployee__Vacancy__r.position__r.LocationCity__c}"/>
+										</p>										
+								    </apex:outputPanel>
+							  	</apex:outputPanel>
+							  	
+							  	<apex:dynamicComponent componentValue="{!fields}" />
+							  	
+							  	
+							  	
+							  	
+							  									
+	                    	</fieldset>
+	                    	
+	                    	
+						</div>
+						
+						
+					</apex:form>
+				</div>
+			</div>
+		</apex:define>
+	</apex:composition>
+</apex:page>

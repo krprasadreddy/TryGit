@@ -1,0 +1,6 @@
+<table height="400" width="550" cellpadding="5" border="0" cellspacing="5" >
+<tr height="400" valign="top" >
+<td style=" color:#000000; font-size:12pt; background-color:#FFFFFF; font-family:arial; bLabel:main; bEditID:r3st1;" tEditID="c1r1" locked="0" aEditID="c1r1" >
+<![CDATA[<span style="background-color: rgb(255, 255, 255);">Dear {!Contact.FirstName},</span><br><br><span style="background-color: rgb(255, 255, 255);">Welcome to&nbsp;</span>{!Organization.Name}<span style="background-color: rgb(255, 255, 255);">! This is your user name and password.</span><br><br><span style="background-color: rgb(255, 255, 255);">User name: {!MF_Recruitment_Candidate__c.authUserName__c}</span><br><span style="background-color: rgb(255, 255, 255);">Password:{!MF_Recruitment_Candidate__c.authPassword__c}</span><br><br><br><br><span style="background-color: rgb(255, 255, 255);">{!User.FirstName} {!User.LastName}</span>]]></td>
+</tr>
+</table>

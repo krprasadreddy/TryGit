@@ -1,0 +1,85 @@
+<apex:page id="adminTemplate" controller="mployee.AdminTemplateController"  
+           docType="html-5.0"
+           showHeader="false"
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        
+        <!-- start: CSS -->
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/bootstrap.min.css')}"/>
+        <!-- Bootstrap theme -->
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/bootstrap-responsive.min.css')}"/>
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600" rel="stylesheet"/>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/font-awesome.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/ui-lightness/jquery-ui-1.10.0.custom.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/base-admin-3.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/base-admin-3-responsive.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/custom.css')}"/>    
+        <apex:insert name="css"/>
+        <style>
+			
+			@media (min-width: 1200px){
+				.container, .navbar-static-top .container, .navbar-fixed-top .container, .navbar-fixed-bottom .container {
+					width: 100%;
+				}
+			}
+			@media (min-width: 1200px){
+				.container {
+					max-width: 100%;
+				}
+			}
+			
+			.alert li{
+				list-style: none;
+			}
+			
+			html,body {
+			  height: 100%;			  
+			  /* The html and body elements cannot have any padding or margin. */
+			}
+			
+			/* Wrapper for page content to push down footer */
+			#wrap {
+				
+			  min-height: 100%;
+			  height: auto !important;
+			  height: 100%;
+			  /* Negative indent footer by its height */
+			  margin: 0 auto -53px;
+			  /* Pad bottom by footer height */
+			  padding: 0 0 53px;			  
+			}
+        </style>
+        
+        
+        <!-- start: JavaScript-->
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBase,'assets/js/libs/jquery-1.9.1.min.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBase,'assets/js/libs/jquery-ui-1.10.0.custom.min.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBase,'assets/js/libs/bootstrap.min.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBase,'assets/js/Application.js')}"  />
+        <apex:insert name="javascript"/>
+        
+    </head>
+    
+    <body>
+    	<div id="wrap">
+    	<div class="container"> 
+        	<c:AdminPageHeader AppMenuItemList="{!AppMenuItemList}" selectedApp="{!app}" sfdcBaseURL="{!sfdcBaseURL}" />
+        </div>	
+        	
+        	<apex:insert name="body"/>
+        </div>
+        
+              
+    </body>
+
+</html> 
+</apex:page>

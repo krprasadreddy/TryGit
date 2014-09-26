@@ -1,0 +1,43 @@
+<apex:page controller="mployee.MF_SetupMployee" showHeader="false" > 
+    
+        <apex:form >
+            <apex:sectionHeader title="Style pages" description="Determine wich page you want to assign with a other layout"/>
+            
+                <apex:pageBlock title="Existing Styled Pages">
+                    <apex:pageBlockTable value="{!ObjectParams}" var="item">
+                        <apex:column value="{!item.name}"/>
+                        <apex:column value="{!item.mployee__keyPrefix__c}"/>
+                        <apex:column value="{!item.mployee__createFieldsets__c}"/>
+                        <apex:column value="{!item.mployee__createTabs__c}"/>
+                    </apex:pageBlockTable>
+                </apex:pageBlock>               
+                
+                <apex:pageBlock title="mployee objects">
+                    <apex:pageBlockButtons >
+                        <apex:commandButton action="{!create}" value="Create"/>
+                        <apex:commandButton action="{!truncate}" value="Delete"/>
+                    </apex:pageBlockButtons>
+                
+                    <apex:outputPanel id="newParams">        
+                        <apex:pageBlockTable columns="5" value="{!ObjectOptions}" var="f">
+                            <apex:column headerValue="Action">
+                                <apex:inputCheckbox />
+                            </apex:column>
+                            <apex:column headerValue="Name">
+                                <apex:inputField value="{!f.Name}"/>
+                            </apex:column>
+                            <apex:column headerValue="Key Prefix">
+                                <apex:inputField value="{!f.mployee__keyPrefix__c}"/>
+                            </apex:column>
+                            <apex:column headerValue="Create Fieldsets">
+                                <apex:inputField value="{!f.mployee__createFieldsets__c}"/>
+                            </apex:column>
+                            <apex:column headerValue="Create Tabs">
+                                <apex:inputField value="{!f.mployee__createTabs__c}"/>
+                            </apex:column>
+                        </apex:pageBlockTable>                
+                    </apex:outputPanel>            
+                </apex:pageBlock>          
+            </apex:form>  
+       
+</apex:page>

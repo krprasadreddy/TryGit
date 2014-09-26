@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Invoices for Salesforce</fullName>
+    <apiAccessLevel>Unrestricted</apiAccessLevel>
+    <description>Invoices for Salesforce extends the Sales Cloud to add Accounts Receivables and invoicing management right within Salesforce</description>
+    <namespacePrefix>kognoz1</namespacePrefix>
+    <types>
+        <members>AccInvoicesSyncUtils</members>
+        <members>BatchJob_OverdueInvoicesUpdate</members>
+        <members>BatchScheduler</members>
+        <members>BatchSchedulerImpl</members>
+        <members>BillingRuleController</members>
+        <members>BillingRuleEditController</members>
+        <members>BillingScenarioDetailController</members>
+        <members>BillingScenarioEditController</members>
+        <members>ChooseBillingConditionTypeController</members>
+        <members>EmailSingleInvoiceController</members>
+        <members>GlobalInvoiceNumberEditController</members>
+        <members>GlobalInvoiceNumberHomeController</members>
+        <members>Invoice2TemplateTable</members>
+        <members>InvoiceCreator</members>
+        <members>InvoiceManagerAccTableController</members>
+        <members>InvoiceManagerController</members>
+        <members>InvoiceManagerPostAccTableController</members>
+        <members>InvoiceManagerPostTableController</members>
+        <members>InvoiceManagerTableController</members>
+        <members>InvoiceTemplateComponentController</members>
+        <members>InvoiceTemplateEditorController</members>
+        <members>InvoicesPostingProcessor</members>
+        <members>InvoicesPreprocessor</members>
+        <members>InvoicesSyncUtils</members>
+        <members>InvoicesforceIntegrityCheck</members>
+        <members>MergeFields20</members>
+        <members>MergeFieldsSummaryTable</members>
+        <members>MigrateInvoicesToV32Controller</members>
+        <members>NewInvoiceController</members>
+        <members>OutstandingBalanceCalcSetupController</members>
+        <members>OverdueInvoicesCalcSetupController</members>
+        <members>PostInstallScripts</members>
+        <members>PreviewInvoice</members>
+        <members>ReceivePaymentsController</members>
+        <members>RollupSummaryEditorController</members>
+        <members>SF1_SingleInvoiceController</members>
+        <members>SF1_Utils</members>
+        <members>SalesTermEditController</members>
+        <members>SalesTermsHomeController</members>
+        <members>SingleAccInvoiceController</members>
+        <members>SingleInvoiceController</members>
+        <members>TemplateImageEditorController</members>
+        <members>Triggers_UnitTesting</members>
+        <members>UT_EmailInvoice</members>
+        <members>UT_SF1</members>
+        <members>UT_Utils</members>
+        <members>Utilities</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>InvoiceManagerAccTable</members>
+        <members>InvoiceManagerPostAccTable</members>
+        <members>InvoiceManagerPostTable</members>
+        <members>InvoiceManagerTable</members>
+        <members>MergeFields20</members>
+        <members>MergeFieldsSummaryTable</members>
+        <members>OppLineItemBillingRule</members>
+        <members>OpportunityBillingRules</members>
+        <members>RevenueScheduleBillingRules</members>
+        <members>RollupSummaryEditor</members>
+        <members>RollupSummarySTEditor</members>
+        <members>TemplateImageEditor</members>
+        <members>TemplateLineEditor</members>
+        <members>TemplateProductTableEditor</members>
+        <members>TemplateSummaryTableEditor</members>
+        <members>TemplateTextBoxEditor</members>
+        <name>ApexComponent</name>
+    </types>
+    <types>
+        <members>BillingRuleEdit</members>
+        <members>BillingScenarioDetail</members>
+        <members>BillingScenarioEdit</members>
+        <members>ChooseBillingConditionType</members>
+        <members>EmailSingleInvoice</members>
+        <members>GlobalInvoiceNumberEdit</members>
+        <members>GlobalInvoiceNumberHome</members>
+        <members>InvoiceManagerCurrencyStep</members>
+        <members>InvoiceManagerStep1</members>
+        <members>InvoiceManagerStep2</members>
+        <members>InvoiceManagerStep2Acc</members>
+        <members>InvoiceManagerStep2AccPost</members>
+        <members>InvoiceManagerStep2Post</members>
+        <members>InvoiceTemplateEditor</members>
+        <members>InvoiceTemplateEditorCanvas</members>
+        <members>InvoicesConfigurationHome</members>
+        <members>MigrateInvoicesToV32</members>
+        <members>NewInvoice</members>
+        <members>NewInvoiceLineItem</members>
+        <members>NewInvoiceTemplate</members>
+        <members>OpportunityBillingRule</members>
+        <members>OpportunityLineItemBillingRule</members>
+        <members>OutstandingBalanceCalcSetup</members>
+        <members>OverdueInvoicesCalcSetup</members>
+        <members>PredefinedInvoiceTemplate</members>
+        <members>ReceivePayments</members>
+        <members>RevenueScheduleBillingRule</members>
+        <members>SF1jqm_SingleInvoice</members>
+        <members>SalesTermEdit</members>
+        <members>SalesTermsHome</members>
+        <members>SingleAccInvoice</members>
+        <members>SingleInvoice</members>
+        <name>ApexPage</name>
+    </types>
+    <types>
+        <members>Invoice_UpdateOutstandingBalance</members>
+        <members>Payment_UpdateOutstandingBalance</members>
+        <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>Invoicesforsalesforce</members>
+        <name>CustomApplication</name>
+    </types>
+    <types>
+        <members>Billing_Condition__c</members>
+        <members>Configuration__c</members>
+        <members>Global_Invoice_Number__c</members>
+        <members>Invoice2_Template_Element__c</members>
+        <members>Invoice2_Template_Table_Element__c</members>
+        <members>Invoice2_Template_Table_Summary_Element__c</members>
+        <members>Invoice2_Template_Table_Summary__c</members>
+        <members>Invoice2_Template_Table__c</members>
+        <members>Invoice2_Template__c</members>
+        <members>Invoice2__c</members>
+        <members>Invoices_Configuration__c</members>
+        <members>Line_Item_2__c</members>
+        <members>Merge_Field__c</members>
+        <members>Payment__c</members>
+        <members>Rollup_Summary__c</members>
+        <members>SalesTerm__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>Configuration__c</members>
+        <members>Invoice2_Template__c</members>
+        <members>Invoice2__c</members>
+        <members>Invoice_Manager_1</members>
+        <members>Invoices_Configuration</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>Invoices_for_Salesforce_Dashboards</members>
+        <name>Dashboard</name>
+    </types>
+    <types>
+        <members>Invoicesforsalesforce_Folder</members>
+        <members>Invoicesforsalesforce_Folder/Invoicesforsalesforce_Logo.jpg</members>
+        <name>Document</name>
+    </types>
+    <types>
+        <members>Billing_Condition__c-Billing Rule Layout</members>
+        <members>Configuration__c-Biling Scenario Layout</members>
+        <members>Global_Invoice_Number__c-Global Invoice Number Layout</members>
+        <members>Invoice2_Template_Element__c-Invoice2 Template Element Layout</members>
+        <members>Invoice2_Template_Table_Element__c-Invoice2 Template Table Element Layout</members>
+        <members>Invoice2_Template_Table_Summary_Element__c-Invoice2 Template Table Summary_Element Layout</members>
+        <members>Invoice2_Template_Table_Summary__c-Invoice2 Template Table Summary Layout</members>
+        <members>Invoice2_Template_Table__c-Invoice2 Template Table Layout</members>
+        <members>Invoice2_Template__c-Invoice Template Layout</members>
+        <members>Invoice2__c-Invoice2 Layout</members>
+        <members>Invoices_Configuration__c-Invoices Configuration Layout</members>
+        <members>Line_Item_2__c-Line Item 2 Layout</members>
+        <members>Merge_Field__c-Merge Field Layout</members>
+        <members>Payment__c-Payment Layout</members>
+        <members>Rollup_Summary__c-Rollup Summary Layout</members>
+        <members>SalesTerm__c-SalesTerm Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>Configuration__c.All</members>
+        <members>Invoice2_Template__c.All</members>
+        <members>Invoice2__c.All</members>
+        <members>SalesTerm__c.All</members>
+        <name>ListView</name>
+    </types>
+    <types>
+        <members>Opportunity.Process_Invoice</members>
+        <name>QuickAction</name>
+    </types>
+    <types>
+        <members>Invoicesforsalesforce</members>
+        <name>RemoteSiteSetting</name>
+    </types>
+    <types>
+        <members>Invoices_For_Salesforce_Reports</members>
+        <members>Invoices_For_Salesforce_Reports/Cash_Receipts</members>
+        <name>Report</name>
+    </types>
+    <types>
+        <members>Invoices_with_wothout_Payments</members>
+        <name>ReportType</name>
+    </types>
+    <types>
+        <members>Invoicepubicon</members>
+        <members>invoicesforsalesforce</members>
+        <members>invoicesforsalesforce1</members>
+        <name>StaticResource</name>
+    </types>
+    <types>
+        <members>Account.Create_Process_Acc_Invoice</members>
+        <members>Invoice2__c.Email_Invoice</members>
+        <members>Invoice2__c.Receive_Payments</members>
+        <members>Opportunity.Create_Process_Invoice</members>
+        <members>SalesTerm__c.Create_New</members>
+        <name>WebLink</name>
+    </types>
+    <version>30.0</version>
+</Package>

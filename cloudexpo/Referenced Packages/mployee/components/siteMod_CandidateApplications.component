@@ -1,0 +1,147 @@
+<apex:component id="candidate-applications" layout="none" controller="mployee.SiteProfileApplicationController">
+	
+	<apex:attribute name="items" description="Desc" type="mployee__MF_Recruitment_JobApplication__c[]" required="false"/>
+	<apex:attribute name="config" description="Site Settings" type="mployee.SiteModConfig" required="false"/>
+	
+	
+	
+	<apex:includeScript value="{!URLFOR($Resource.templateUnicorn,	'assets/js/jquery.gritter.min.js')}"  />
+    <apex:stylesheet value="{!URLFOR($Resource.mployee__templateUnicorn, 'assets/css/jquery.gritter.css')}"/>
+    
+	<a name="applications"/>
+	
+	<script type="text/javascript">
+	
+		$(document).ready(function(){
+			$('.table').tooltip({
+				selector: "[data-toggle=tooltip]",
+				html: true,
+				placement: "top",
+				container: "body",
+				delay:{ show: 100, hide: 500 }
+			});
+		});
+		
+		function showGritter(text){
+       		$.gritter.add({
+            	title:	'Hello: ',
+        		text:	text,            
+                sticky: false
+        	});
+       	}
+       	
+		function setApplicationState(target,id,state) {
+		    
+		
+		    mployee.SiteProfileApplicationController.updateApplicationState(id,state,function(result, event){
+		            if (event.status) {
+		                
+		                showGritter(result.message);		                
+		                document.getElementById(target).innerHTML = result.state;
+		            } else if (event.type === 'exception') {
+		                document.getElementById("responseErrors").innerHTML = event.message;
+		            } else {
+		                document.getElementById("responseErrors").innerHTML = event.message;
+		            } 
+		        }, 
+		        {escape: true}
+		    );
+		}
+          	
+   	</script>
+   	<style>
+   		td.action{
+   			width:45px;
+   		}
+   	</style>
+	
+	
+	<!-- Template Default -->
+	<apex:outputPanel styleClass="well" layout="block" id="layout-default" rendered="{!IF(config.params['layout'] =='default',true,false)}">		
+		
+	</apex:outputPanel>
+	
+	<!-- Template Unicorn -->
+	<apex:outputPanel layout="block" id="layout-unicorn" rendered="{!IF(config.params['layout'] =='unicorn',true,false)}">		
+		
+			<apex:outputPanel layout="block" styleClass="{!config.params['header_tag']}">
+            	<span class="fa fa-leaf"/>&nbsp;
+            	<apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_JobApplication__c.LabelPlural}" />            	
+            	<apex:outputPanel layout="inline" styleClass="badge pull-right" rendered="true">
+            		<apex:outputText value="{!items.size}"/>
+            	</apex:outputPanel>
+            </apex:outputPanel>
+          	
+		
+		
+		
+		<div class="">
+			
+			<div class="widget-content nopadding table-responsive">
+				<table class="table table-condensed">
+					
+					<tbody>
+						<apex:repeat value="{!items}" var="item">
+						<tr>
+							<td class="action">
+							
+								<apex:outputLink html-data-toggle="tooltip" title="{!$Label.GLOBAL_ACTION_EDIT}" value="{!$Page.mployee__SiteProfileApplication}">
+	                    			<apex:param name="id" value="{!item.id}"/>
+									<apex:param name="action" value="edit"/>
+									<apex:param name="retURL" value="{!$CurrentPage.URL}"/>
+	                    			<span class="fa fa-edit"/>
+	                    		</apex:outputLink>
+	                    		
+	                    		<apex:outputLink html-data-toggle="tooltip" title="{!$Label.GLOBAL_ACTION_DELETE}" value="{!$Page.mployee__SiteProfileApplication}">
+	                    			<apex:param name="id" value="{!item.id}"/>
+									<apex:param name="action" value="delete"/>
+									<apex:param name="retURL" value="{!$CurrentPage.URL}"/>
+	                    			<span class="fa fa-trash-o"/>
+	                    		</apex:outputLink>
+								
+							</td>
+							<td>
+								<apex:outputLink html-data-toggle="tooltip" title="{!$Label.GLOBAL_ACTION_VIEW}" value="{!$Page.mployee__SiteProfileApplication}">
+									<apex:param name="id" value="{!item.id}"/>
+									<apex:param name="action" value="view"/>
+									<apex:param name="retURL" value="{!$CurrentPage.URL}"/>
+									<apex:outputText value="{!item.mployee__Vacancy__r.mployee__Position__r.Name}"/>
+								</apex:outputLink><br/>
+								<i class="fa fa-map-marker"/>&nbsp;<apex:outputText value="{!item.mployee__Vacancy__r.position__r.mployee__LocationCity__c}"/>
+							</td>
+							<td>
+								<apex:outputField value="{!item.mployee__State__c}" id="applicationState" />	
+								<apex:outputPanel title="On Hold" styleClass="click" onclick="setApplicationState('{!$Component.applicationState}','{!item.id}','On hold')" > 
+							        <span class="fa-stack fa-lg">
+							        	<i class="fa fa-square-o fa-stack-2x"></i>
+							        	<i class="fa fa-pause fa-stack-1x"></i>
+							        </span>					        
+							    </apex:outputPanel>
+							
+							</td>							
+							<apex:outputPanel layout="none" rendered="{!IF(config.params['showCreatedDate'] =='1',true,false)}" >
+							<td>
+								<i class="fa fa-clock-o"/>&nbsp;
+								<time>
+		                			<apex:outputText value="{0,date,dd-MM-yyyy HH:mm}">
+		                				<apex:param value="{!item.CreatedDate}" />
+		               				</apex:outputText>
+		             			</time>
+							</td>
+							</apex:outputPanel>
+						</tr>
+						</apex:repeat>						
+					</tbody>
+				</table>							
+			</div>
+		</div>
+		
+		
+	</apex:outputPanel>
+	
+	<!-- Template Base -->
+	<apex:outputPanel layout="block" id="layout-base" rendered="{!IF(config.params['layout'] =='base',true,false)}">
+			
+	
+	</apex:outputPanel>
+</apex:component>

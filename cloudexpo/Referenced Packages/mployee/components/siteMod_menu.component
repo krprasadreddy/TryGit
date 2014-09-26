@@ -1,0 +1,27 @@
+<apex:component id="siteMod_menu"
+	controller="mployee.com_SiteMod_menuController"
+>
+
+	
+	<apex:outputPanel layout="block" styleClass="container">
+		
+		<apex:outputPanel layout="block" styleClass="row">
+		
+			<ul class="nav nav-pills">
+				<apex:repeat value="{!menus}" var="menu">
+					<li>
+						<apex:outputLink value="{!menu.mployee__link__c}" >
+							<i class="icon "></i><span class="hidden-sm"> {!menu.Name}</span>
+						</apex:outputLink>
+					
+					</li>
+					
+				</apex:repeat>			  
+			</ul>
+				
+			
+			
+		</apex:outputPanel>
+	
+	</apex:outputPanel>
+</apex:component>

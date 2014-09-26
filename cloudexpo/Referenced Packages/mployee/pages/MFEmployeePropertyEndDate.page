@@ -1,0 +1,49 @@
+<apex:page standardController="mployee__MF_EmployeeProperty__c" sidebar="false" extensions="mployee.MF_EmployeePropertyClass"  >
+
+    <apex:sectionHeader title="{!$Label.MF_ReturnProperty} {!mployee__MF_EmployeeProperty__c.EmployeeFile__r.Name}" subtitle="{!mployee__MF_EmployeeProperty__c.PropertyInventory__r.Name} ({!mployee__MF_EmployeeProperty__c.PropertyInventory__r.mployee__BrandName__c})"/>
+    <apex:pageMessages />
+    
+    <apex:form >
+        <apex:pageBlock title="{!$Label.MF_EditProperty}" id="CP" mode="edit">
+        
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!save}" value="{!$Label.MF_Save}"/>
+                <apex:commandButton action="{!cancel}" value="{!$Label.MF_Cancel}" onclick="return confirmCancel()" immediate="true"/>   
+            </apex:pageBlockButtons>     
+            
+            <apex:actionRegion >
+            
+                <apex:pageBlockSection title="{!$Label.MF_PropertyReturnDate} ({!mployee__MF_EmployeeProperty__c.EmployeeFile__r.Name}) " columns="1">
+                    <apex:inputField value="{!Property.mployee__DateEnd__c}"/>   
+                </apex:pageBlockSection>
+            
+                <!-- Inventory -->
+            
+               <apex:pageBlockSection title="{!$Label.MF_EditCompanyPropertyInventory}">                
+                   <apex:pageBlockSectionItem >
+                       <apex:outputLabel value="{!$ObjectType.mployee__MF_Organisation_PropertyInventory__c.Fields.mployee__State__c.Label}"/>
+                         <apex:outputPanel >
+                            <apex:inputField value="{!PropertyInventory.mployee__State__c}" label="stage">
+                                <apex:actionSupport event="onchange" rerender="CP" status="status"/>
+                            </apex:inputField>  
+                            <apex:actionStatus startText="applying value...." id="status"/>  
+                         </apex:outputPanel>             
+                    </apex:pageBlockSectionItem>
+                </apex:pageBlockSection> 
+            </apex:actionRegion>
+            
+            <apex:pageBlockSection title="{!$Label.MF_OrganisationPropertyDisposed}" columns="1" rendered="{!PropertyInventory.mployee__State__c == 'Disposed'}" >
+              <apex:inputField value="{!PropertyInventory.mployee__DateEndExpected__c}"/>
+            </apex:pageBlockSection>            
+        </apex:pageBlock>    
+    </apex:form>
+    
+    <script>
+    function confirmCancel() {
+      var isCancel = confirm("{!$Label.MF_AreYouSure}");
+      if (isCancel) return true;
+    
+     return false;
+    }  
+    </script>  
+</apex:page>

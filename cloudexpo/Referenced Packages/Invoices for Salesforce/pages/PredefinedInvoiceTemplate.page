@@ -1,0 +1,239 @@
+<apex:page standardController="kognoz1__Invoice2_Template__c" extensions="kognoz1.InvoiceTemplateEditorController" tabStyle="kognoz1__Invoice2_Template__c" title="New Invoice Template">
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+ 	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-json-2.2.js')}"></script> 
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+
+	<style type="text/css">
+		.pgCol1{width:40%;min-width:300px;}
+		.pgCol2{width:60%;}
+	</style>
+	
+	<script type="text/javascript">
+	var preDefTemplImgInfoArray;
+	$(function(){
+		var html='{!$Api.Partner_Server_URL_220}';
+		$("input[id$=serverUrl]").val(html);
+		$("#templateTabs").tabs({
+				select:  function(event, ui) {$("input[id$=selectedPredefinedTabContField]").val(ui.panel.id);}
+		});
+		$("#errorInfoPanel").dialog({
+				modal: true, 
+				autoOpen: false,
+				width: 550,
+				height:'auto',
+				title:'Processing information'
+		});
+
+		$("input[id$=templateDPIContField]").val(getTemplateDpi());
+		
+		var preDefTemplImgJsonObjStr = $("input[id$=predefTemplImgJSONContField]").val();
+		if(preDefTemplImgJsonObjStr)
+		{
+			preDefTemplImgInfoArray = JSON.parse(preDefTemplImgJsonObjStr);
+		}
+		
+		var preloadedPicUrl	= $("input[id$=preloadedTmplImageContField]").val();	
+		$("img[id$=preDefTmplImg]").attr("src",preloadedPicUrl);
+	});
+
+	function selectTemplateFromGallery(ctl)
+	{
+		var selectedPreDefTemplateFromGallery=  $(ctl).val();
+		var preDefTemplInfoObj = $.grep($(preDefTemplImgInfoArray),function(obj){return $(obj).attr("code")==selectedPreDefTemplateFromGallery;})
+		if(preDefTemplInfoObj.length > 0)
+		{
+			var picUrl = preDefTemplInfoObj[0].picurl;
+			$("img[id$=preDefTmplImg]").attr("src",picUrl);
+			var orientation = preDefTemplInfoObj[0].orientation;
+			if(orientation=="Portrait")
+				$("img[id$=preDefTmplImg]").attr("height",650);
+			else
+				$("img[id$=preDefTmplImg]").attr("height",450);
+		}
+	}
+	
+	
+	function displayNextResults()
+	{
+	 	var isError = $("input[id*=errorInController]").val();
+	 	if(isError=="true")
+	 	{
+	 		$("span[id*=errorPanel]").empty();
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+			$("#nextStatMsg").css("display","none");
+			$("#errorInfoPanel").dialog("open");
+		}
+		else
+		{
+			redirectToInvoiceTemplateCanvas();
+		}	 	
+	}
+
+	function displayNextInProgress()
+	{
+		$("#nextStatMsg").css("display","block");
+		$("#nextMsg").html("Preparing the invoice layout canvas ...");
+	}
+	
+	function checkTemplateName(){
+		if ($("input[id$='templateName']").val() == '')
+		{
+			$("input[id$='templateName']").parent("div").children("div[class=oliErrorInp]").each(function(){$(this).remove();});
+			$("input[id$='templateName']").parent("div").append('<div class="oliErrorInp" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;"><strong>Error: </strong>You must enter a valid value</div>');
+			return false;
+		}
+		else{
+			
+			return IsalphaNumericValidate($("input[id$='templateName']").val(),"input[id$='templateName']");
+		}
+	}
+	
+	function IsalphaNumericValidate(alphanumericChar, ctl)
+	{	
+		if($.trim(alphanumericChar).length == 0 || alphanumericChar.search(/[^a-zA-Z0-9_ ]/g) != -1 )
+		{	
+			$(ctl).parent("div").children("div[class=oliErrorInp]").each(function(){$(this).remove();});
+			$(ctl).parent("div").append('<div class="oliErrorInp" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;"><strong>Error: </strong>Invalid Template Name. Use only alphanumeric characters, spaces and underscores</div>');
+			return false;
+		}
+		else
+			return true;
+	}	
+	
+	</script>
+
+	<apex:sectionHeader subtitle="{!template.Name}" title="Invoice Template Edit" help="{!ifsHelpUrl}" rendered="{!template.name != null}"/>
+	<apex:sectionHeader subtitle="New Invoice Template" title="Invoice Template Edit" help="{!ifsHelpUrl}" rendered="{!template.name == null}"/>
+	<apex:form >
+		<apex:pageMessages id="pageErrorMessages"/>
+		<apex:outputPanel layout="block" rendered="{!AND(OR(isRead),NOT(isEdit))}" >
+			<p> Inssufficient privileges to access this invoice template. Contact your System Administrator.</p>
+		</apex:outputPanel>
+		<apex:outputPanel styleClass="ifsWizardBlock ifsTertiaryPalette" layout="block" rendered="{!AND(isRead,isEdit,isCreate)}"> 
+		    <div class="ifsWizardTitle ifsTertiaryPalette">         
+		            <div class="ifsRightTitle">Step 2 of 3</div> 
+		            <h2>Step 2: Select a predefined template from our gallery or one of your existing templates</h2>
+		    </div>
+		    <div class="ifsBody " style="background-color: #FFFFFF"> 
+			      <div class="ifsWizardHeader" style="background-color: #F8F8F8"> 
+			          <div class="ifsTopButtons" style="white-space: nowrap;"> 
+						<apex:commandButton value="Cancel" action="{!cancel}" title="Cancel new invoice template"/>
+						<apex:commandButton value="Back"  action="{!backToNewInvoiceTemplate}"  title="Go to new invoice template"/>  
+						<apex:actionStatus onstart="displayNextInProgress();" onstop="displayNextResults();" id="nextStatus"/>  
+						<apex:commandButton value="Next" action="{!nextPredefinedTemplate}"  onclick="if(!checkTemplateName()) return false;" status="nextStatus" rerender="errorInController,errorBagJSONContField,integrityCheckJSONContField,pageErrorMessages,isServerEnabledContField"  title="Go to create new invoice template"/> 	
+			          </div>
+			      </div> 
+				<apex:outputPanel styleClass="requiredExampleOuter" layout="block" style="float:right;margin-top:5px;">
+					<apex:outputPanel styleClass="requiredExampleOuter">
+						<apex:outputPanel styleClass="requiredExample">&nbsp;</apex:outputPanel>
+					</apex:outputPanel>
+					<apex:outputPanel styleClass="requiredMark">*</apex:outputPanel>
+					<apex:outputPanel styleClass="requiredText">= Required Information</apex:outputPanel>
+				</apex:outputPanel>
+
+				  <div class="ifsWizardBody" style="background-color: #FFFFFF;min-height:110px;"> 
+						<div class="typeStep" style="background-color: #FFFFFF"> 
+							<div class="ifsPageBlock ifsSecondaryPalette" style="background-color: #FFFFFF"> 
+								<div class="ifsBody" style="background-color: #FFFFFF"> 
+							      <br/>
+									<apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" style="clear:both;" columnClasses="ifsLabelCol, ifsData2Col">
+										<apex:outputText id="templateNamePanel" value="Template Name" />
+										<apex:outputPanel layout="block" style="position:absolute;">
+											<apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/>
+											<apex:inputField value="{!template.Name}" id="templateName"/>
+										</apex:outputPanel>
+									</apex:panelGrid> 
+							      <br/>
+							      <br/>
+								  <div id="templateTabs" class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+										<ul class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all">
+											<li class="ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#templateGalleryTab">Invoice Templates Gallery</a></li>
+											<li class="ui-state-default ui-corner-top "><a href="#myTemplatesTab">My Invoice Templates</a></li>
+										</ul>
+										<div id="templateGalleryTab">
+											<p>Select one of the predefined templates from our gallery</p>
+											<apex:outputPanel layout="block" >
+												<apex:panelGrid columns="2" width="100%" columnClasses="pgCol1,pgCol2">
+											      <apex:selectRadio value="{!selectedGalleryTemplate}" layout="pageDirection" onclick="selectTemplateFromGallery(this);">
+											      	<apex:selectOptions value="{!galleryTemplates}" />
+											      </apex:selectRadio>
+											      <apex:image height="650" id="preDefTmplImg"/>
+											    </apex:panelGrid>
+										    </apex:outputPanel>
+										</div>
+										<div id="myTemplatesTab" style="height:400px;">
+											<p> Select one of your existing templates to clone</p>
+											<apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" width="100%" style="clear:both;" columnClasses="ifsLabelCol, ifsData2Col">
+												<apex:outputText id="existingTemplates" value="Existing Templates" />
+												<apex:selectList id="myTemplatesList" value="{!selectedMyTemplate}" size="1" style="width: 250px">
+													<apex:selectOptions value="{!myTemplates}" />
+												</apex:selectList>
+											</apex:panelGrid>
+										</div>
+								  </div>
+							   </div>
+							</div>
+						</div>
+				 </div>
+		    </div>
+		</apex:outputPanel>	
+		<apex:inputText value="{!sfdcServerUrl}" id="serverUrl" style="display:none" />
+		<apex:inputText value="{!isError}" id="errorInController" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+        <apex:inputText value="{!selectedPredefinedTab}" id="selectedPredefinedTabContField" style="display:none"/>
+        <apex:inputText value="{!templateDPI}" id="templateDPIContField" style="display:none"/>
+        <apex:inputText value="{!predefTemplImgJSON}" id="predefTemplImgJSONContField" style="display:none"/>
+        <apex:inputText value="{!preloadedTmplImage}" id="preloadedTmplImageContField" style="display:none"/>
+		<!-- ###########################################
+		
+				ERROR HANDLING MODAL DIALOG BOX
+		
+		 ###############################################-->
+		<div id="errorInfoPanel" style="display:none;">
+			<apex:outputPanel id="errorPanel">
+			</apex:outputPanel>
+		</div>	
+
+		<!-- ###########################################
+		
+				ACTION STATUS IN PROGRESS
+		
+		 ###############################################-->
+		<div id="nextStatMsg" class="statusPopup">
+			<div  class="popupStatus1" >
+			</div>
+			<div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+            	<div style="text-align:center;margin-top:15px;" > 
+            		<table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+            			<tr>
+			                <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+			                <td><span id="nextMsg" style="z-index:153;"></span></td>
+	                	</tr>
+	                </table>
+                </div>
+			</div>
+		</div>
+
+		<!-- ###########################################
+
+		<!-- ###########################################
+		
+				ACTION FUNCTIONS
+		
+		 ###############################################-->
+ 	 	<apex:actionFunction action="{!redirectToInvoiceTemplateCanvas}" name="redirectToInvoiceTemplateCanvas" />  
+	</apex:form>
+</apex:page>

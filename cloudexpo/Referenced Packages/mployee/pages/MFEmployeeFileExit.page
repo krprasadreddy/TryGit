@@ -1,0 +1,196 @@
+<apex:page standardController="mployee__MF_EmployeeFile__c" extensions="mployee.MFEmployeeFileExit"  sidebar="true" id="exit">
+
+    
+    
+    
+    <apex:variable value="{!mployee__MF_EmployeeFile__c}" var="employee"/>
+    <apex:sectionHeader title="{!$Label.MFEmployeeFileExit_ExitEmployee}" subtitle="{!employee.Name}"/>
+    
+    <script type='text/javascript'>
+    
+            
+        var j$ = jQuery.noConflict(); 
+        
+        /*Execute this code block once page DOM has fully loaded*/
+        j$(document).ready(function(){
+            
+            createFieldsetsSB();
+            createPortletsSB();
+            
+            var apply = false;      
+            
+            j$('input[name$="ExitDate"]').change(function() {
+                var exitDate = j$(this).val();
+                var msg = '{!$Label.MFEmployeeFileExit_UpdateDates} ' + exitDate + ' ?';                
+                
+                if(confirm (msg)){
+                    /* if confirmed, call the function syncDate */
+                    syncDate(exitDate);
+                }               
+            });         
+        });
+        
+        function syncDate(exitDate){
+            /* loop through all the input tags that end with "date"
+             * set the value with the var exitDate          
+            */
+            j$('input[name$="date"]').each(function() {
+                j$(this).val(exitDate);
+            });
+        };
+        
+    </script>
+    <style>
+        span.dateFormat, .labelCol.empty{
+            display:none;
+        }
+        .clr { clear:both;}
+            
+    </style>
+    
+    <apex:form id="adminForm" >
+        <apex:pageBlock title="{!$Label.MF_EmployeeFile_EditEmployee}" id="employee">           
+            <apex:pageMessages />
+            
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!save}" value="{!$Label.MF_Save}"/>
+                <apex:commandButton action="{!cancel}" value="{!$Label.MF_Cancel}" />
+            </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection columns="2" id="employee_Details">          
+                <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__Details}" var="d">
+                    <apex:outputField value="{!employee[d]}"/>
+                </apex:repeat>
+            </apex:pageBlockSection>
+            <div class="clr"></div>
+            
+            <apex:pageBlockSection title="{!$Label.MFEmployeeFileExit_ExitDate}" columns="1" id="ExitInformation">
+                <apex:inputField id="ExitDate" value="{!employee.mployee__ExitDate__c}"/>
+                <apex:inputField value="{!employee.mployee__ExitReason__c}"/>
+                <apex:inputField value="{!employee.mployee__ExitReasonDesc__c}"/>
+                <apex:inputField value="{!employee.mployee__ReEngage__c}"/>
+            </apex:pageBlocksection>
+            
+            <div class="clr"></div>
+            
+            <!-- Contracts-->
+            <apex:pageBlockSection title="{!$Label.MFEmployeeFileExit_Contracts} ({!Contracts.size})" id="Contract">
+                
+                <apex:pageBlockTable value="{!Contracts}" var="contract" rendered="{!Contracts.size !=0}">            
+                    <apex:column value="{!contract.name}"/>
+                    <apex:column value="{!contract.mployee__Type__c}"/>
+                    <apex:column value="{!contract.mployee__Organization__c}"/>
+                    <apex:column value="{!contract.mployee__DateStart__c}"/>
+                    <apex:column headerValue="{!$ObjectType.mployee__MF_Contract__c.Fields.mployee__DateEnd__c.Label}">
+                        <apex:inputField id="date" value="{!contract.mployee__DateEnd__c}"/>
+                    </apex:column>                   
+                        
+                </apex:pageBlockTable>
+                
+                
+                
+                <apex:outputPanel rendered="{!Contracts.size = 0}">
+                    {!$Label.MF_mployee_noRecords}
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            
+            
+            <!-- Employment -->
+            <apex:pageBlockSection title="{!$Label.MFEmployeeFileExit_Employment} ({!Jobs.size})" id="EmployeeJob">                        
+                <apex:pageBlockTable value="{!Jobs}" var="job" id="job" rendered="{!Jobs.size !=0}">                  
+                    <apex:column value="{!job.Name}"/>
+                    <apex:column width="800px" value="{!job.mployee__Organisation_Position__c}"/>
+                    <apex:column value="{!job.mployee__DateStart__c}"/>
+                    <apex:column headerValue="{!$ObjectType.mployee__MF_EmployeeJob__c.Fields.mployee__DateEnd__c.Label}">
+                        <apex:inputField id="date" value="{!job.mployee__DateEnd__c}"/>
+                    </apex:column>
+                    <apex:column headerValue="{!$Label.Update} {!$ObjectType.mployee__MF_EmployeeJob__c.Fields.mployee__Organisation_Position__c.Label}">
+                        <apex:inputField id="state" value="{!job.Organisation_Position__r.mployee__State__c}"/>
+                    </apex:column>                   
+                </apex:pageBlockTable>
+                
+                <apex:outputPanel rendered="{!Jobs.size = 0}">
+                    {!$Label.MF_mployee_noRecords}
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            
+            <!-- Salary -->
+            <apex:pageBlockSection title="{!$Label.MFEmployeeFileExit_Salary} ({!Salaries.size})" id="EmployeeSalary">
+                <apex:pageBlockTable value="{!Salaries}" var="sal" id="sal" rendered="{!Salaries.size !=0}">            
+                    <apex:column value="{!sal.name}"/>
+                    <apex:column value="{!sal.mployee__DateStart__c}"/>                    
+                    <apex:column headerValue="{!$ObjectType.mployee__MF_EmployeeSalary__c.Fields.mployee__DateEnd__c.Label}">                    
+                        <apex:inputField id="date" value="{!sal.mployee__DateEnd__c}"/>
+                    </apex:column>
+                    <apex:column value="{!sal.mployee__AmountSalaryFT__c}"/>
+                    <apex:column value="{!sal.mployee__AmountTravelAllowance__c}"/>
+                    <apex:column value="{!sal.mployee__AmountExpenses__c}"/>
+                </apex:pageBlockTable>
+                
+                <apex:outputPanel rendered="{!Salaries.size = 0}">
+                    {!$Label.MF_mployee_noRecords}
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            
+            <!-- Property -->
+            <apex:pageBlockSection title="{!$Label.MFEmployeeFileExit_Property} ({!Properties.size})" id="EmployeeProperty">
+                <apex:pageBlockTable value="{!Properties}" var="prop" id="prop" rendered="{!Properties.size !=0}">
+                    <apex:column value="{!prop.name}"/>
+                    <apex:column value="{!prop.mployee__PropertyInventory__c}"/>
+                    <apex:column value="{!prop.mployee__DateStart__c}"/>
+                    <apex:column headerValue="{!$ObjectType.mployee__MF_EmployeeProperty__c.Fields.mployee__DateEnd__c.Label}">
+                        <apex:inputField id="date" value="{!prop.mployee__DateEnd__c}"/>
+                    </apex:column>
+                    <apex:column headerValue="{!$Label.Update} {!$ObjectType.mployee__MF_EmployeeProperty__c.Fields.mployee__PropertyInventory__c.Label}">
+                        <apex:inputField id="state" value="{!prop.PropertyInventory__r.mployee__State__c}"/>
+                    </apex:column>   
+                </apex:pageBlockTable>
+                
+                <apex:outputPanel rendered="{!Properties.size = 0}">
+                    {!$Label.MF_mployee_noRecords}
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            
+            <!-- Company Cars -->
+            <apex:pageBlockSection title="{!$Label.MFEmployeeFileExit_CompanyCar} ({!CompanyCars.size})" id="EmployeeCompanyCar">
+                <apex:pageBlockTable value="{!CompanyCars}" var="ccar" id="ccar" rendered="{!CompanyCars.size !=0}">    
+                    <apex:column value="{!ccar.name}"/>
+                    <apex:column value="{!ccar.mployee__CompanyCarInventory__c}"/>
+                    <apex:column value="{!ccar.mployee__DateStart__c}"/>                    
+                    <apex:column headerValue="{!$ObjectType.mployee__MF_EmployeeCompanyCar__c.Fields.mployee__DateEnd__c.Label}">                    
+                        <apex:inputField id="date" value="{!ccar.mployee__DateEnd__c}"/>
+                    </apex:column>
+                    <apex:column headerValue="{!$Label.Update} {!$ObjectType.mployee__MF_EmployeeCompanyCar__c.Fields.mployee__CompanyCarInventory__c.Label}">
+                        <apex:inputField id="state" value="{!ccar.CompanyCarInventory__r.mployee__State__c}"/>
+                    </apex:column>   
+                </apex:pageBlockTable>
+                
+                <apex:outputPanel rendered="{!CompanyCars.size = 0}">
+                    {!$Label.MF_mployee_noRecords}
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            
+            <!-- Employee Benefits -->
+            <apex:pageBlockSection title="{!$Label.MFEmployeeFileExit_Benefits} ({!Benefits.size})" id="EmployeeBenefit">
+                <apex:pageBlockTable value="{!Benefits}" var="bf" id="bf" rendered="{!Benefits.size !=0}">            
+                    <apex:column value="{!bf.name}"/>
+                    <apex:column value="{!bf.mployee__Type__c}"/>
+                    <apex:column value="{!bf.mployee__DateStart__c}"/>                    
+                    <apex:column headerValue="{!$ObjectType.mployee__MF_EmployeeBenefit__c.Fields.mployee__DateEnd__c.Label}">                    
+                        <apex:inputField id="date" value="{!bf.mployee__DateEnd__c}"/>
+                    </apex:column>
+                    <apex:column value="{!bf.mployee__Note__c}"/>
+                </apex:pageBlockTable>
+                
+                <apex:outputPanel rendered="{!Benefits.size = 0}">
+                    {!$Label.MF_mployee_noRecords}
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            
+            <div class="clr"></div>
+            
+        </apex:pageBlock>
+    </apex:form>         
+    
+    
+</apex:page>

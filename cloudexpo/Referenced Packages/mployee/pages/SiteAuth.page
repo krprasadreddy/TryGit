@@ -1,0 +1,27 @@
+<apex:page id="auth"
+		   docType="html-5.0"
+           showHeader="false"
+           controller="mployee.SiteClass"
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+           action="{!SiteAuthAction}"
+>
+
+	<apex:composition template="SiteTemplate{!siteSettings.template.name}">
+	    <apex:define name="body">
+	    
+	    	<apex:pageMessages escape="false" />
+	    	
+	    	<div class="container">
+                <div class="row">
+                	<p class="text-center">	    	
+	    				<i class="fa fa-spinner fa-spin fa-5x"></i>
+	    			</p>
+	    		</div>
+	    	</div>
+	    	
+		</apex:define>
+	</apex:composition>
+</apex:page>

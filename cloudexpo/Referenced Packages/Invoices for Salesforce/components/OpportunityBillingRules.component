@@ -1,0 +1,81 @@
+<apex:component >
+<script type="text/javascript" > 
+	$(function(){
+	});
+	function setFocusOnLoad() {}
+	
+	function validateOppBillingRuleInput()
+	{
+		var isValid = true;
+		$(".errorInp").each(function(){
+			$(this).remove();
+		});
+		$(".errorMsg").each(function(){
+			$(this).remove();
+		});
+		$("table[id$=oppBillingRulesTable] tr").each(function(){
+		    var ctl = $(this).children("td[id$=variable]").children("input");
+		    if($(ctl).attr("checked")==true)
+		    {
+		    	var inpBox = $(this).children("td[id$=inputBox]").find("input");
+		    	var value = $(inpBox).val();
+		    	if(value=="")
+		    	{
+		    		$(inpBox).parent().append('<div class="errorInp" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;"><strong>Error: </strong>You must enter a valid value</div>');
+		    		isValid = false;
+		    	}
+		    }
+		});
+		return isValid;
+	}
+</script>
+
+<apex:attribute name="cont" description="Controller" type="kognoz1.InvoiceCreator" required="true" />
+<apex:outputPanel rendered="{!cont.showOppBillingRules}" > 
+<fieldset style="width:100%; background-color: rgb(248, 248, 248);border:1px solid #DBDBDB;">
+			<legend style="font-weight:strong;">Opportunity billing rules</legend>
+			<apex:outputPanel layout="block" >
+					<apex:dataTable id="oppBillingRulesTable" value="{!cont.oppBillingRules}" var="oppBillingRule" cellspacing="1" cellpadding="1" rowClasses="billingRulesRows">
+						<apex:column ><apex:outputText value="{!oppBillingRule.billingRule.kognoz1__FieldLabel__c}" /></apex:column>
+						<apex:column ><apex:outputText styleClass="billingRuleOperator" value="{!oppBillingRule.billingRule.kognoz1__Operator__c}" /></apex:column>
+						<apex:column id="inputBox">
+								<!-- date field -->
+								<apex:outputField value="{!oppBillingRule.billingRule.kognoz1__Date__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'date',oppBillingRule.billingRule.kognoz1__Variable__c == false)}"/>
+								<apex:inputField value="{!oppBillingRule.billingRule.kognoz1__Date__c}" styleClass="dateField"  rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'date',oppBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- datetime field -->
+								<apex:outputField value="{!oppBillingRule.billingRule.kognoz1__Datetime__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'datetime',oppBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!oppBillingRule.billingRule.kognoz1__Datetime__c}" styleClass="datetimeField"  rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'datetime',oppBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- double field -->
+								<apex:outputField value="{!oppBillingRule.billingRule.kognoz1__Double__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'double',oppBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!oppBillingRule.billingRule.kognoz1__Double__c}" styleClass="doubleField"  rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'double',oppBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- currency field -->
+								<apex:outputField value="{!oppBillingRule.billingRule.kognoz1__Currency__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'currency',oppBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!oppBillingRule.billingRule.kognoz1__Currency__c}" styleClass="currencyField"  rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'currency',oppBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- percent field -->
+								<apex:outputField value="{!oppBillingRule.billingRule.kognoz1__Percent__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'percent',oppBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!oppBillingRule.billingRule.kognoz1__Percent__c}" styleClass="percentField"  rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'percent',oppBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- integer field -->
+								<apex:outputField value="{!oppBillingRule.billingRule.kognoz1__Integer__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'integer',oppBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!oppBillingRule.billingRule.kognoz1__Integer__c}" styleClass="integerField"  rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'integer',oppBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- text field -->
+								<apex:outputField value="{!oppBillingRule.billingRule.kognoz1__Text__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'string',oppBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!oppBillingRule.billingRule.kognoz1__Text__c}" styleClass="textField"  rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'string',oppBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- boolean field -->
+								<apex:selectList value="{!oppBillingRule.billingRule.kognoz1__Value__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'boolean',oppBillingRule.billingRule.kognoz1__Variable__c)}" size="1" multiselect="false">
+									<apex:selectOptions value="{!oppBillingRule.pickListValues}"/>
+								</apex:selectList>
+								<apex:outputField value="{!oppBillingRule.billingRule.kognoz1__Value__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'boolean',oppBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<!-- picklist field -->
+								<apex:selectList value="{!oppBillingRule.billingRule.kognoz1__Value__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'picklist',oppBillingRule.billingRule.kognoz1__Variable__c)}" size="1" multiselect="false">
+									<apex:selectOptions value="{!oppBillingRule.pickListValues}"/>
+								</apex:selectList>
+								<apex:outputField value="{!oppBillingRule.billingRule.kognoz1__Value__c}" rendered="{!AND(oppBillingRule.billingRule.kognoz1__Type__c == 'picklist',oppBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+						</apex:column>
+						<apex:column id="variable" style="display:none;">
+								<apex:inputCheckbox value="{!oppBillingRule.billingRule.kognoz1__Variable__c}" id="variableBillingRule"/>
+						</apex:column>
+					</apex:dataTable>
+				</apex:outputPanel>
+			</fieldset>
+	</apex:outputPanel>
+</apex:component>

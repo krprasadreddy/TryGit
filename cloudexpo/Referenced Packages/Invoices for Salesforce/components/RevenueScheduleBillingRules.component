@@ -1,0 +1,76 @@
+<apex:component >
+<script type="text/javascript" > 
+	function setFocusOnLoad() {}
+
+	function validateRevenueScheduleBillingRuleInput()
+	{
+		var isValid = true;
+		$(".revSchedErrorInp").each(function(){
+			$(this).remove();
+		});
+		$("table[id$=revenueScheduleBillingRulesTable] tr").each(function(){
+		    var ctl = $(this).children("td[id$=variable]").children("input");
+		    if($(ctl).attr("checked")==true)
+		    {
+		    	var inpBox = $(this).children("td[id$=inputBox]").find("input");
+		    	var value = $(inpBox).val();
+		    	if(value=="")
+		    	{
+		    		$(inpBox).parent().append('<div class="revSchedErrorInp" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;"><strong>Error: </strong>You must enter a valid value</div>');
+		    		isValid = false;
+		    	}
+		    }
+		});
+		return isValid;
+	}
+</script>
+
+<apex:attribute name="cont" description="Controller" type="kognoz1.InvoiceCreator" required="true" />
+<apex:outputPanel rendered="{!cont.showRevenueScheduleBillingRules}" >
+<fieldset style="width:100%; background-color: rgb(248, 248, 248);border:1px solid #DBDBDB;">
+			<legend style="font-weight:strong;">Revenue schedule billing rules</legend>
+			<apex:outputPanel layout="block" >
+					<apex:dataTable id="revenueScheduleBillingRulesTable" value="{!cont.revenueScheduleBillingRules}" var="revenueScheduleBillingRule" cellspacing="1" cellpadding="1"  rowClasses="billingRulesRows">
+						<apex:column ><apex:outputText value="{!revenueScheduleBillingRule.billingRule.kognoz1__FieldLabel__c}" /></apex:column>
+						<apex:column ><apex:outputText styleClass="billingRuleOperator" value="{!revenueScheduleBillingRule.billingRule.kognoz1__Operator__c}" /></apex:column>
+						<apex:column id="inputBox">
+								<!-- date field -->
+								<apex:outputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Date__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'date',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c == false)}"/>
+								<apex:inputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Date__c}" styleClass="dateField"  rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'date',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- datetime field -->
+								<apex:outputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Datetime__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'datetime',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Datetime__c}" styleClass="datetimeField"  rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'datetime',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- double field -->
+								<apex:outputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Double__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'double',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Double__c}" styleClass="doubleField"  rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'double',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- currency field -->
+								<apex:outputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Currency__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'currency',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Currency__c}" styleClass="currencyField"  rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'currency',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- percent field -->
+								<apex:outputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Percent__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'percent',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Percent__c}" styleClass="percentField"  rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'percent',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- integer field -->
+								<apex:outputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Integer__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'integer',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Integer__c}" styleClass="integerField"  rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'integer',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- text field -->
+								<apex:outputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Text__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'string',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<apex:inputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Text__c}" styleClass="textField"  rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'string',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c)}" /> 
+								<!-- boolean field -->
+								<apex:selectList value="{!revenueScheduleBillingRule.billingRule.kognoz1__Value__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'boolean',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c)}" size="1" multiselect="false">
+									<apex:selectOptions value="{!revenueScheduleBillingRule.pickListValues}"/>
+								</apex:selectList>
+								<apex:outputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Value__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'boolean',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+								<!-- picklist field -->
+								<apex:selectList value="{!revenueScheduleBillingRule.billingRule.kognoz1__Value__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'picklist',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c)}" size="1" multiselect="false">
+									<apex:selectOptions value="{!revenueScheduleBillingRule.pickListValues}"/>
+								</apex:selectList>
+								<apex:outputField value="{!revenueScheduleBillingRule.billingRule.kognoz1__Value__c}" rendered="{!AND(revenueScheduleBillingRule.billingRule.kognoz1__Type__c == 'picklist',revenueScheduleBillingRule.billingRule.kognoz1__Variable__c==false)}"/>
+						</apex:column>
+						<apex:column id="variable" style="display:none;">
+								<apex:inputCheckbox value="{!revenueScheduleBillingRule.billingRule.kognoz1__Variable__c}" id="variableBillingRule"/>
+						</apex:column>
+					</apex:dataTable>
+				</apex:outputPanel>
+			</fieldset>
+	</apex:outputPanel>
+</apex:component>

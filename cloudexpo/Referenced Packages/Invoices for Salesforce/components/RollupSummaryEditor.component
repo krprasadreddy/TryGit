@@ -1,0 +1,44 @@
+<apex:component controller="kognoz1.RollupSummaryEditorController">
+    <script type="text/javascript" >
+        $(function(){
+            var describeFieldsJsonObjStr = $("input[id*=JSONDescribeFieldsInfoContField]").val();
+            //console.log("describeFieldsJsonObjStr --> "+describeFieldsJsonObjStr);
+            if(describeFieldsJsonObjStr)
+            {
+                rollupFieldsDescription = JSON.parse(describeFieldsJsonObjStr);
+            }
+        
+        });
+        
+        function insertRollupField()
+        {
+            var selRollupField = $("select[id$=rollupFieldOptions]").val();
+            if(selRollupField!="-- Select field to roll-up --")
+            {
+                var infoSelection = $(edittext).getSelection();
+                var toInsert = 'SUM('+selRollupField+')';
+                if (infoSelection.length == 0)
+                     $(edittext).insertAtCaretPos(toInsert);
+                else
+                    $(edittext).replaceSelection(toInsert);
+                $("select[id$=rollupFieldOptions]").val("-- Select field to roll-up --");
+            }
+            else
+                window.alert("Select a field to roll-up before trying to insert.");
+        }
+    </script>
+    <apex:outputPanel layout="block">
+        <apex:panelGrid columns="2" cellspacing="2" cellpadding="0" border="0" style="margin-top:20px;margin-left:70px">
+            <apex:selectList multiselect="false" size="1" id="rollupFieldOptions">
+                <apex:selectOptions value="{!rollupSumFieldOptions}" />
+            </apex:selectList>
+            <input type="button" onclick="insertRollupField();" value="Insert" />
+        </apex:panelGrid>
+    </apex:outputPanel>
+        <!-- ###########################################
+        
+                CONTROLLER-PAGE MEMBERS
+        
+         ###############################################-->
+        <apex:inputText value="{!JSONDescribeFieldsInfo}" id="JSONDescribeFieldsInfoContField" style="display:none"/>
+</apex:component>

@@ -1,0 +1,638 @@
+<apex:page standardController="kognoz1__Invoice2_Template__c" extensions="kognoz1.InvoiceTemplateEditorController" tabStyle="kognoz1__Invoice2_Template__c" title="Invoice Template">
+
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+ 	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-json-2.2.js')}"></script> 
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+
+	<apex:sectionHeader subtitle="{!template.Name}" title="Invoice Template Edit" help="{!ifsHelpUrl}" rendered="{!template.name != null}"/>
+	<apex:sectionHeader subtitle="New Invoice Template" title="Invoice Template Edit" help="{!ifsHelpUrl}" rendered="{!template.name == null}"/>
+	<apex:form >
+		<apex:pageMessages id="pageErrorMessages"/>
+		<apex:outputPanel layout="block" rendered="{!AND(OR(isRead),NOT(isEdit))}" >
+			<p> Inssufficient privileges to access this invoice template. Contact your System Administrator.</p>
+		</apex:outputPanel>
+		<apex:outputPanel styleClass="ifsWizardBlock ifsTertiaryPalette" layout="block" rendered="{!AND(isRead,isEdit,isCreate)}"> 
+		    <apex:outputPanel styleClass="ifsWizardTitle ifsTertiaryPalette" layout="block" rendered="{!NOT(newInvoiceTemplate)}">         
+		            <div class="ifsRightTitle">Step 1 of 2</div> 
+		            <h2>Step 1: Page and formats configuration</h2>
+		    </apex:outputPanel>
+		    <apex:outputPanel styleClass="ifsWizardTitle ifsTertiaryPalette" layout="block" rendered="{!newInvoiceTemplate}">         
+		            <div class="ifsRightTitle">Step 2 of 3</div> 
+		            <h2>Step 2: Page and formats configuration</h2>
+		    </apex:outputPanel>
+		    <div class="ifsBody " style="background-color: #FFFFFF"> 
+			      <div class="ifsWizardHeader" style="background-color: #F8F8F8"> 
+			          <div class="ifsTopButtons" style="white-space: nowrap;"> 
+						<apex:commandButton value="Cancel" action="{!cancel}" title="Cancel invoice template editing"/>
+						<apex:commandButton value="Back"  action="{!backToNewInvoiceTemplate}"  title="Go to new invoice template" rendered="{!newInvoiceTemplate}"/>  
+						<apex:actionStatus onstart="displayNextInProgress();" onstop="displayNextResults();" id="nextStatus"/>  
+						<apex:commandButton value="Next" action="{!next}" onclick="if (!checkTemplateName()) return false;"  status="nextStatus" rerender="errorInController,errorBagJSONContField,integrityCheckJSONContField,pageErrorMessages,isServerEnabledContField"  title="Go to invoice template layout canvas"/> 	
+			          </div>
+			      </div> 
+
+				<apex:outputPanel styleClass="requiredExampleOuter" layout="block" style="float:right;margin-top:5px;">
+					<apex:outputPanel styleClass="requiredExampleOuter">
+						<apex:outputPanel styleClass="requiredExample">&nbsp;</apex:outputPanel>
+					</apex:outputPanel>
+					<apex:outputPanel styleClass="requiredMark">*</apex:outputPanel>
+					<apex:outputPanel styleClass="requiredText">= Required Information</apex:outputPanel>
+				</apex:outputPanel>
+	
+ 	
+				  <div class="ifsWizardBody" style="background-color: #FFFFFF;min-height:110px;"> 
+						<div class="typeStep" style="background-color: #FFFFFF"> 
+							<div class="ifsPageBlock ifsSecondaryPalette" style="background-color: #FFFFFF"> 
+								<div class="ifsBody" style="background-color: #FFFFFF"> 
+								  <apex:outputPanel id="inputsPanel">
+									<table>
+										<col width="10%"/>
+										<col width="10%"/>
+										<col width="35%"/>
+										<col width="15%"/>
+										<col width="30%"/>
+										<tr>
+											<td>
+												<apex:outputText value="Template Name"  title="The name of the invoice template" style="cursor:default;font-weight:bold; width: 150px"/>
+											</td>
+											<td>			
+												<apex:outputPanel layout="block" style="position:absolute;">
+													<apex:outputPanel styleClass="ifsRequiredBlock" layout="block"/>
+													<apex:inputField value="{!template.Name}" id="templateName"/>
+												</apex:outputPanel>
+											</td>
+											<td>&nbsp;</td>
+											<td>
+												<apex:outputText value="Dates Format"  title="Set the date format to use for all dates on the invoice " style="cursor:default;font-weight:bold; width: 150px"/>
+											</td>
+											<td>			
+												<apex:selectList id="dateFormatList" value="{!template.kognoz1__Date_Format__c}" size="1" style="width: 150px">
+													<apex:selectOptions value="{!dateFormat}" />
+												</apex:selectList>
+											</td>
+										</tr>
+										<tr>	
+											<td > <!-- width="10%" -->
+												<apex:outputText value="Page Size" title="The size of the invoice page" style="cursor:default;font-weight:bold; width: 150px"/>
+											</td>
+											<td>			
+												<apex:selectList id="pageSizeList" value="{!template.kognoz1__Page_Size__c}" size="1" 
+													onchange="changePageSize()" style="width: 150px">
+													<apex:selectOptions value="{!pageSize}" />
+												</apex:selectList>
+											</td>
+											<td>&nbsp;</td>
+											<td>
+												<apex:outputText value="Currency Format"  title="Set the currency format to use for all amounts on the invoice " style="cursor:default;font-weight:bold; width: 150px"/>
+											</td>
+											<td>			
+												<apex:selectList id="currencyFormatList" value="{!template.kognoz1__Currency_Formats__c}" size="1" style="width: 150px">
+													<apex:selectOptions value="{!currencyFormat}" />
+												</apex:selectList>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<apex:outputText value="Page Orientation" title="The orientation of the invoice page" style="cursor:default;font-weight:bold; width: 150px"/>	
+											</td>			
+											<td>
+												<apex:selectList id="pageOrientationList" value="{!template.kognoz1__Page_Orientation__c}" size="1" 
+													onchange="changePageSize()" style="width: 150px">
+													<apex:selectOptions value="{!pageOrientation}" />
+												</apex:selectList>						
+											</td>
+											<td>&nbsp;</td>
+											<td>
+												<apex:outputText value="Use Currency Symbol"  title="Define whether or not use a currency symbol for all amount on the invoice " style="cursor:default;font-weight:bold; width: 150px"/>
+											</td>
+											<td>
+													<apex:inputCheckbox value="{!template.kognoz1__Use_Currency_Symbol__c}">
+														<apex:actionStatus onstart="displayUpdating();" onstop="hideUpdating();" id="updatingStatus"/>  
+														<apex:actionSupport event="onclick" reRender="inputsPanel" status="updatingStatus"/>
+													</apex:inputCheckbox>
+											</td>
+										</tr>
+										<tr>
+											<td>&nbsp;</td>
+											<td>&nbsp;</td>
+											<td>&nbsp;</td>
+											<td>
+												<apex:outputText value="Currency Symbol"  title="Set the currency symbol to use in all amounts on the invoice " rendered="{!template.kognoz1__Use_Currency_Symbol__c}" style="cursor:default;font-weight:bold; width: 150px"/>
+											</td>
+											<td>
+												<apex:inputField value="{!template.kognoz1__Currency_Symbol__c}" rendered="{!template.kognoz1__Use_Currency_Symbol__c}"/>
+											</td>
+										
+										</tr>
+									</table>
+									</apex:outputPanel>
+								</div>
+							</div>
+						</div>	
+				  </div>
+				  
+				  
+				  <div class="ifsWizardBody">
+						<div class="typeStep">
+								<div class="ifsPageBlock ifsSecondaryPalette">
+									<div class="ifsBody" style="background-color: #FFFFFF">
+									<span style="cursor:default;font-weight:bold" title="Top, Right, Bottom, and Left margins of the invoice page" >Margins </span>
+										<table style="width : 80%; margin-left:20%">
+				
+										<tr>
+										<td style="width : 40%">
+										
+										<table style="width : 100%">
+											<tr>
+												<td align="center">
+													<div id="horizontal-margin-range" style="width : 80%; ">
+														<table style="width:100%; margin-top: 5%">
+															<tr style="">
+																<td style="width: 50%;text-align:left;">
+																	Left: <span id="marginLeftInfo"></span>
+																</td>
+																<td style="width: 50%;text-align:right;">	
+																	Right: <span id="marginRightInfo"></span>
+																</td>
+										
+															</tr>
+														</table>	
+													</div>
+												</td>
+												<td>
+												
+												</td>
+											</tr>	
+											<tr style="height :25px">
+												
+											</tr>
+											<tr>
+												<td align="center">
+														
+												<table id="previewTable" style="width : 150px; height: 210px">
+													<tr>
+														<td id="ex1" style="background-color:#CEE1EE"></td>
+														<td id="ex2" style="background-color:#CEE1EE; "></td>
+														<td id="ex3" style="background-color:#CEE1EE;"></td>
+													</tr>
+													<tr>
+														<td id="ex4" style="background-color:#CEE1EE;"></td>
+														<td id="ex5" style="background-color:#CFEEF8; "></td>
+														<td id="ex6" style="background-color:#CEE1EE;"></td>
+													</tr>
+													<tr>
+														<td id="ex7" style="background-color:#CEE1EE;"></td>
+														<td id="ex8" style="background-color:#CEE1EE; "></td>
+														<td id="ex9" style="background-color:#CEE1EE;"></td>
+													</tr>
+												</table>
+												
+												</td>
+												</tr>
+											</table>
+										</td>
+							
+										<td style="width : 60%">
+											<table style="width : 100%">
+												<tr style="height :45px">
+												
+												</tr>
+												<tr>
+													
+													<td style="width : 5%">
+														<div id="vertical-margin-range" style="height :250px"></div>
+													</td>	
+													<td style="width : 95%">
+														<table id="table-margin-vertical">
+														<tr style="height : 10%; ">
+														<td>Top: <span id="marginTopInfo"></span></td>
+														</tr>
+														<tr style="height : 80%">
+														</tr>
+														
+														<tr style="height : 10%; ">
+														<td>Bottom: <span id="marginBottomInfo"></span></td>
+														</tr>
+														</table>
+													</td>
+												</tr>	
+											</table>	
+										</td>
+										</tr>
+										</table>
+				
+								</div>
+							</div>
+						</div>
+				     </div>
+		      </div>
+		</apex:outputPanel>	
+		<apex:inputText value="{!template.kognoz1__Margin_Left__c}" id="marginLeftValue" style="display:none"/>
+		<apex:inputText value="{!template.kognoz1__Margin_Right__c}" id="marginRightValue" style="display:none" />
+		<apex:inputText value="{!template.kognoz1__Margin_Top__c}" id="marginTopValue" style="display:none" />
+		<apex:inputText value="{!template.kognoz1__Margin_Bottom__c}" id="marginBottomValue" style="display:none" />
+		<apex:inputText value="{!sfdcServerUrl}" id="serverUrl" style="display:none" />
+		<apex:inputText value="{!integrityCheckJSON}" id="integrityCheckJSONContField" style="display:none"/>
+		<apex:inputText value="{!isError}" id="errorInController" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+        <apex:inputText value="{!isServerEnabled}" id="isServerEnabledContField" style="display:none"/>
+        <apex:inputText value="{!templateDPI}" id="templateDPIContField" style="display:none"/>
+		<!-- ###########################################
+		
+				ERROR HANDLING MODAL DIALOG BOX
+		
+		 ###############################################-->
+		<div id="errorInfoPanel" style="display:none;">
+			<apex:outputPanel id="errorPanel">
+			</apex:outputPanel>
+		</div>	
+
+		<!-- ###########################################
+		
+				ACTION STATUS IN PROGRESS
+		
+		 ###############################################-->
+		<div id="nextStatMsg" class="statusPopup">
+			<div  class="popupStatus1" >
+			</div>
+			<div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+            	<div style="text-align:center;margin-top:15px;" > 
+            		<table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+            			<tr>
+			                <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+			                <td><span id="nextMsg" style="z-index:153;"></span></td>
+	                	</tr>
+	                </table>
+                </div>
+			</div>
+		</div>
+
+		<!-- ###########################################
+
+		<!-- ###########################################
+		
+				ACTION FUNCTIONS
+		
+		 ###############################################-->
+ 	 	<apex:actionFunction action="{!redirectToInvoiceTemplateCanvas}" name="redirectToInvoiceTemplateCanvas" />  
+	</apex:form>
+
+<script type="text/javascript" >
+	
+	var pageDimensions = new Object();
+	var xMax = 0; 
+	var yMax = 0; 
+	var initLeftRight = new Array();  
+	var initTopBottom = new Array();  
+	var examplePageWidth = 0;
+	var examplePageHeight = 0;
+	
+	function loadSliders() {
+		$("#horizontal-margin-range").slider({
+			range: true,
+			step: 0.5,
+			min: 0,
+			max: xMax,
+			values: initLeftRight,
+			slide: function(event, ui) {
+				var pageInfo = giveMePageSelections();
+				var cmMarginLeft = 0;
+				var cmMarginRight = 0;
+				$("#marginLeftInfo").html(ui.values[0]+'cm');
+				$("#marginRightInfo").html(xMax - ui.values[1]+'cm');
+				$("input[id$='marginLeftValue']").val(ui.values[0]);
+				$("input[id$='marginRightValue']").val(xMax - ui.values[1]);
+				modifyExamplePreviewByWidth();
+			}
+		});
+		$("#marginLeftInfo").html($("#horizontal-margin-range").slider("values", 0)+'cm');
+		$("#marginRightInfo").html(xMax - $("#horizontal-margin-range").slider("values", 1)+'cm');
+		
+		
+		
+		$("#vertical-margin-range").slider({
+			range: true,
+			step: 0.5,
+			min: 0,
+			max: yMax,
+			values: initTopBottom,
+			orientation: "vertical",
+			slide: function(event, ui) {
+				var pageInfo = giveMePageSelections();
+				$("#marginTopInfo").html(yMax - ui.values[1]+'cm');
+				$("#marginBottomInfo").html(ui.values[0]+'cm');
+				$("input[id$='marginTopValue']").val(yMax - ui.values[1]);
+				$("input[id$='marginBottomValue']").val(ui.values[0]);	
+				modifyExamplePreviewByHeight();
+				
+			}
+		});
+		$("#marginTopInfo").html(yMax - $("#vertical-margin-range").slider("values", 1)+'cm');
+		$("#marginBottomInfo").html($("#vertical-margin-range").slider("values", 0)+'cm');
+		
+		
+		
+	}
+	
+
+	function changePageSize(){
+		var infoPageInitial = giveMePageSelections();
+		var dims = pageDimensions[infoPageInitial[0]];
+		if (infoPageInitial[1] == 'Horizontal'){
+			dims = swapDimensions(dims);
+		}
+		xMax = Math.round(dims[0]);
+		yMax = Math.round(dims[1]);
+
+		initLeftRight = new Array();
+		initLeftRight.push($("input[id$='marginLeftValue']").val());
+		initLeftRight.push(xMax - $("input[id$='marginRightValue']").val());
+		initTopBottom = new Array();
+		initTopBottom.push($("input[id$='marginBottomValue']").val());
+		initTopBottom.push(yMax - $("input[id$='marginTopValue']").val());
+		loadSliders();
+		drawExamplePreviewTable();
+		modifyExamplePreviewByWidth();
+		modifyExamplePreviewByHeight();
+	}
+	
+	function swapDimensions(dimensions){
+		var swap = new Array();
+		swap[0] = dimensions[1];
+		swap[1] = dimensions[0];
+		return swap;
+	}
+	
+	function drawExamplePreviewTable(){
+		examplePageWidth = xMax * 10;
+		examplePageHeight = yMax * 10;		
+		$("table[id='previewTable']").css("width", examplePageWidth);
+		$("table[id='previewTable']").css("height", examplePageHeight);
+		$("div[id='horizontal-margin-range']").css("width", examplePageWidth);
+		$("div[id='vertical-margin-range']").css("height", examplePageHeight);
+		$("table[id='table-margin-vertical']").css("height", examplePageHeight);
+		
+		
+	}
+	
+	function modifyExamplePreviewByWidth(){
+		var mgLeftPerc = Math.round($("input[id$='marginLeftValue']").val() * 100 / xMax);
+		var mgRightPerc = Math.round($("input[id$='marginRightValue']").val() * 100 / xMax);
+		var pageExamplePerc = 100 - mgLeftPerc - mgRightPerc;
+		$("td[id='ex1']").css("width", mgLeftPerc+'%');
+		$("td[id='ex3']").css("width", mgRightPerc+'%');
+		$("td[id='ex2']").css("width", pageExamplePerc+'%');
+
+	}
+	
+	
+	function modifyExamplePreviewByHeight(){
+		var mgTopPerc = Math.round($("input[id$='marginTopValue']").val() * 100 / yMax);
+		var mgBottomPerc = Math.round($("input[id$='marginBottomValue']").val() * 100 / yMax);
+		var pageExamplePercH = 100 - mgTopPerc - mgBottomPerc;
+		$("td[id='ex1']").css("height", mgTopPerc+'%');
+		$("td[id='ex4']").css("height", pageExamplePercH+'%');
+		$("td[id='ex7']").css("height", mgBottomPerc+'%');
+
+	}
+		
+	
+	function giveMePageSelections(){
+		var infoRet = new Array();
+		infoRet.push($("select[id$='pageSizeList']").val());
+		infoRet.push($("select[id$='pageOrientationList']").val());
+		return infoRet;
+	}
+	function roundNumber(rnum, rlength) { 
+ 	 	var newnumber = Math.round(rnum*Math.pow(10,rlength))/Math.pow(10,rlength);
+  		return newnumber;
+	}
+	
+	function checkTemplateName(){
+		if ($("input[id$='templateName']").val() == '')
+		{
+			$("input[id$='templateName']").parent("div").children("div[class=oliErrorInp]").each(function(){$(this).remove();});
+			$("input[id$='templateName']").parent("div").append('<div class="oliErrorInp" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;top:-35px;position:relative;"><strong>Error: </strong>You must enter a valid value</div>');
+			return false;
+		}
+		else{
+			
+			return IsalphaNumericValidate($("input[id$='templateName']").val(),"input[id$='templateName']");
+		}
+	}
+	
+	function IsalphaNumericValidate(alphanumericChar, ctl)
+	{	
+		if($.trim(alphanumericChar).length == 0 || alphanumericChar.search(/[^a-zA-Z0-9_ ]/g) != -1 )
+		{	
+			$(ctl).parent("div").children("div[class=oliErrorInp]").each(function(){$(this).remove();});
+			$(ctl).parent("div").append('<div class="oliErrorInp" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;top:-35px;position:relative;"><strong>Error: </strong>Invalid Template Name. Use only alphanumeric characters, spaces and underscores</div>');
+			return false;
+		}
+		else
+			return true;
+	}	
+
+
+	function displayNextResults()
+	{
+	 	var isError = $("input[id*=errorInController]").val();
+	 	if(isError=="true")
+	 	{
+	 		$("span[id*=errorPanel]").empty();
+			var integrityCheckJsonObjStr = $("input[id*=integrityCheckJSONContField]").val();
+		
+			if(integrityCheckJsonObjStr)
+			{
+				var isServerEnabled = $("input[id$=isServerEnabledContField]").val();
+                var integrityCheckJsonObj = JSON.parse(integrityCheckJsonObjStr);
+                for(var idx=0; idx< integrityCheckJsonObj.length;idx++)
+                {
+                    var missingObjects = integrityCheckJsonObj[idx].missingObjects;
+                    var missingFields = integrityCheckJsonObj[idx].missingFields;
+                    var missingRelationships = integrityCheckJsonObj[idx].missingRelationships;
+                    
+                    var missingObjectsUl = "<ul>";
+                    if(missingObjects.length>0)
+                    {
+	                    for(var i=0; i<missingObjects.length; i++)
+	                    {
+	                        missingObjectsUl+="<li>"+missingObjects[i].objName+"</li>";
+	                    }
+                    }
+                    missingObjectsUl+="</ul>";
+                    
+                    var missingFieldsTableRows = "";
+                    if(missingFields.length>0)
+                    {
+	                    for(var j=0; j<missingFields.length;j++)
+	                    {
+	                        var missingFieldsObj = missingFields[j].objName;
+	                        var objFields = missingFields[j].fields;
+	                        for(var k=0; k<objFields.length;k++)
+	                        {
+	                            if(k==0)
+	                                missingFieldsTableRows+="<tr><td>"+missingFieldsObj+"</td><td>"+objFields[k].fieldName+"</td><td>"+objFields[k].fieldType+"</td></tr>";
+	                            else
+	                                missingFieldsTableRows+="<tr><td style=\"text-align:center;\">-\"-</td><td>"+objFields[k].fieldName+"</td><td>"+objFields[k].fieldType+"</td></tr>";
+	                        
+	                        }
+	                    }
+                    }
+                    var missingRelationshipsRows = "";
+                    if(missingRelationships.length>0)
+                    {
+                    	for(var k=0; k<missingRelationships.length; k++)
+                    	{
+                    		var lookup = missingRelationships[k].lookup;
+                    		var obj = missingRelationships[k].obj;
+                    		missingRelationshipsRows+="<tr><td>"+obj+"</td><td>"+lookup+"</td></tr>"
+                    	}
+                    }
+                    var processingInfoHtml = "";
+                    if(missingObjects.length>0)
+                    {
+                         processingInfoHtml+="<p>The following objects are missing from your org:</p>"+missingObjectsUl;
+                         processingInfoHtml+="<p>Restore the missing objects to continue.</p>"
+                    }
+                    if(missingRelationships.length>0)
+                    {
+                   		if(missingObjects.length>0)
+                    	 	processingInfoHtml+="<hr/>";
+                        var missingRelationshipsTbl = '<table cellpadding="3" cellspacing="0" border="1" >'+
+                                                '<th class="ifsthBack">Object name</th><th class="ifsthBack">Lookup to object</th>'+
+                                                missingRelationshipsRows+'</table>';
+                         processingInfoHtml+="<p>The following object relationships are missing from your org:</p>"+missingRelationshipsTbl;
+                         processingInfoHtml+="<p>Restore the missing relationships to continue.</p>"
+                    }
+                    if(missingFields.length>0)
+                    {
+                        var missingFieldsTbl = '<table cellpadding="3" cellspacing="0" border="1" >'+
+                                                '<th class="ifsthBack">Object name</th><th class="ifsthBack">Field name</th><th class="ifsthBack">Field type</th>'+
+                                                missingFieldsTableRows+'</table>';
+                   		if(missingObjects.length>0 || missingRelationships.length>0)
+                    	 	processingInfoHtml+="<hr/>";
+
+							processingInfoHtml+="<p>The automatic customization of the <strong>Invoice</strong> and <strong>Invoice Line Item</strong> objects could not be carried out because one of the following reasons:"
+                                                +"</p>"
+	                                             +"<ul>"
+	                                             +"<li>Your Salesforce edition does not allow the use of the required API</li>"
+	                                             +"<li>The automatic customization cannot be applied to your org</li>"
+	                                             +"</ul>"
+												+"<p>"
+												+" Follow these steps to manually customize the <strong>Invoice</strong> and <strong>Invoice Line Items</strong> objects to proceed:"
+	                                            +"</p>"
+	                                            +"<p>Customization of <strong>Invoice</strong> object (Invoice2__c)</p>"
+	                                             +"<ol>"
+	                                             +"<li>Click Your Name | Setup</li>"
+	                                             +"<li>Click App Setup | Create | Objects</li>"
+	                                             +"<li>In the Custom Objects page, click <strong>Invoice</strong></li>"
+	                                             +"<li>Scroll down to the Custom Fields and Relationships, and click the New button on that section</li>"
+	                                             +"<li>Create a new custom field for every entry in the table below where <strong>Object name</strong> is Invoice2__c, using the <strong>Field type</strong> and <span style=\"text-decoration:underline;\">exact <strong>Field name</strong></span> for that entry</li>"
+	                                             +"</ol>"
+	                                            +"<p>Customization of <strong>Invoice Line Item</strong> object (Line_Item_2__c)</p>"
+	                                             +"<ol>"
+	                                             +"<li>Click App Setup | Create | Objects</li>"
+	                                             +"<li>In the Custom Objects page, click <strong>Invoice Line Item</strong></li>"
+	                                             +"<li>Scroll down to the Custom Fields and Relationships, and click the New button on that section</li>"
+	                                             +"<li>Create a new custom field for every entry in the table below where <strong>Object name</strong> is Line_Item_2__c, using the <strong>Field type</strong> and <span style=\"text-decoration:underline;\">exact <strong>Field name</strong></span> for that entry</li>"
+	                                             +"</ol>";
+                            processingInfoHtml+=missingFieldsTbl+"<br/><br/>";
+
+                    }
+                    $("span[id*=errorPanel]").html(processingInfoHtml);                   
+                }
+				
+			}
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+			$("#nextStatMsg").css("display","none");
+			$("#errorInfoPanel").dialog("open");
+		}
+		else
+		{
+			redirectToInvoiceTemplateCanvas();
+		}	 	
+	}
+
+	function displayNextInProgress()
+	{
+		$("#nextStatMsg").css("display","block");
+		$("#nextMsg").html("Preparing the invoice layout canvas ...");
+	}
+
+	function displayUpdating()
+	{
+		$("#nextStatMsg").css("display","block");
+		$("#nextMsg").html("Updating ...");
+	}
+
+	function hideUpdating()
+	{
+		$("#nextStatMsg").css("display","none");
+		$("#nextMsg").empty();
+	}
+	
+	
+	$(function() {
+	var html='{!$Api.Partner_Server_URL_220}';
+	$("input[id$=serverUrl]").val(html);
+		var hoja = new Array();
+		hoja.push(21.0);
+		hoja.push(29.7);
+		pageDimensions['A4'] = hoja;
+		hoja = new Array();
+		hoja.push(21.6);
+		hoja.push(27.9);
+		pageDimensions['Letter'] = hoja;
+		hoja = new Array();
+		hoja.push(21.6);
+		hoja.push(35.6);
+		pageDimensions['Legal'] = hoja;
+		
+		var infoPageInitial = giveMePageSelections();
+		var dims = pageDimensions[infoPageInitial[0]];
+		if (infoPageInitial[1] == 'Horizontal'){
+			dims = swapDimensions(dims);
+		}
+		xMax = Math.round(dims[0]);
+		yMax = Math.round(dims[1]);
+		var templMarginLeft = $("input[id$=marginLeftValue]").val();
+		var templMarginRight = $("input[id$=marginRightValue]").val();
+		var templMarginBottom = $("input[id$=marginBottomValue]").val();
+		var templMarginTop = $("input[id$=marginTopValue]").val();
+		initLeftRight = new Array();
+		initLeftRight.push(templMarginLeft);
+		initLeftRight.push(xMax - templMarginRight);
+		initTopBottom = new Array();
+		initTopBottom.push(templMarginBottom);
+		initTopBottom.push(yMax - templMarginTop);
+		changePageSize();
+
+		$("#errorInfoPanel").dialog({
+				modal: true, 
+				autoOpen: false,
+				width: 550,
+				height:'auto',
+				title:'Processing information'
+		});
+
+		$("input[id$=templateDPIContField]").val(getTemplateDpi());
+	});
+
+</script>
+
+
+
+</apex:page>

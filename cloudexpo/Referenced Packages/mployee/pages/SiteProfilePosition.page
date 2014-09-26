@@ -1,0 +1,181 @@
+<apex:page id="profilePosition" 
+           docType="html-5.0" 
+           controller="mployee.SiteProfilePositionController" 
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+           language="{!language}"
+>
+	<apex:variable var="config" value="{!siteSettings.modules['mod_candidatePositions']}" />
+	
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+    	
+    	
+        
+        <apex:define name="javascript">
+        	
+        	<apex:includeScript value="{!URLFOR($Resource.mployeeSite,'assets/js/plugins/typeahead/typeahead-0.9.3.min.js')}"  />
+        	
+        	
+        	<script type="text/javascript">
+                //var j$ = jQuery.noConflict();
+                
+                $(document).ready(function(){
+                	
+					
+					//
+					$('.title').typeahead({
+						name: 'title',
+						remote: {
+					  		url: 'https://www.linkedin.com/ta/title?query=%QUERY',
+					  		filter: function(parsedResponse){
+					  			var dataset = [];
+					  			for(i = 0; i < parsedResponse.resultList.length; i++) {
+					  				dataset.push({
+					  					name: parsedResponse.resultList[i].headLine,
+					  					value: parsedResponse.resultList[i].displayName,
+					  				});
+					  			}
+					  			return dataset;
+					  			console.log('dataset: '+dataset);
+					  		},
+					  		dataType: 'jsonp',
+							beforeSend: function (jqXhr, settings) {
+								jqXhr.setRequestHeader('Accept-Language','nl');
+							
+							}
+						},   
+						                                      
+					  	limit: 10                                                                   
+					});
+					
+					
+					
+                	var elementId = $('#{!$Component.adminform.isCurrent__c}');
+                	
+                	var isChecked = $('[id$=isCurrent__c]').prop('checked');
+                	console.log('isChecked: '+isChecked);
+                	
+                	if(isChecked){                		
+                		$('#control-group-endDate').hide();
+                	}
+                	
+                	
+                });
+                
+               	function toggleEndDate(){
+                	$('#control-group-endDate').toggle();
+                	
+                }
+        	</script>
+        </apex:define>
+        
+        <apex:define name="css">        	
+        	<apex:stylesheet value="{!URLFOR($Resource.mployeeSite,'assets/css/plugins/typeahead/typeahead.css')}"/>
+        </apex:define>
+        
+        <apex:define name="body">
+        	
+        	<apex:outputPanel styleClass="container{!IF(siteSettings.template.isFluid,'-fluid','')}" layout="block">
+                
+                <apex:outputPanel styleClass="row" layout="block" rendered="{!config.showHeader}" >
+        		<div class="col-sm-12">
+        			<apex:dynamicComponent componentValue="{!pageHeader}" />
+        		</div>
+        		</apex:outputPanel>
+                
+                <div class="row">
+                	<apex:form styleClass="form-horizontal" id="adminform">
+						
+						<apex:outputPanel id="content" styleClass="col-sm-8" layout="block" >								
+							
+							<fieldset>
+								
+								<apex:outputPanel layout="none" rendered="{!config.showTitle}" >
+		                    		<legend>
+		                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id == null,true,false)}">	
+		                    				<apex:outputText value="{!$Label.GLOBAL_ACTION_NEW_OBJECT}">
+		                    					<apex:param value="{!$ObjectType.candidatePosition__c.Label}"/> 
+		                    				</apex:outputText>
+		                    			</apex:outputPanel>
+		                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id != null,true,false)}">
+		                    				<apex:outputText value="{!item.title__c}"/>	                    					                   
+		                    			</apex:outputPanel>	                    			 			
+		                    		</legend>
+	                    		</apex:outputPanel>
+	                    		
+	                    		<apex:outputpanel styleClass="form-group" rendered="false" layout="block">						    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidatePosition__c.Fields.Name.label}" for="name"/>
+								    <div class="col-sm-10">
+										<apex:inputField value="{!item.Name}" id="name" styleClass="form-control industry required "/>
+								    </div>
+							  	</apex:outputpanel>							  	
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">								    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidatePosition__c.Fields.companyName__c.label}" for="companyName__c"/>
+								    <div class="col-sm-10">										
+										<apex:inputField value="{!item.companyName__c}" id="companyName__c" styleClass="industry form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">								    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidatePosition__c.Fields.title__c.label}" for="mployee__title__c"/>
+								    <div class="col-sm-10">										
+										<apex:inputField value="{!item.title__c}" id="mployee__title__c" styleClass="form-control title"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">								    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidatePosition__c.Fields.startDate__c.label}" for="startDate__c"/>
+								    <div class="col-sm-10">										
+										<apex:inputField value="{!item.startDate__c}" showDatePicker="false" id="startDate__c" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">								    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidatePosition__c.Fields.isCurrent__c.label}" for="isCurrent__c"/>
+								    <div class="col-sm-10">										
+										<apex:inputField value="{!item.isCurrent__c}" onchange="toggleEndDate();" id="isCurrent__c" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<div class="form-group" id="control-group-endDate" >
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidatePosition__c.Fields.endDate__c.label}" for="endDate__c"/>
+								    <div class="col-sm-10">										
+										<apex:inputField value="{!item.startDate__c}" showDatePicker="false" id="endDate__c" styleClass="form-control"/>
+								    </div>
+							  	</div>
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidatePosition__c.Fields.summary__c.label}" for="summary__c"/>
+								    <div class="col-sm-10">										
+										<apex:inputField value="{!item.summary__c}" id="summary__c" styleClass="form-control" style="resize:vertical" />
+								    </div>
+							  	</apex:outputpanel>
+							  	
+							  									
+	                    	</fieldset>
+	                    	
+	                    	
+						</apex:outputPanel>
+						
+						<!-- Side Bar -->						
+						<ul class="nav {!siteSettings.navStyleClass} nav-stacked col-sm-4">
+							<li class="nav-header"><apex:outputText styleClass="hidden-phone" value="{!$Label.GLIB_HTML_SELECT_ACTION}"/></li>
+							<li>
+                        		<apex:commandLink action="{!importItems}">
+                        			<apex:param name="service" assignto="{!service}" value="linkedin" />
+                        			<span class="glyphicon glyphicon-cloud-download"/>&nbsp;
+                        			<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_IMPORT_FROM}"><apex:param value="LinkedIn" /></apex:outputText>  
+                        		</apex:commandLink>
+                        	</li> 
+							<li><apex:commandLink action="{!saveNew}"><span class="glyphicon glyphicon-plus"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_NEW}"/></apex:commandLink></li>
+							<li><apex:commandLink action="{!saveClose}"><span class="glyphicon glyphicon-check"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_CLOSE}"/></apex:commandLink></li>                        
+                        	<li><apex:commandLink action="{!remove}"><span class="glyphicon glyphicon-trash"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_DELETE}"/></apex:commandLink></li>                        
+                        	<li><apex:commandLink action="{!cancel}"><span class="glyphicon glyphicon-remove"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_CANCEL}"/></apex:commandLink></li>
+						</ul>
+						
+						
+					</apex:form>
+				</div>
+			</apex:outputPanel>
+		</apex:define>
+	</apex:composition>
+</apex:page>

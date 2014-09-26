@@ -1,0 +1,241 @@
+<apex:page docType="html-5.0" showChat="true" controller="mployee.MF_Organisation_PositionVacancyCtr" tabStyle="mployee__MF_Organisation_PositionVacancy__c"  >
+    
+    <apex:sectionHeader title="{!page.title}"
+        subtitle="{!page.subtitle}" 
+        description="{!page.description}"/>
+    <social:profileViewer entityId="{!account.id}" rendered="false"/>
+    <apex:pagemessages />
+    	
+        <apex:form id="adminForm">
+            <!-- Account -->
+            <apex:pageBlock title="{!$ObjectType.Account.Label}" id="accountDetail" mode="maindetail" rendered="{!renderMap['accountDetail']}">
+                <apex:pageBlockButtons location="top">
+                	<apex:commandButton value="{!$Label.GLOBAL_ACTION_CANCEL}" action="{!cancel}" />
+                </apex:pageBlockButtons>
+                
+                <apex:pageBlockSection showHeader="false" title="{!$ObjectType.Account.Label}" columns="1">
+                    <apex:outputField value="{!account.Name}"/>                    
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="Address" showHeader="false"  columns="1">                
+                    <apex:outputField value="{!account.BillingStreet}"/>                    
+                    <apex:outputField value="{!account.BillingPostalCode}"/>                    
+                    <apex:outputField value="{!account.BillingCity}"/>
+                    <apex:outputField value="{!account.BillingCountry}"/>                
+                </apex:pageBlockSection>
+            </apex:pageBlock>
+            
+            <!-- Vacancies -->
+            <apex:pageBlock mode="maindetail" title="{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.LabelPlural}" id="accountVacancyList" rendered="{!renderMap['accountVacancyList']}" >
+            	<apex:pageBlockButtons location="bottom">
+            		<apex:commandButton value="{!$Label.GLOBAL_ACTION_NEW} {!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.Label}" action="{!stepPositionSimple}"/>            			
+            		<apex:commandButton value="{!$Label.GLOBAL_ACTION_NEW} Extended {!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.Label}" action="{!stepPositionExtended}"/>            			
+            	</apex:pageBlockButtons>
+            	
+                <!-- The Table with vacancies -->
+                <apex:pageBlockTable id="accountVacancyTable" value="{!account.mployee__Vacancies__r}" var="v">
+                    <apex:column headerValue="{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.Fields.Name.Label}" id="Name"> 
+                        <apex:commandLink value="{!v.Name}" action="{!selectFunction}">
+                            <apex:param name="positionId" value="{!v.mployee__Position__r.id}"/>
+                            <apex:param name="vacancyId" value="{!v.id}"/>                              
+                        </apex:commandLink>
+                    </apex:column>
+                    <apex:column value="{!v.mployee__Position__r.mployee__LocationCity__c}" />
+                    <apex:column value="{!v.mployee__Position__r.Name}" />
+                    <apex:column value="{!v.mployee__Contact__c}" />
+                    <apex:column value="{!v.mployee__State__c}" />
+                    
+                </apex:pageBlockTable>                
+            </apex:pageBlock>
+            
+            <apex:outputpanel layout="block" rendered="{!renderMap['accountVacancyList']}">
+            	
+                <table class="recordTypeInfo infoTable" border="0" cellpadding="0" cellspacing="0">
+                	<tbody>
+                		<tr class="headerRow">
+                			<th class="recordTypeName" scope="col"><apex:outputText value="{!$Label.PAGE_VACANCYNEW_BUTTON_TYPE_NAME}"/></th>
+                			<th class="recordTypeDescription" scope="col"><apex:outputText value="{!$Label.PAGE_VACANCYNEW_BUTTON_TYPE_DESCRIPTION}"/></th>
+                		</tr>
+                		<tr>
+                			<th class="recordTypeName" scope="row"><apex:outputText value="{!$Label.PAGE_VACANCYNEW_BUTTON_TYPE_NEW_VACANCY_NAME}"/></th>
+                			<td class="recordTypeDescription"><apex:outputText value="{!$Label.PAGE_VACANCYNEW_BUTTON_TYPE_NEW_VACANCY_DESCRIPTION}"/></td>                			
+                		</tr>                		
+                		<tr class="last">
+                			<th class="recordTypeName" scope="row"><apex:outputText value="{!$Label.PAGE_VACANCYNEW_BUTTON_TYPE_NEW_VACANCY_EXTENDED_NAME}"/></th>
+                			<td class="recordTypeDescription"><apex:outputText value="{!$Label.PAGE_VACANCYNEW_BUTTON_TYPE_NEW_VACANCY_EXTENDED_DESCRIPTION}"/></td>
+                		</tr>
+                	</tbody>
+                </table>
+			</apex:outputpanel>
+            
+            
+            <!-- position  -->
+            <apex:pageBlock id="function" title="{!$ObjectType.mployee__MF_Organisation_Position__c.Label}" mode="edit" rendered="{!renderMap['positionDetail']}"  >
+                <apex:pageBlockButtons >
+                    <apex:commandButton action="{!stepAccount}" value="{!$Label.GLIB_HTML_BACK}" immediate="true"/>
+                    <apex:commandButton action="{!stepVacancy}"  value="{!$Label.GLIB_HTML_NEXT}"/>
+                    <apex:commandButton action="{!copyAddressFromAccount}" reRender="location" value="{!$Label.PAGE_VACANCYNEW_BUTTON_GET_ACCOUNT_ADDRESS}"/>
+                </apex:pageBlockButtons>
+
+                <apex:pageBlockSection title="{!$Label.MF_Information}">
+                    <apex:inputField required="true" value="{!position.Name}" styleClass="typeahead-devs"/>
+                    <apex:inputField value="{!position.mployee__HoursPosition__c}" />
+                    <apex:inputField value="{!position.mployee__Type__c}" />
+                    <apex:inputField value="{!position.mployee__ExperienceLevel__c}" />
+                    <apex:inputField value="{!position.mployee__EducationLevel__c}" />
+                    
+                    
+                    
+                    <apex:inputField value="{!position.mployee__State__c}"/>
+                    
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="LOCATION" id="location">
+                    <apex:inputField value="{!position.mployee__LocationStreet__c}"/> 
+                    <apex:inputField value="{!position.mployee__LocationPostalCode__c}"/>
+                    <apex:inputField value="{!position.mployee__LocationCity__c}"/>
+                    <apex:inputField value="{!position.mployee__LocationCountryCode__c}"/>                                                                                        
+                </apex:pageBlockSection>
+               
+                <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Organisation_Position__c.Fields.mployee__Description__c.Label}">
+                    <apex:inputField value="{!position.mployee__Description__c}" style="width:400px"/>
+                </apex:pageBlockSection>
+
+
+			<apex:outputpanel layout="block" rendered="{!renderMap['jobViewExpanded']}">
+				 
+				<!-- Skills -->
+                <apex:pageBlockSection title="{!$ObjectType.mployee__positionSkill__c.labelPlural}" id="skillList" columns="1">
+                    <apex:pageBlockTable id="skillsTable" value="{!skillList}" var="skill">
+                        <apex:column headerValue="{!$ObjectType.mployee__positionSkill__c.Fields.Name.Label}" > 
+                            <apex:inputField value="{!skill.Name}" id="liberySkill" styleClass="skills typeahead">
+                				<c:adminMod_AutoComplete elementClass=".skills" autocomplete_textbox="{!$Component.liberySkill}"/>
+                            </apex:inputField>
+                            
+                        </apex:column>
+                        <apex:column headerValue="{!$ObjectType.mployee__positionSkill__c.Fields.mployee__proficiency__c.Label}">
+                            <apex:inputField styleClass="input-small" value="{!skill.mployee__proficiency__c}"/>
+                        </apex:column>
+                        <apex:column headerValue="{!$ObjectType.mployee__positionSkill__c.Fields.mployee__years__c.Label}">
+                            <apex:inputField styleClass="input-small" value="{!skill.mployee__years__c}"/>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                    <apex:commandButton action="{!addSkill}" value="{!$Label.GLOBAL_ACTION_ADD} {!$ObjectType.mployee__positionSkill__c.label}" reRender="skillList" oncomplete="initAutoComplete();"/>
+                    <apex:commandButton action="{!removeSkill}" value="{!$Label.GLOBAL_ACTION_REMOVE} {!$ObjectType.mployee__positionSkill__c.label}" reRender="skillList" disabled="{!if(skillList.size < 1,true,false)}"/>
+                </apex:pageBlockSection>
+
+
+                <!-- Industry -->
+                <apex:pageBlockSection title="{!$ObjectType.mployee__positionIndustry__c.labelPlural}" id="industryList" columns="1">
+                    <apex:pageBlockTable id="industryTable" value="{!industryList}" var="e">
+                        <apex:column headerValue="{!$ObjectType.mployee__positionIndustry__c.Fields.mployee__Industry__c.Label}" >                                        
+                            
+                            
+                            <apex:inputField value="{!e.mployee__Industry__c}" id="liberyIndustry">
+                               
+                            </apex:inputField>  
+                        </apex:column>                          
+                    </apex:pageBlockTable>
+                    <apex:commandButton action="{!addIndustry}" value="{!$Label.GLOBAL_ACTION_ADD} {!$ObjectType.mployee__positionIndustry__c.label}" reRender="industryList"/>
+                    <apex:commandButton action="{!removeIndustry}" value="{!$Label.GLOBAL_ACTION_REMOVE} {!$ObjectType.mployee__positionIndustry__c.label}" reRender="industryList" disabled="{!if(industryList.size < 1,true,false)}"/>
+                </apex:pageBlockSection>
+                
+                <!-- Specialism -->
+                <apex:pageBlockSection title="{!$ObjectType.mployee__positionFunction__c.labelPlural}" id="functionList" columns="1">
+                    <apex:pageBlockTable id="functionTable" value="{!functionList}" var="f">
+                        <apex:column headerValue="{!$ObjectType.mployee__positionFunction__c.Fields.mployee__Function__c.Label}" >                                        
+                            <apex:inputField value="{!f.mployee__Function__c}" id="libraryFunction">
+                                
+                            </apex:inputField>   
+                        </apex:column>                            
+                    </apex:pageBlockTable>
+                    <apex:commandButton action="{!addFunction}" value="{!$Label.GLOBAL_ACTION_ADD} {!$ObjectType.mployee__positionFunction__c.label}" reRender="functionList"/>
+                    <apex:commandButton action="{!removeFunction}" value="{!$Label.GLOBAL_ACTION_REMOVE} {!$ObjectType.mployee__positionFunction__c.label}" reRender="functionList" disabled="{!if(functionList.size < 1,true,false)}"/>
+                </apex:pageBlockSection>
+                
+
+                <!-- Education -->
+                <apex:pageBlockSection title="{!$ObjectType.mployee__positionEducation__c.labelPlural}" id="educationList" columns="1">
+                	<apex:pageBlockTable id="educationTable" value="{!educationList}" var="e">
+                    	<apex:column headerValue="{!$ObjectType.mployee__positionEducation__c.Fields.Name.Label}" >                                        
+                        	<apex:inputField value="{!e.Name}" />   
+                        </apex:column>
+                    </apex:pageBlockTable>
+                    <apex:commandButton action="{!addEducation}" value="{!$Label.GLOBAL_ACTION_ADD} {!$ObjectType.mployee__positionEducation__c.label}" reRender="educationList"/>
+                	<apex:commandButton action="{!removeEducation}" value="{!$Label.GLOBAL_ACTION_REMOVE} {!$ObjectType.mployee__positionEducation__c.label}" reRender="educationList" disabled="{!if(educationList.size < 1,true,false)}"/>
+				</apex:pageBlockSection>
+
+
+				<!-- Language -->
+				<apex:pageBlockSection title="{!$ObjectType.mployee__positionLanguage__c.labelPlural}" id="languageList" columns="1">
+                	<apex:pageBlockTable id="languageTable" value="{!languageList}" var="language">                		
+                        <apex:column rendered="false" headerValue="{!$ObjectType.mployee__positionLanguage__c.Fields.Name.Label}" >                                        
+                            <apex:inputField value="{!language.Name}" />
+                        </apex:column>
+                        <apex:column headerValue="{!$ObjectType.mployee__positionLanguage__c.Fields.mployee__languageCode__c.Label}" >                                        
+                            <apex:inputField value="{!language.mployee__languageCode__c}" />
+                        </apex:column>
+                        <apex:column headerValue="{!$ObjectType.mployee__positionLanguage__c.Fields.mployee__proficiency__c.Label}">
+                            <apex:inputField styleClass="input-small" value="{!language.mployee__proficiency__c}"/>
+                        </apex:column>                         
+                    </apex:pageBlockTable>
+                    <apex:commandButton action="{!addLanguage}" value="{!$Label.GLOBAL_ACTION_ADD} {!$ObjectType.mployee__positionLanguage__c.label}" reRender="languageList"/>
+                    <apex:commandButton action="{!removeLanguage}" value="{!$Label.GLOBAL_ACTION_REMOVE} {!$ObjectType.mployee__positionLanguage__c.label}" reRender="languageList" disabled="{!if(languageList.size < 1,true,false)}"/>
+                </apex:pageBlockSection>
+            </apex:outputpanel>
+            
+            </apex:pageBlock>
+		
+
+            <!-- Vacancy -->
+            <apex:pageBlock title="{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.Label}" mode="edit" rendered="{!renderMap['vacancyDetail']}">
+                <apex:pageBlockButtons >
+                    <apex:commandButton action="{!stepPosition}" title="Back to position" value="{!$Label.GLIB_HTML_BACK}"/>
+                    <apex:commandButton action="{!save}" value="{!$Label.GLOBAL_ACTION_SAVE}"/>
+                    <apex:commandButton action="{!cancel}" title="Cancel and go back to Account" value="{!$Label.GLOBAL_ACTION_CANCEL}"/>
+                </apex:pageBlockButtons>
+                                 
+                
+                <apex:pageBlockSection title="{!$ObjectType.Account.Label} & {!$ObjectType.Contact.Label}">
+                    <apex:outputField value="{!account.Name}"/>
+                    <apex:inputField value="{!vacancy.mployee__Contact__c}"/>                        
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Organisation_Position__c.Label}">
+                    <apex:outputField value="{!position.Name}"/>
+                    <apex:outputtext label="Skills" value="{!skillList.size}"/>
+                    <apex:outputtext label="Functions" value="{!functionList.size}"/>
+                    <apex:outputtext label="Languages" value="{!languageList.size}"/>
+                    <apex:outputtext label="Educations" value="{!educationList.size}"/>
+                    <apex:outputtext label="Industries" value="{!industryList.size}"/>   
+                                        
+                </apex:pageBlockSection>
+                
+                 <!-- Industry -->
+                <apex:pageBlockSection title="{!$ObjectType.mployee__positionIndustry__c.labelPlural}" id="summary_industryList" columns="1">
+                    <apex:pageBlockTable id="industryTable" value="{!industryList}" var="e">
+                        <apex:column value="{!e.mployee__Industry__c}" />
+                        <apex:column value="{!e.mployee__Position__c}" />
+                    </apex:pageBlockTable>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="position">
+                	<apex:outputField value="{!position.Id}"/>
+                	<apex:outputText value="{!positionId}"/>
+                	<apex:outputField value="{!position.Name}"/>
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.Label}">
+                    <apex:inputField value="{!vacancy.mployee__DateStart__c}"/> 
+                    <apex:inputField value="{!vacancy.mployee__hireByDate__c}"/>
+                    <apex:inputField value="{!position.mployee__SalaryMin__c}"/>
+                    <apex:inputField value="{!position.mployee__SalaryMax__c}"/>                                               
+                </apex:pageBlockSection>
+                
+                <apex:pageBlockSection columns="1" title="{!$ObjectType.mployee__MF_Organisation_Position__c.Fields.mployee__VacancyText__c.Label} {!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.Label}">
+                    <apex:inputField value="{!position.mployee__VacancyText__c}" style="width:200%;"/>                                                                
+                </apex:pageBlockSection>
+                
+            </apex:pageBlock>
+        </apex:form>
+</apex:page>

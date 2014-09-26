@@ -1,0 +1,57 @@
+<apex:component id="candidate-toolbox" layout="none">
+	
+	<apex:attribute name="profile" description="Site Profile" type="mployee.SiteProfile" required="false"/>
+	<apex:attribute name="config" description="Config Settings" type="mployee.SiteModConfig" required="false"/>
+	
+	
+	
+	<apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/font-awesome.min.css')}"/>	
+	<apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeSite,'assets/css/pages/candidateToolbox.css')}"/>
+	
+	
+	
+	<a name="toolbox"/>
+	
+	<apex:outputPanel styleClass="well" layout="block" id="layout-default" rendered="{!IF(config.params['layout'] =='default',true,false)}">	
+	
+	</apex:outputPanel>
+	
+	<!-- Template Unicorn -->
+	<apex:outputPanel layout="block" id="layout-unicorn" rendered="{!IF(config.params['layout'] =='unicorn',true,false)}">	
+		
+		<h3>
+			<apex:outputText value="{!$Label.MOD_CANDIDATE_TOOLBOX_TITLE}"/>
+			<span class="recommended-arrow">
+				<img src="https://static.licdn.com/scds/common/u/img/bg/bg_arw_drawn.png" width="31" height="45" alt="Voeg een van onderstaande onderdelen toe"/>
+			</span>
+		</h3>
+		
+		<ul class="list-group">
+			<apex:repeat value="{!profile.toolbox.recommendedList}" var="item">
+				<apex:outputLink styleClass="list-group-item {!item.styleClass}" value="{!$Site.Prefix}{!item.pageRef}">
+					<em/>					
+					<strong><apex:outputText value="{!item.label}"/></strong>
+					<span class="text-right"><i class="fa fa-plus"/></span>
+				</apex:outputLink>
+			</apex:repeat>
+			<!-- when using fontawesome -->
+			<apex:outputLink rendered="false" styleClass="list-group-item" value="{!$Page.mployee__SiteProfile}">
+				<span class="fa-stack fa-lg">
+					<i class="fa fa-square-o fa-stack-2x"></i>
+					<i class="fa fa-twitter fa-stack-1x"></i>					
+				</span>
+				<strong><apex:outputText value="LABEL_NAME"/></strong>
+				<i class="fa fa-plus text-right"/>
+			</apex:outputLink>
+		</ul>
+	</apex:outputPanel>	
+	
+	
+	<!-- Template Base -->
+	<apex:outputPanel layout="block" id="layout-base" rendered="{!IF(config.params['layout'] =='base',true,false)}">			
+	
+	</apex:outputPanel>
+	
+	
+	
+</apex:component>

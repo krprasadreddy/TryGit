@@ -1,0 +1,178 @@
+<apex:page controller="kognoz1.OutstandingBalanceCalcSetupController" tabStyle="Invoices_Configuration__tab" title="Outstanding Balance Calculation Setup">
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-json-2.2.js')}"></script> 
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+	<style type="text/css">
+		.ifsTableRows td{vertical-align:middle;}
+		.bcol1{width:40%;}
+		.bcol2{width:5%;text-align:right;}
+		.bcol3{width:5%;text-align:left;}
+		.bcol4{width:50%;}
+		.qbcol1{width:80%;}
+		.qbcol2{width:10%;text-align:right;}
+		.qbcol3{width:10%;text-align:left;}
+		body .bPageBlock .pbBody .labelCol
+		{
+			vertical-align:middle;
+			width:15%;
+		}
+		.data2Col{width:10%;}
+		.noteCol{width:75%;}
+	</style>
+	<script type="text/javascript" >
+		$(function(){
+			updateMappingsDisplay();
+		});
+
+		function updateMappingsDisplay()
+		{
+			if($("input[id$=autoCalc]").attr("checked"))
+			{
+				$("div[id$=mappingsPanel]").css("display","block");
+				$("span[id$=notePanel]").css("color","#222222");
+			}
+			else
+			{
+				$("div[id$=mappingsPanel]").css("display","none");
+				$("span[id$=notePanel]").css("color","#F8F8F8");
+			}
+						
+		}
+
+		function displayLoading()
+        {
+          if($("#statusMsgContainer").css("display")=="none")
+          {
+                  $("span[id=statusMsg]").html("Loading ...");
+                  $("#statusMsgContainer").css("display","block");
+          }
+        }
+       
+        function hideLoading()
+        {
+          $("#statusMsgContainer").css("display","none");
+        }
+
+        function changeViewSelection()
+        {
+              calculateView();
+        }               
+		
+	</script>
+
+	<apex:form >
+		<apex:outputPanel layout="block" style="clear:both;">
+			<br/>&nbsp;« &nbsp;
+			<apex:outputLink value="InvoicesConfigurationHome" style="color:#015BA7;text-decoration:none;">Back to Invoices Configuration page</apex:outputLink>
+		</apex:outputPanel>
+		<apex:sectionHeader subtitle="Outstanding Balance and Payment Status Calculation" title="Outstanding Balance and Payment Status Calculation Setup" help="{!ifsHelpUrl}" />
+
+         <apex:panelGrid columns="4" width="100%" columnClasses="bcol1, bcol2,bcol3,bcol4" style="margin-bottom:10px;margin-top:2px" styleClass="stage2Table">
+			  <apex:outputText value="" />
+			  <apex:commandButton value="Save" action="{!save}"/>
+			  <apex:commandButton value="Cancel" action="{!cancel}"/>
+			  <apex:outputText value="" />
+		 </apex:panelGrid>
+
+		<apex:outputPanel layout="block" style="width:100%;margin-bottom:5px">
+			Use the Outstanding Balance Calculation and Payment Status Setup to enable the automatic calculation of the invoices and accounts Outstanding
+			Balance, and the invoices Payment Status, when payments are recorded against the invoices. Depending on whether the sum of
+			all payments recorded against an invoice is lower, equal, or greater than the invoice Outstanding Balance, the invoice
+			Payment Status is automatically set to <strong>Underpaid</strong>, <strong>Paid</strong>, or <strong>Overpaid</strong> respectively.
+		</apex:outputPanel>
+
+		<apex:pageBlock title="Outstanding Balance and Payment Status Calculation" mode="detail">
+		    <apex:panelGrid columns="3" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, data2Col, noteCol">
+				<apex:outputText value="Enable Automatic Calculation" />
+				<apex:inputField value="{!invoicesConfiguration.kognoz1__Outstanding_Balance_Automatic_Calc__c}" id="autoCalc" onchange="updateMappingsDisplay();"/> 
+				<apex:outputPanel id="notePanel" style="width:80%;color:#F8F8F8;">
+					Note: The outstanding balance calculations rely on the following invoice Payment Status picklist values: "Not Paid", "Underpaid", and "Overpaid".
+					If these picklist values are modified the outstanding balance calculations may not be accurate.
+				</apex:outputPanel> 
+			</apex:panelGrid>
+		</apex:pageBlock>
+
+		<apex:outputPanel id="mappingsPanel" layout="block" style="margin-top:20px;display:none;">
+			<apex:outputPanel layout="block" style="width:100%;margin-bottom:5px">
+				Use the Invoice Templates Total Amount Mappings to map the Invoice Total Amount
+				to the merge field used in the template for that amount. Note that this mapping is required
+				to automatically calculate the invoices Outstanding Balance and, if a specific template is not
+				assigned a mapping merge field, the accounts and invoices Outstanding Balance and the invoices
+				Payment Status automatic calculations are skipped for invoices using that template.
+			</apex:outputPanel>
+	
+			<apex:pageBlock mode="maindetail" >
+				<div class="ifsPageBlock ifsSecondaryPalette" style="border-top:3px solid #6AACD8;-moz-border-radius-topleft:5px;-moz-border-radius-topright:5px;">
+				  <div class="ifsBody" style="min-height:40px;">
+	                <apex:panelGrid columns="3" width="100%" columnClasses="qbcol1, qbcol2,qbcol3" style="margin-bottom:3px;margin-top:2px" styleClass="stage2Table">
+	                     <apex:outputPanel style="margin-left:2px; font-weight:bold;font-family: Arial,Helvetica,sans-serif;font-size:1.15em"> Invoice Template Total Amount Mappings</apex:outputPanel>
+	                     <apex:outputPanel style="margin-left:2px; font-weight:bold;"> View:</apex:outputPanel>
+	                      <apex:selectList value="{!selectedViewOption}" size="1" onchange="changeViewSelection();">
+	                          <apex:selectOptions value="{!viewOptions}" />
+	                      </apex:selectList>
+	                 </apex:panelGrid>   
+	
+		            <div class="ifsthBack" style="width:100%;">
+		                <table id="imTableHeaders" style="table-layout:fixed;border-collapse:collapse;" cellspacing="0" cellpadding="3" width="100%">
+		                    <colgroup span="2">
+		                        <col width="90px"/> 
+		                        <col width="90px" />
+		                    </colgroup>
+		                    <tbody>
+		                        <tr>
+		                            <td class="ifsthBack" style="vertical-align:middle;">Invoice Template</td>
+		                            <td class="ifsthBack" style="vertical-align:middle;">Invoice Total Amount Merge Field</td>
+		                        </tr>
+		                    </tbody>    
+		                </table>
+		            </div>
+	
+		            <apex:outputPanel id="templatesPanel" layout="block">
+						<apex:outputPanel rendered="{!noOfRecords==0}" layout="block" style="margin-top:10px">	            
+							<apex:outputText value="No records to display" id="noRecsPanel" style="font: 11px Arial,Helvetica,sans-serif; color:gray; padding: 10px;" />
+						</apex:outputPanel>
+						<apex:dataTable value="{!templateInvoiceTotalMappings}" var="templateInvoiceTotalMapping"  rendered="{!noOfRecords>0}" cellspacing="0" cellpadding="3"  width="100%"   columnsWidth="90px,90px"  styleClass="ifsIMTable"  style="table-layout:fixed;border-collapse:collapse;background-color:white;" rowClasses="ifsTableRows" > 
+							<apex:column >
+								<apex:outputText value="{!templateInvoiceTotalMapping.template.Name}" />
+							</apex:column>
+							<apex:column >
+		                      <apex:selectList value="{!templateInvoiceTotalMapping.selectedField}" size="1">
+		                          <apex:selectOptions value="{!templateInvoiceTotalMapping.availableFieldOptions}" />
+		                      </apex:selectList>
+							</apex:column>
+						</apex:dataTable>
+					</apex:outputPanel>
+	
+				</div>
+			  </div>
+			</apex:pageBlock>
+		</apex:outputPanel>
+        <apex:actionStatus onstart="displayLoading();" onstop="hideLoading();" id="loadingStatus"/>
+        <apex:actionFunction action="{!calculateView}" name="calculateView" status="loadingStatus" reRender="templatesPanel"/> 		
+
+       <!-- ###########################################
+       
+               ACTION STATUS
+       
+        ###############################################-->
+       <div id="statusMsgContainer" class="statusPopup" >
+		<div  class="popupStatus1" >
+		</div>
+           <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+           	<div style="text-align:center;margin-top:15px;" > 
+           		<table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+           			<tr>
+		                <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+		                <td><span id="statusMsg" style="z-index:153;"></span></td>
+                	</tr>
+                </table>
+               </div>
+           </div>
+       </div>
+
+	</apex:form>
+
+
+</apex:page>

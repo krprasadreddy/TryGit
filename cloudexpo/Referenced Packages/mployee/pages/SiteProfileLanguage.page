@@ -1,0 +1,76 @@
+<apex:page id="profileLanguage" 
+           docType="html-5.0" 
+           controller="mployee.SiteProfileLanguageController" 
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"            
+>
+
+	<apex:variable var="config" value="{!siteSettings.modules['mod_candidateLanguages']}" />
+	
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+        <apex:define name="body">
+        	<apex:messages />
+        	<div class="container">
+                <div class="row well">
+                	<apex:form styleClass="form-horizontal" id="adminform"> 
+                		
+                		<!-- Side Bar -->						
+						<ul class="nav {!siteSettings.navStyleClass} nav-stacked col-md-4 col-md-push-8">
+							<li class="nav-header"><apex:outputText styleClass="hidden-phone" value="{!$Label.GLIB_HTML_SELECT_ACTION}"/></li>
+							<li>
+                        		<apex:commandLink action="{!importItems}">
+                        			<apex:param name="service" assignto="{!service}" value="linkedin" />
+                        			<span class="fa fa-cloud-download"/>&nbsp;
+                        			<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_IMPORT_FROM}"><apex:param value="LinkedIn" /></apex:outputText>  
+                        		</apex:commandLink>
+                        	</li> 
+							<li><apex:commandLink action="{!saveNew}"><span class="fa fa-plus"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_NEW}"/></apex:commandLink></li>
+							<li><apex:commandLink action="{!saveClose}"><span class="fa fa-check"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_CLOSE}"/></apex:commandLink></li>                        
+                        	<li><apex:commandLink action="{!remove}"><span class="fa fa-trash"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_DELETE}"/></apex:commandLink></li>                        
+                        	<li><apex:commandLink action="{!cancel}"><span class="fa fa-remove"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_CANCEL}"/></apex:commandLink></li>
+						</ul>
+						
+	                    <div class="col-md-8 col-md-pull-4">
+	                    	<apex:dynamicComponent componentValue="{!pageHeader}" />
+						
+							<fieldset>
+								<legend>
+	                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id == null,true,false)}">	
+	                    				<apex:outputText value="{!$Label.GLOBAL_ACTION_NEW_OBJECT}">
+	                    					<apex:param value="{!$ObjectType.candidateLanguage__c.Label}"/> 
+	                    				</apex:outputText>
+	                    			</apex:outputPanel>
+	                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id != null,true,false)}">
+	                    				<apex:outputText value="{!item.Name}"/>	                    					                   
+	                    			</apex:outputPanel>	                    			 			
+	                    		</legend>
+	                    		
+	                    		
+	                    		<div class="form-group">								    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidateLanguage__c.Fields.Name.label}" for="name"/>
+								    <div class="col-sm-10">
+										<apex:inputField value="{!item.Name}" id="name" styleClass="form-control required"/>
+								    </div>
+							  	</div>
+							  	<apex:outputpanel styleClass="form-group" rendered="{!config.params['showProficiency']}" layout="block">							  	
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidateLanguage__c.Fields.proficiency__c.label}" for="mployee__proficiency__c"/>
+								    <div class="col-sm-10">										
+										<apex:inputField value="{!item.proficiency__c}" id="mployee__proficiency__c" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>							  	
+							  									
+	                    	</fieldset>
+	                    	
+	                    	
+						</div>
+						
+						
+					</apex:form>
+				</div>
+			</div>
+		</apex:define>
+	</apex:composition>
+</apex:page>

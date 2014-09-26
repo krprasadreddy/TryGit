@@ -1,0 +1,33 @@
+<apex:page standardController="kognoz1__Invoices_Configuration__c"  tabStyle="Invoices_Configuration__tab" title="Invoices Configuration: Home">
+        <apex:sectionHeader subtitle="Home" title="Invoices Configuration" help="https://userguide.invoicesforsalesforce.com/UserGuide.html"/> 
+			<p style="margin-bottom:-15px">
+				Use the Invoices Configuration sections below to manage general aspects of the billing process that apply across all billing scenarios.
+			</p>
+			<apex:pageBlock title="" mode="maindetail">
+
+				<apex:pageBlockSection title="Global Invoice Numbers" columns="1" collapsible="false">
+			 		<apex:pageBlockSectionItem dataStyle="background-color:#FFFFFF;">
+				 		<apex:outputLink value="GlobalInvoiceNumberHome" >Manage Global Invoice Numbers </apex:outputLink>
+				 	</apex:pageBlockSectionItem>
+				</apex:pageBlockSection>
+
+				<apex:pageBlockSection title="Sales Terms" columns="1" collapsible="false">
+			 		<apex:pageBlockSectionItem dataStyle="background-color:#FFFFFF;">
+				 		<apex:outputLink value="SalesTermsHome" >Manage Sales Terms </apex:outputLink>
+				 	</apex:pageBlockSectionItem>
+				</apex:pageBlockSection>
+
+				<apex:pageBlockSection title="Outstanding Balance and Payment Status Calculation" columns="1" collapsible="false">
+			 		<apex:pageBlockSectionItem dataStyle="background-color:#FFFFFF;">
+				 	<apex:outputLink value="OutstandingBalanceCalcSetup" >Setup Outstanding Balance and Payment Status Calculation</apex:outputLink> 
+				 	</apex:pageBlockSectionItem>
+				</apex:pageBlockSection>
+
+				<apex:pageBlockSection title="Overdue Invoices Calculation" columns="1" collapsible="false">
+			 		<apex:pageBlockSectionItem dataStyle="background-color:#FFFFFF;">
+				 	<apex:outputLink value="OverdueInvoicesCalcSetup" >Setup Overdue Invoices Calculation</apex:outputLink> 
+				 	</apex:pageBlockSectionItem>
+				</apex:pageBlockSection>
+
+			</apex:pageBlock>
+</apex:page>

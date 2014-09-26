@@ -1,0 +1,10 @@
+<apex:component controller="kognoz1.RollupSummaryEditorController">
+    <apex:outputPanel layout="block">
+        <apex:panelGrid columns="2" cellspacing="2" cellpadding="0" border="0" style="margin-top:20px;margin-left:70px">
+            <apex:selectList multiselect="false" size="1" id="stRollupFieldOptions">
+                <apex:selectOptions value="{!rollupSumFieldOptions}" />
+            </apex:selectList>
+            <input type="button" onclick="insertSTRollupField();" value="Insert" />
+        </apex:panelGrid>
+    </apex:outputPanel>
+</apex:component>

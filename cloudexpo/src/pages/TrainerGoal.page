@@ -1,0 +1,136 @@
+<apex:page standardController="Contact" extensions="TrainerGoalController">
+	<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"/> 
+	<apex:includeScript value="https://cdn.datatables.net/1.10.0/js/jquery.dataTables.min.js"/>
+    <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"/> 
+    <apex:stylesheet value="https://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"/>
+    <apex:stylesheet value="https://cdn.datatables.net/1.10.0/css/jquery.dataTables.css"/>
+    
+    <script type="text/javascript">
+    	
+    	$j = jQuery.noConflict();
+    	
+    	$j(document).ready(function(){
+    	
+    		$j("input[id$='example']").dataTable({
+		        "order": [[ 3, "desc" ]]
+		    } );
+    		
+    		$j("input[id$='txtDate']").datepicker({
+		        altField: "#alternate",
+		        altFormat: "MM yy"
+		    });
+		
+		    $j("input[id$='txtDate']").datepicker('setDate', 'today');
+		
+		    $j("input[id$='btn']").click(function () {
+		        $j("input[id$='txtDate']").datepicker("setDate", "today");
+		    });
+		
+		    $j("input[id$='prev']").click(function () {
+		        var currentDate = $j("#txtDate").datepicker("getDate");
+		        $j("input[id$='txtDate']").datepicker().datepicker("setDate", "currentDate-1m");
+		    });
+		
+		    $j("input[id$='next']").click(function () {
+		        var currentDate = $j("#txtDate").datepicker("getDate");
+		        $j("input[id$='txtDate']").datepicker().datepicker("setDate", "currentDate+1m");
+		    });	
+		    
+		    $j("input[id$='example']").dataTable( {
+		        "scrollY":        "200px",
+		        "scrollCollapse": true,
+		        "paging":         false
+		    } );
+    	
+    	});	
+    
+    </script>
+    <apex:form >
+        <apex:pageMessages id="pgMsg"/>
+     <apex:pageBlock title="Trainer Goals"  id="clubpb" mode="detail"> 
+     
+     
+      <apex:pageBlockButtons style="float:right">
+             <apex:commandButton value="RESET ALL" action="{!resetAll}" reRender="pb,pgMsg"/>
+             <apex:commandButton value="SUBMIT ALL" action="{!submitAll}" reRender="pb,pgMsg"/>
+     </apex:pageBlockButtons>
+     
+     <apex:pageBlockSection id="pbs1"   collapsible="false">
+                  <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="Trainer Goals" for="TG"/> 
+                     <apex:panelGrid columns="2">
+                         <apex:selectList style="margin-top:-5px;" id="TG" value="{!selectClub}" multiselect="false" size="1">
+                            <apex:selectOptions value="{!listofClubs}"/>
+                             <apex:actionSupport event="onchange" action="{!processFilter}" rerender="pb,pgMsg" status="fetchStatus"/>
+                         </apex:selectList>
+                     </apex:panelGrid>
+                 </apex:pageBlockSectionItem>
+     </apex:pageBlockSection> 
+    
+     
+     
+     <apex:actionRegion id="region">
+	     <apex:panelGrid columns="6" id="theGrid">
+	        <input id="alternate" size="8"/>	        
+	        <apex:commandButton value="<" id="prev" onclick="return false;"/>
+	        <apex:inputText id="txtDate" size="7"/>
+	        <apex:commandButton value=">" id="next" onclick="return false;"/>
+	        <apex:commandButton value="Current" id="btn" onclick="return false;"/>
+	    </apex:panelGrid>
+	    <apex:actionSupport event="onclick" rerender="region" status="status"/>
+	 </apex:actionRegion>   
+     
+      <apex:pageBlockSection id="pbs2"  columns="7" collapsible="false">
+                  <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="Filter Tier" for="FT"/> 
+                     <apex:panelGrid columns="2">
+                         <apex:selectList style="margin-top:-5px;" id="FT" value="{!selectedTier}" multiselect="false" size="1">
+                            <apex:selectOptions value="{!listofTrainerTiers}"/>
+                             <apex:actionSupport event="onchange" action="{!processFilter}" rerender="pb,pgMsg" status="fetchStatus"/>
+                         </apex:selectList>
+                     </apex:panelGrid>
+                 
+                 </apex:pageBlockSectionItem>	
+           
+                 <apex:pageBlockSectionItem >
+                      <apex:outputLabel value="PROJ/ACTUAL"/> 
+                 </apex:pageBlockSectionItem>
+           			
+           		 <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="LM GOAL"/> 
+                 </apex:pageBlockSectionItem>
+          			
+          		 <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="GOAL"/> 
+                 </apex:pageBlockSectionItem>
+     </apex:pageBlockSection> 
+     
+     
+       <apex:actionfunction name="processSubmit" action="{!processSubmitSpecificTrainerGoal}" rerender="pb,pgMsg"> 
+           <apex:param name="trainerIdparam" assignTo="{!trainerIdparaminController}" value=""></apex:param>
+       </apex:actionfunction>  
+      <apex:outputpanel id="pb">   
+       <apex:pageBlockTable value="{!listOfTrainerGoals}" var="goal" id="example" style="display" styleClass="display">                                    
+            <apex:column headerValue="Trainer" ><apex:outputLink value="{!goal.trainerURL}" target="_blank">{!goal.trainerName}</apex:outputLink></apex:column>
+            <apex:column headerValue="Tier">{!goal.tier}</apex:column>
+            <apex:column headerValue="{!mapofMonthNumberandName[currentmonth]} Projected/Actual">{!goal.projectVsActual}</apex:column>
+            <apex:column headerValue="{!mapofMonthNumberandName[currentmonth-1]} Goal">{!goal.previousmonthGoal}</apex:column>
+            <apex:column headerValue="{!mapofMonthNumberandName[currentmonth]} Goal"><apex:inputText value="{!goal.currentmonthGoal}"></apex:inputText></apex:column>
+          <apex:column headerValue="Action"><apex:commandbutton value="submit" onclick="processSubmit('{!goal.userId}')" reRender="pb"/></apex:column>
+        </apex:pageBlockTable>
+        
+         <apex:outputPanel layout="block" styleClass="pSearchShowMore" rendered="{!listOfTrainerGoals.size > 0}">      
+                   <apex:outputText >{!(pageNumber * size)+1-size}-{!IF((pageNumber * size)>noOfRecords, noOfRecords,(pageNumber * size))} of {!noOfRecords}</apex:outputText>                                    
+                    <apex:commandButton status="fetchStatus" reRender="pb,pgMsg" value="|<First" action="{!first}" disabled="{!!hasPrevious}" title="First Page"/>
+                    <apex:commandButton status="fetchStatus" reRender="pb,pgMsg" value="<Previous" action="{!previous}" disabled="{!!hasPrevious}" title="Previous Page"/>
+                    <apex:outputText >{!(pageNumber * size)+1-size}-{!IF((pageNumber * size)>noOfRecords, noOfRecords,(pageNumber * size))} of {!noOfRecords}</apex:outputText>                
+                    <apex:commandButton status="fetchStatus" reRender="pb,pgMsg" value="Next>" action="{!next}" disabled="{!!hasNext}" title="Next Page"/>
+                    <apex:commandButton status="fetchStatus" reRender="pb,pgMsg" value="Last>|" action="{!last}" disabled="{!!hasNext}" title="Last Page"/>
+                    <apex:outputPanel style="color:#4AA02C;font-weight:bold">
+                        <apex:actionStatus id="fetchStatus" startText="Fetching..." stopText=""/>
+                    </apex:outputPanel>
+         </apex:outputPanel> 
+     </apex:outputpanel> 
+    </apex:pageBlock>      
+    </apex:form> 
+</apex:page>

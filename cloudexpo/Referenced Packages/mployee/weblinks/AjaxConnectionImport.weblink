@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomPageWebLink xmlns="http://soap.sforce.com/2006/04/metadata">
+    <availability>online</availability>
+    <description>Import AJAX toolkit. Having an OnClick javascript button will automatically include the AJAX toolkit and handle session IDs. Then we can issue queries against database from other home page components.</description>
+    <displayType>link</displayType>
+    <linkType>javascript</linkType>
+    <masterLabel>AjaxConnectionImport</masterLabel>
+    <openType>onClickJavaScript</openType>
+    <protected>false</protected>
+    <url>{!REQUIRESCRIPT(&quot;/soap/ajax/24.0/connection.js&quot;)}</url>
+</CustomPageWebLink>

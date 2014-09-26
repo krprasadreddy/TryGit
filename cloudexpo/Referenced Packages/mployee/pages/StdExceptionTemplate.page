@@ -1,0 +1,41 @@
+<apex:page id="StdExceptionTemplate" 
+           docType="html-5.0"
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false" 
+           language="nl-NL"
+           title="{!$Label.site.site_under_construction}"
+>
+<html>
+    <head>
+        <meta charset="utf-8"/>        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <!-- Bootstrap core CSS -->
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/bootstrap.min.css')}"/>
+        <!-- Bootstrap theme -->
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/bootstrap-responsive.min.css')}"/>
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600" rel="stylesheet"/>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/font-awesome.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/ui-lightness/jquery-ui-1.10.0.custom.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/base-admin-3.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/base-admin-3-responsive.css')}"/> 
+    </head>
+    
+    <body>
+    	<div class="container">				
+			<div class="row">					
+				<div class="col-md-12">						
+					<div class="error-container">
+						<apex:insert name="icon"/>
+       					<apex:insert name="error"/> 
+					</div>
+				</div>
+			</div>
+		</div>   
+    </body>
+</html> 
+</apex:page>

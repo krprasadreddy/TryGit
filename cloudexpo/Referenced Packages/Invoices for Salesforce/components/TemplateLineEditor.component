@@ -1,0 +1,284 @@
+<apex:component >
+
+	<script type="text/javascript" >
+	
+	$(function(){
+	
+		$("#lineEditorCancelBtn").click(function(event) {
+
+			$("#lineEditor").dialog("close");
+		});
+	
+		$("#lineEditorDoneBtn").click(function(event) {
+			var editorMode = $("#lineEditor").dialog("option","dialogMode");
+			var lineType = $("#lineEditor").dialog("option","lineType");
+			if(editorMode=="createNewItem")
+			{
+				lineItemsCounter+=1;
+				var topMargin = parseInt($("#mainContainer").css("margin-top").replace("px",""));
+				var leftMargin = parseInt($("#mainContainer").css("margin-left").replace("px",""));
+				var topPos = $("#mainContainer").position().top + topMargin;
+				var leftPos = $("#mainContainer").position().left + leftMargin;
+				var containerWidth;
+				var containerHeight;
+				var lineWidth = $("#lineWidthSelect").val(); 
+				if(lineType=="HorizontalLine")
+				{
+					containerWidth = "120px";
+					containerHeight = lineWidth;
+				}
+				else
+				{
+					containerWidth = lineWidth;
+					containerHeight = "120px";
+				}
+				var lineColor = $("input[id=lineColor]").val();
+				var lineContainerStyle = "cursor:pointer;height:"+containerHeight+";width:"+containerWidth+";";  
+				lineContainerStyle = 'position: absolute; top: '+topPos+'px; left:'+leftPos+'px;'+lineContainerStyle+'z-index:'+lineItemsCounter+';background-color:'+lineColor+';border-width:0px';
+				$("#mainContainer").append('<div id="lineElement'+lineItemsCounter+'"  style="'+lineContainerStyle+'" lineType="'+lineType+'" ></div>');
+				var lineContainerId = 'lineElement'+lineItemsCounter;
+				var lineContainerSelector = ("#"+lineContainerId);
+
+				$(lineContainerSelector).click(function() {
+					$('.ui-selected').each(function(index){
+						$(this).removeClass('ui-selected');
+						$(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+						$(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+						$(this).children("div[id=sizeDiv]").css("display","none");
+					});
+					$(this).addClass('ui-selected');
+					$(this).children('.imgsDiv').children('img').addClass('showEditBt');
+					$(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+					var w = parseInt($(this).css("width").replace("px","")).toFixed();
+					var h = parseInt($(this).css("height").replace("px","")).toFixed();
+					$(this).children("div[id=sizeDiv]").html("W:"+w+" H:"+h);
+					$(this).children("div[id=sizeDiv]").css("display","block");
+					var zindex = calculateMaxZIndex();
+					$(this).css("z-index",zindex);
+				});
+				var zindex = calculateMaxZIndex();
+				$(lineContainerSelector).css("z-index",zindex);
+						
+				$(lineContainerSelector).addClass("lineClass");
+				var imgsrc = $("#deleteEditorItemImg").attr("src");
+				var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+				var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+				$(lineContainerSelector).append(imgNode);
+
+				var sizeNode = '<div id="sizeDiv" style="position:absolute;top:-16px;left:0px;width:70px; height:15px;background-color:#FFFFFF;color:red;font-size:9px;font-weight:bold;display:none" />';
+				$(lineContainerSelector).append(sizeNode);
+								
+				$(lineContainerSelector).draggable({
+					containment: 'parent',
+					grid: [1, 1], 
+					stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable],div[id^=lineElement]" 
+				});
+				var lineWidthNumber = parseInt($.trim(lineWidth.replace("px","")));
+
+				if(lineType=="HorizontalLine")
+				{
+					$(lineContainerSelector).resizable({
+						grid: [1,1], 
+						handles:'e,w',
+						minHeight: lineWidthNumber,
+						maxHeight: lineWidthNumber,
+						maxWidth: parseFloat($("#mainContainer").width()),
+						resize:function(event,ui){
+							$(this).children("div[id=sizeDiv]").html("W:"+ui.size.width.toFixed()+" H:"+ui.size.height.toFixed());
+							$(this).children("div[id=sizeDiv]").css("display","block");
+						}
+					});
+					var resizeNode = '<div id="resizeDiv" style="position:absolute;top:-16px;left:0px;width:90px; height:15px;background-color:#DBDBDB;color:red;font-size:9px;font-weight:bold;display:none" > W:<input id="width"type"text" size="3" style="font-size:0.85em;color:red;"/>&nbsp;<a id="doneResize" style="color:red;">Done</a></div>';
+					$(lineContainerSelector).append(resizeNode);
+					$(lineContainerSelector).children("div[id=sizeDiv]").click(function(){
+						$(this).css("display","none");
+						var w = $(this).parent("div").width().toFixed();
+						$(this).siblings("div[id=resizeDiv]").children("input[id=width]").val(w);
+						$(this).siblings("div[id=resizeDiv]").css("display","block");									
+					});
+					$(lineContainerSelector).children("div[id=resizeDiv]").children("a[id=doneResize]").click(function(){
+						$(this).parent("div[id=resizeDiv]").css("display","none");
+						var w = $(this).siblings("input[id=width]").val();
+						$(this).parent("div[id=resizeDiv]").parent().width(w);
+						$(this).parent("div[id=resizeDiv]").siblings("div[id=sizeDiv]").css("display","block");									
+					});
+				}
+				else
+				{
+					$(lineContainerSelector).resizable({
+						grid: [1,1], 
+						handles:'n,s',
+						minWidth: lineWidthNumber,
+						maxwidth: lineWidthNumber,
+						maxHeight: parseFloat($("#mainContainer").height()),
+						resize:function(event,ui){
+							$(this).children("div[id=sizeDiv]").html("W:"+ui.size.width.toFixed()+" H:"+ui.size.height.toFixed());
+							$(this).children("div[id=sizeDiv]").css("display","block");
+						}
+					});
+					var resizeNode = '<div id="resizeDiv" style="position:absolute;top:-16px;left:0px;width:90px; height:15px;background-color:#DBDBDB;color:red;font-size:9px;font-weight:bold;display:none" > H:<input id="height"type"text" size="3" style="font-size:0.85em;color:red;"/>&nbsp;<a id="doneResize" style="color:red;">Done</a></div>';
+					$(lineContainerSelector).append(resizeNode);
+					$(lineContainerSelector).children("div[id=sizeDiv]").click(function(){
+						$(this).css("display","none");
+						var h = $(this).parent("div").height().toFixed();
+						$(this).siblings("div[id=resizeDiv]").children("input[id=height]").val(h);
+						$(this).siblings("div[id=resizeDiv]").css("display","block");									
+					});
+					$(lineContainerSelector).children("div[id=resizeDiv]").children("a[id=doneResize]").click(function(){
+						$(this).parent("div[id=resizeDiv]").css("display","none");
+						var h = $(this).siblings("input[id=height]").val();
+						$(this).parent("div[id=resizeDiv]").parent().height(h);
+						$(this).parent("div[id=resizeDiv]").siblings("div[id=sizeDiv]").css("display","block");									
+					});
+				}
+				
+				$(lineContainerSelector).dblclick(function(){
+					$("input[id=lineColor]").val(lineColor);	
+					$("select[id=lineWidthSelect]" ).val(lineWidth);
+					$("#lineEditor").dialog("option","dialogMode","editExistingItem");
+					$("#lineEditor").dialog("option","selectorId",$(this).attr("id"));
+					$("#lineEditor").dialog("option","lineType",lineType);
+					$("#lineEditor").dialog("open");
+				});
+
+				$(lineContainerSelector).addClass("ui-selected");
+				$(lineContainerSelector).children('.imgsDiv').children('img').addClass('showEditBt');
+				$(lineContainerSelector).children('.imgsDiv').children('img').removeClass('hideEditBt');
+				
+				$("#lineWidthSelect").css("display","none");
+				$("#lineEditor").dialog("close");
+				
+			}
+			else
+			{
+				var selectorId = $("#lineEditor").dialog("option","selectorId");
+				var lineType = $("#lineEditor").dialog("option","lineType");
+				var lineSelector = "#"+selectorId;
+				
+				var lineWidth = $("#lineWidthSelect").val(); 
+				var lineColor = $("input[id=lineColor]").val();
+				if(lineType=="HorizontalLine")
+				{
+					var currentWidth = $(lineSelector).width(); 
+					$(lineSelector).height(lineWidth);
+					$(lineSelector).width(currentWidth);
+				}
+				else
+				{
+					var currentHeight = $(lineSelector).height(); 
+					$(lineSelector).width(lineWidth);
+					$(lineSelector).height(currentHeight); 
+				}
+				$(lineSelector).css("background-color",lineColor);
+				
+				$(lineSelector).unbind("dblclick");
+				$(lineSelector).dblclick(function(){
+					$("input[id=lineColor]").val(lineColor);	
+					$("select[id=lineWidthSelect]" ).val(lineWidth);
+					$("#lineEditor").dialog("option","dialogMode","editExistingItem");
+					$("#lineEditor").dialog("option","selectorId",$(this).attr("id"));
+					$("#lineEditor").dialog("option","lineType",lineType);
+					$("#lineEditor").dialog("open");
+				});
+				
+			
+				$("#lineWidthSelect").css("display","none");
+				$("#lineEditor").dialog("close");
+			}
+		});
+
+		$("img[id=lineColorIcon]").ColorPicker({
+			onSubmit: function(hsb, hex, rgb, colorPckr) {
+				var hexColor = '#'+hex+'';
+				$("input[id=lineColor]").val(hexColor);
+				$(colorPckr).ColorPickerHide();
+			},
+			onBeforeShow: function (colorPckr) {
+			
+				var linecolor = $("input[id=lineColor]").val();
+				if(linecolor.charAt(0)=="#")
+					linecolor = $.trim(linecolor.replace("#",""));
+				else
+					linecolor = $.trim(RGBtoHEX(linecolor).replace("#",""));
+				$(this).ColorPickerSetColor(linecolor);
+
+			},
+		});
+
+		$("#lineWidthIcon").live("click",function(){
+			if($("#lineWidthSelect").css("display")=="block")
+			{
+				$("#lineWidthSelect").css("display","none");
+			}
+			else
+			{			
+				$("#lineWidthSelect").css("display","block");
+			}
+		});
+		
+		$("#lineWidthSelect").live("click",function(){
+			$(this).css("display","none");
+		});
+	
+	});
+
+	function initNewLineProperties()
+	{
+		$("input[id=lineColor]").val("#000000");	
+		$("select[id=lineWidthSelect] option[value=1px]" ).attr("selected","selected");
+		$("#lineWidthSelect").css("display","none");
+	}	
+	
+	</script>
+
+	<div id="lineEditor" style="background-color:white; display: none;">
+		<apex:form >
+			<div style="float:right;padding-bottom:5px">
+				<input id="lineEditorCancelBtn" type="button" value="Cancel"/>
+				<input id="lineEditorDoneBtn" type="button" value="Done"/>
+			</div>
+			
+			<div>
+				<span style="font-size:0.93em;font-weight: normal;display:block;clear:both;border-top:solid thin;padding-top:5px">1. Select the line color and width.</span>
+				<br /><br />
+				<div style="position:relative;width:100%">	
+					<div style="position:absolute;left:30%;width:40%">		
+					    <table style="width:100%">
+					    	<tr style="text-align:left:">
+						    	<td style="width:60%">
+						    		<span style="font-weight: normal; font-family: Verdana,Arial,sans-serif; font-size: 12px; width:200px"> Line color</span>
+						    	</td>
+						    	<td style="width:40%">
+	 								<img alt="" src="{!URLFOR($Resource.invoicesforsalesforce, 'images/color_icon.gif')}" style="display:block;width: 20px; height: 20px; border-width: 0px;" id="lineColorIcon" title="Line Color"/>  
+								</td>
+							</tr>
+							<tr style="text-align:left:">
+						    	<td style="width:60%">
+						    		<span style="font-weight: normal; font-family: Verdana,Arial,sans-serif; font-size: 12px; width:200px"> Line width</span>
+						    	</td>
+						    	<td style="width:40%">
+									<input type="button" id="lineWidthIcon" alt="Font Size" 
+								  		style="background-image: url('{!URLFOR($Resource.invoicesforsalesforce, 'images/linewidth.gif')}'); background-color: transparent; background-repeat: no-repeat; 
+								  		width: 20px; height: 20px; border-width: 0px;" title="Line Width"/>
+									<select id="lineWidthSelect" size="4" style="position:absolute;display:none">
+							  			<option value="1px">1</option>
+							  			<option value="2px">2</option>
+										<option value="3px">3</option>
+										<option value="4px">4</option>
+										<option value="5px">5</option>
+										<option value="6px">6</option>
+										<option value="7px">7</option>
+									</select>
+	
+								</td>
+							</tr>
+						</table>	
+					</div>
+				</div>
+			</div>
+		<input id="lineColor" style="display:none"/>
+		</apex:form>
+	</div>
+
+
+</apex:component>

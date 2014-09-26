@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <columns>
+        <field>MF_EmployeeFile__c$Name</field>
+    </columns>
+    <columns>
+        <field>MF_EmployeeFile__c$EmployedSince__c</field>
+    </columns>
+    <columns>
+        <field>MF_EmployeeFile__c.EmployeeJobs__r$HoursWeek__c</field>
+    </columns>
+    <columns>
+        <field>MF_EmployeeFile__c$State__c</field>
+    </columns>
+    <columns>
+        <field>MF_EmployeeFile__c$ExitReason__c</field>
+    </columns>
+    <columns>
+        <field>MF_EmployeeFile__c$ExitReasonDesc__c</field>
+    </columns>
+    <columns>
+        <field>MF_EmployeeFile__c$ReEngage__c</field>
+    </columns>
+    <description>Exit List Employees</description>
+    <filter>
+        <criteriaItems>
+            <column>MF_EmployeeFile__c$State__c</column>
+            <operator>equals</operator>
+            <value>not-employed</value>
+        </criteriaItems>
+    </filter>
+    <format>Matrix</format>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>MF_EmployeeFile__c.EmployeeJobs__r$Organisation_Position__c.Organization__c</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <groupingsDown>
+        <dateGranularity>Day</dateGranularity>
+        <field>MF_EmployeeFile__c$Seniority__c</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <name>Exit Employees</name>
+    <params>
+        <name>co</name>
+        <value>1</value>
+    </params>
+    <reportType>EmployeesJobs__c</reportType>
+    <scope>organization</scope>
+    <showDetails>true</showDetails>
+    <timeFrameFilter>
+        <dateColumn>MF_EmployeeFile__c$ExitDate__c</dateColumn>
+        <interval>INTERVAL_CURY</interval>
+    </timeFrameFilter>
+</Report>

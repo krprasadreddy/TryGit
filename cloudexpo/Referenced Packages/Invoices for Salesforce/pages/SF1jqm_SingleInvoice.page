@@ -1,0 +1,1588 @@
+<apex:page standardController="Opportunity" extensions="kognoz1.SF1_SingleInvoiceController" docType="html-5.0" standardStylesheets="false" showheader="false" sidebar="false">
+      
+ <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+ <!-- jquery mobile 1.4.2 style sheets -->
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1,'css/jquery.mobile-1.4.2.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1,'css/jquery.mobile-1.4.2.min.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1,'css/jquery.mobile.external-png-1.4.2.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1,'css/jquery.mobile.icons-1.4.2.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1,'css/jquery.mobile.inline-png-1.4.2.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1,'css/jquery.mobile.inline-svg-1.4.2.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1,'css/jquery.mobile.structure-1.4.2.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1,'css/jquery.mobile.theme-1.4.2.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1, 'css/jquery-ui-1.10.4.custom.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.kognoz1__invoicesforsalesforce1, 'css/jquery.mobile.datepicker.css')}"/>
+<!-- publisher -->  
+<script type="text/javascript" src="/canvas/sdk/js/publisher.js"></script>
+<!-- jquery  -->
+<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce1,'js/jquery-1.11.0.min.js')}"></script>
+<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce1,'js/jquery-ui-1.10.4.custom.js')}"></script>
+<!-- jquery mobile 1.4.2 js -->
+<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce1,'js/jquery.mobile-1.4.2.js')}"></script>
+<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce1,'js/jquery.mobile.datepicker.js')}"></script>
+<!-- jquery validator js -->
+<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce1,'js/jquery.validate.js')}"></script>
+
+<style type="text/css">
+
+	.ifs1_section{
+		margin-bottom: 20px;
+	}
+	section div.ifs1_section_label{
+		background-color:#2a94d6; 
+		padding-top:10px;
+		padding-left:10px;
+		margin-bottom:15px;
+		height:30px;
+		color:#ffffff;
+	}
+	.custom-corners .ui-bar {
+	  -webkit-border-top-left-radius: inherit;
+	  border-top-left-radius: inherit;
+	  -webkit-border-top-right-radius: inherit;
+	  border-top-right-radius: inherit;
+	  background-color:#2a93d5;
+	  color:#ffffff;
+	}
+	.custom-corners .ui-body {
+	  border-top-width: 0;
+	  -webkit-border-bottom-left-radius: inherit;
+	  border-bottom-left-radius: inherit;
+	  -webkit-border-bottom-right-radius: inherit;
+	  border-bottom-right-radius: inherit;
+	}
+
+	label.error {
+		color: red;
+		font-size: 13px;
+		font-weight: normal;
+		line-height: 0.5;
+		margin-top: 0.5em;
+		width: 100%;
+		float: none;
+	    display:block; /*to show error message in new line*/
+	}
+	 
+	@media screen and (orientation: portrait){
+		label.error { margin-left: 0; display: block; }
+	}
+	 
+	@media screen and (orientation: landscape){
+		label.error { display: inline-block; margin-left: 22%; }
+	}
+	 
+	em { color: red; font-weight: bold; padding-right: .25em; }
+
+
+	div#statusPanel .ui-bar 
+	{
+		background-color: #FFFFFF; 
+		color:#333;
+	}
+	
+	div#oosPanel .ui-bar 
+	{
+		background-color: #FFFFFF;
+		color:#333;
+	}
+
+</style>
+
+
+
+	<script type="text/javascript">
+		jq = jQuery.noConflict();
+		// Globals
+		var oppId;
+		var ifsNamespace;
+		var billingScenarioId;
+		var isPreprocessing;
+		var sfdcUrl;
+		var billingRules = new Array();
+		var invAttId;
+		var locDateFormat;
+		var locPlaceholder;
+		var locNumberFormat;
+		var locNumMsg;
+		var locNumPlaceholder;
+		var locPerMsg;
+		var locPerPlaceholder;
+		var isDecDot;
+		var isOutOfSyncOverride = false;
+
+		var validator;
+
+	    jq(function() {
+			displayLoading("Loading");
+	        sfdcUrl='{!$Api.Partner_Server_URL_220}';
+	        oppId = '{!JSENCODE(opportunityId)}';
+	        ifsNamespace = '{!JSENCODE(ifsNamespacePrefix)}';
+	        locDateFormat = '{!JSENCODE(localeDateFormat)}';
+	        locPlaceholder = '{!JSENCODE(datePlaceholder)}';
+	        locNumberFormat = '{!JSENCODE(localeNumFormat)}';
+	        locNumMsg = '{!JSENCODE(localeNumMsg)}';
+	        locNumPlaceholder = '{!JSENCODE(numberPalceholder)}';
+	        locPerMsg = '{!JSENCODE(localePercMsg)}';
+	        locPerPlaceholder = '{!JSENCODE(percentPlaceholder)}';
+	        var isDecDotStr = '{!JSENCODE(isDecimalDot)}';
+	        if(isDecDotStr=="true")
+	        	isDecDot = true;
+	        else
+	        	isDecDot = false;
+		    jq.datepicker.setDefaults({
+		    	dateFormat:locDateFormat,
+				beforeShow: function ( input, inst ) {
+				        setTimeout(function(){
+				            inst.dpDiv.css({
+				                zIndex: 10000
+				            });
+
+				        });
+        
+				}
+		    });
+
+			jq.validator.setDefaults({
+				debug: true,
+				success: "valid",
+				focusCleanup: true,
+				onfocusout: false,
+				errorPlacement: function(error, element) {
+        			error.appendTo(element.parent().parent().parent());
+    			}
+			});
+
+			var amtregxmsg = "Enter a valid amount "+locNumMsg;
+			jq("div[id=dataContainer]").data("amtregx",locNumberFormat);
+			jq.validator.addMethod(
+						"currencyFld",
+						function(val,element){
+							var pattern = jq("div[id=dataContainer]").data("amtregx");
+							var regx = new RegExp(pattern);
+							return regx.test(val);
+						},
+						amtregxmsg
+			);
+			var numregxmsg = "Enter a valid number "+locNumMsg;
+			jq("div[id=dataContainer]").data("numregx",locNumberFormat);
+			jq.validator.addMethod(
+						"numberFld",
+						function(val,element){
+							var pattern = jq("div[id=dataContainer]").data("numregx");
+							var regx = new RegExp(pattern);
+							return regx.test(val);
+						},
+						numregxmsg
+			);
+			var perregxmsg = "Enter a valid percent "+locPerMsg;
+			jq("div[id=dataContainer]").data("numregx",locNumberFormat);
+			jq.validator.addMethod(
+						"percentFld",
+						function(val,element){
+							var pattern = jq("div[id=dataContainer]").data("numregx");
+							var regx = new RegExp(pattern);
+							return regx.test(val);
+						},
+						perregxmsg
+			);
+			var intregxmsg = "Enter a valid integer -e.g. 123";
+			jq("div[id=dataContainer]").data("intregx","^[0-9]+$");
+			jq.validator.addMethod(
+						"integerFld",
+						function(val,element){
+							var pattern = jq("div[id=dataContainer]").data("intregx");
+							var regx = new RegExp(pattern);
+							return regx.test(val);
+						},
+						intregxmsg
+			);
+
+		    jq("input[id=invoiceDate]").datepicker("option",
+		    {
+		    	dateFormat:locDateFormat
+		    });
+
+		    jq("input[id=invoiceDate]").attr("placeholder",locPlaceholder);
+	        jq("input[id=invoiceDate]").val(jq.datepicker.formatDate(locDateFormat, new Date()));
+
+	        jq("div[id=statusDlgBox]").popup();
+	        jq("div[id=oosDlgBox]").popup();
+
+	        validator = jq("form[id=invoiceForm]").validate();
+
+	        console.log("opportunity Id --> "+oppId+"   sfdcurl --> "+sfdcUrl);
+	        fetchBillingScenariosList();
+	    });
+
+		function fetchBillingScenariosList()
+		{
+			Visualforce.remoting.Manager.invokeAction(
+				'{!$RemoteAction.SF1_SingleInvoiceController.getBillingScenarios}',
+				populateBillingScenarios 
+			);
+		}
+	
+		function populateBillingScenarios(result, event)
+		{
+			hideLoading();
+			if(event.status)
+			{
+				var ifsStatus = result.status;
+				if(ifsStatus.success)
+				{
+					jq("select[id=billing_scenario_select]").append('<option value="none"> -- None -- </option>');
+					jq("div[id=billing_scenario_select-button]").children("span").html("-- None -- ")
+					var bsResult = result.configurations;
+					for(var i=0; i<bsResult.length;i++)
+					{
+						var bs = bsResult[i];
+						jq("select[id=billing_scenario_select]").append('<option value="'+bs.Id+'" >'+bs.Name+'</option>');
+					}
+				}
+				else
+				{
+					var errors = result.status.errors;
+					var errorMsg = "<div>";
+					jq.each(errors,function(idx,value){
+						errorMsg+="<p>"+value+"</p>";
+					});
+					displayPopup("Processing Information",errorMsg);
+				}
+			}
+			else if(event.type=="exception")
+			{
+				// handle exception	
+				displayPopup("Processing Information","<p>"+event.message+"<p>")	;	
+			}
+			else
+			{
+				// handle exception			
+				displayPopup("Processing Information","<span>Remote Method did not succeed</span><p>"+event.message+"<p>")	;	
+			}
+		}
+
+		function billingScenarioChange(ctl)
+		{
+			billingScenarioId = jq(ctl).find(":selected").val();
+			if(billingScenarioId=='none')
+			{
+				jq("div[id=billing_rules_list]").css("display","none");
+				jq("div[id=invoicedatePanel]").css("display","none");
+				jq("div[id=billing_actions]").css("display","none");
+
+			}
+			else
+			{
+				jq("div[id=billing_rules_list]").css("display","none");
+				jq("div[id=invoicedatePanel]").css("display","none");
+				jq("div[id=billing_actions]").css("display","none");
+
+				displayLoading("Loading");
+				
+				Visualforce.remoting.Manager.invokeAction(
+					'{!$RemoteAction.SF1_SingleInvoiceController.getBillingRules}',
+					billingScenarioId,
+					sfdcUrl,
+					populateBillingRules 
+				);
+
+			}
+			// Disable the Submit button
+			try
+			{
+				Sfdc.canvas.publisher.publish({name: 'publisher.setValidForSubmit',payload:false});
+			}
+			catch(e)
+			{
+				console.log("publisher exception status: "+e.status+"  statusText: "+e.statusText+"  parent version: "+e.parentVersion+"  payload: "+e.payload);
+			}
+		}
+
+		function populateBillingRules(result,event)
+		{
+			hideLoading();
+			if(event.status)
+			{
+				jq("div[id=billing_rules]").empty();
+				var ifsStatus = result.status;
+				if(ifsStatus.success)
+				{
+					billingRules = [];
+					var billingConds = result.billingConditions;
+					for(var i=0; i<billingConds.length;i++)
+					{
+						var dispBrule = billingConds[i];
+						var brule = dispBrule.billingRule;
+						billingRules.push(brule);
+						var brTblEntry;
+						if(!brule[ifsNamespace+'Variable__c'])
+						{
+							
+							if(brule[ifsNamespace+'Type__c']!="boolean")
+							{
+
+									brTblEntry = '<fieldset data-role="controlgroup" class="ui-controlgroup ui-controlgroup-vertical ui-corner-all">'+
+												'<div role="heading" class="ui-controlgroup-label">'+
+												'<legend>'+brule[ifsNamespace+'FieldLabel__c']+' '+brule[ifsNamespace+'Operator__c']+'</legend>'+
+												'</div>'+
+												'<div class="ui-controlgroup-controls ">'+
+												'<div class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset">'+
+														'<input type="text" value="'+brule[ifsNamespace+'Value__c']+'" disabled="disabled" billingConditionId="'+brule.Id+'"></input>'+
+												'</div>'+
+												'</div>'+
+												'</fieldset>';
+							}
+							else
+							{
+									brTblEntry = '<fieldset data-role="controlgroup" class="ui-controlgroup ui-controlgroup-vertical ui-corner-all">'+
+												'<div class="ui-controlgroup-controls ">'+
+													'<input type="checkbox" name="'+brule.Id+'" id="'+brule.Id+'" fldType="boolfix"/>'+
+														'<label for="'+brule.Id+'" style="font-weight:normal;">'+brule[ifsNamespace+'FieldLabel__c']+'</label>';
+												'</div>'+
+												'</div>'+
+												'</fieldset>';
+							}
+						}
+						else
+						{
+										if(brule[ifsNamespace+'Type__c']!="boolean")
+										{
+											brTblEntry = '<fieldset data-role="controlgroup" class="ui-controlgroup ui-controlgroup-vertical ui-corner-all">'+
+														'<div role="heading" class="ui-controlgroup-label">'+
+														'<legend>'+brule[ifsNamespace+'FieldLabel__c']+' '+brule[ifsNamespace+'Operator__c']+'</legend>'+
+														'</div>'+
+														'<div class="ui-controlgroup-controls ">';
+										}
+										else
+										{
+											brTblEntry = '<fieldset data-role="controlgroup" class="ui-controlgroup ui-controlgroup-vertical ui-corner-all">'+
+														'<div class="ui-controlgroup-controls">';
+
+										}
+
+										
+
+										if(brule[ifsNamespace+'Type__c']=="string")
+										{
+											brTblEntry+='<div class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset">'+
+													'<input class="billingRuleValue" type="text" fldType="string" name="'+brule.Id+'" billingConditionId="'+brule.Id+'" placeholder="text"></input> '+ 
+												'</div>';
+										}
+										else if(brule[ifsNamespace+'Type__c']=="date" || brule[ifsNamespace+'Type__c']=="datetime")
+										{
+											brTblEntry+='<div class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset">'+
+													'<input type="text" fldType="date" class="billingRuleValue" readonly="true" name="'+brule.Id+'" billingConditionId="'+brule.Id+'" id="'+brule.Id+'" placeholder="'+locPlaceholder+'"></input> '+
+												'</div>';
+										}
+										else if(brule[ifsNamespace+'Type__c']=="picklist")
+										{
+
+											brTblEntry+= '<select fldType="select" class="billingRuleValue" style="z-index:1;" name="'+brule.Id+'" billingConditionId="'+brule.Id+'" >';
+																var picklistOptions = dispBrule.pickListValues;
+																for(var j=0; j<picklistOptions.length;j++)
+																{
+																	brTblEntry+= '<option value="'+picklistOptions[j]+'">'+picklistOptions[j]+'</option>';
+																}
+
+											brTblEntry+=	'</select> ';
+											
+										}
+										else if(brule[ifsNamespace+'Type__c']=="currency")
+										{
+											brTblEntry+='<div class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset">'+
+													'<input type="text" class="billingRuleValue currencyinp" fldType="currency" name="'+brule.Id+'" billingConditionId="'+brule.Id+'" placeholder="'+locNumPlaceholder+'" ></input> '+ 
+												'</div>';
+											
+										}
+										else if(brule[ifsNamespace+'Type__c']=="percent" || brule[ifsNamespace+'Type__c']=="double")
+										{
+											if(brule[ifsNamespace+'Type__c']=="percent")
+											{	
+												brTblEntry+='<div class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset">'+
+														'<input type="text" class="billingRuleValue percentinp" fldType="double" name="'+brule.Id+'" billingConditionId="'+brule.Id+'" placeholder="'+locPerPlaceholder+'" ></input> '+ 
+													'</div>';
+											}
+											else
+											{
+												brTblEntry+='<div class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset">'+
+														'<input type="text" class="billingRuleValue doubleinp" fldType="double" name="'+brule.Id+'" billingConditionId="'+brule.Id+'" placeholder="'+locNumPlaceholder+'" ></input> '+ 
+													'</div>';
+											}
+
+											
+										}
+										else if(brule[ifsNamespace+'Type__c']=="integer")
+										{
+												brTblEntry+='<div class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset">'+
+														'<input type="text" class="billingRuleValue integerinp" fldType="integer" name="'+brule.Id+'" billingConditionId="'+brule.Id+'" placeholder="123" ></input> '+ 
+													'</div>';
+											
+										}
+										else if(brule[ifsNamespace+'Type__c']=="boolean")
+										{
+											brTblEntry+='<input type="checkbox" name="'+brule.Id+'" id="'+brule.Id+'" billingConditionId="'+brule.Id+'" fldType="bool"  />'+
+														'<label for="'+brule.Id+'" style="font-weight:normal;">'+brule[ifsNamespace+'FieldLabel__c']+'</label>';
+										}
+										brTblEntry+='</div>';
+											'</fieldset>';
+						}
+						jq("div[id=billing_rules]").append(brTblEntry);			
+					}
+					jq("div[id=billing_rules]").find("input[fldType=date]").date();
+					jq("div[id=billing_rules]").find("select[fldType=select]").selectmenu();
+					jq("div[id=billing_rules]").find("input[fldType=bool]").checkboxradio();
+					jq("div[id=billing_rules]").find("input[fldType=boolfix]").checkboxradio();
+
+					jq("div[id=billing_rules]").find("input[fldType=boolfix]").each(function(){
+						var billingRuleId = jq(this).attr("id");
+						var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+						if(billingRuleIdx!=-1)
+						{
+							var billingRule = billingRules[billingRuleIdx];
+							if(billingRule[ifsNamespace+'Value__c']=="True")
+								jq(this).prop("checked",true).checkboxradio("refresh");
+							jq(this).checkboxradio("disable");
+						}
+					});
+
+					jq.validator.addClassRules({
+						billingRuleValue : {
+								required:true
+						},
+						currencyinp : {
+							currencyFld:true
+						},
+						doubleinp : {
+							numberFld:true
+						},
+						percentinp : {
+							percentFld:true
+						},
+						integerinp : {
+							integerFld:true
+						}
+					});
+
+					jq("div[id=invoicedatePanel]").css("display","block");
+					jq("div[id=billing_rules_list]").css("display","block");
+					scrollBottomOfPage();
+				}
+				else
+				{
+					var errors = result.status.errors;
+					var errorMsg = "<div>";
+					jq.each(errors,function(idx,value){
+						errorMsg+="<p>"+value+"</p>";
+					});
+					displayPopup("Processing Information",errorMsg);
+				}
+			}
+			else if(event.type=="exception")
+			{
+				// handle exception	
+				displayPopup("Processing Information","<p>"+event.message+"<p>")	;	
+			}
+			else
+			{
+				// handle exception			
+				displayPopup("Processing Information","<span>Remote Method did not succeed</span><p>"+event.message+"<p>")	;	
+			}
+		}
+
+		function gotoBillingActions()
+		{
+			// validate the form
+			var isValid = jq("form[id=invoiceForm]").valid();
+			if(isValid)
+			{
+				isOutOfSyncOverride = false;
+				sendBillingActions();
+			}
+		}
+
+		function sendBillingActions()
+		{
+			// ------- debug start ---------------------------------------------------
+			for(var i=0 ;i<billingRules.length;i++)
+			{
+				console.log(" Billing rule field --> "+billingRules[i][ifsNamespace+'FieldLabel__c']);
+				console.log(" Billing rule query text --> "+billingRules[i][ifsNamespace+'QueryText__c']);
+				console.log(" Billing rule value --> "+billingRules[i][ifsNamespace+'Value__c']);
+				console.log(" Billing rule variable --> "+billingRules[i][ifsNamespace+'Variable__c']);
+			}
+			// ------- debug ebd ---------------------------------------------------
+
+			// Populate the billing rules values 
+			// input elements
+			jq("input[fldType=string]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Value__c'] = jq(this).val();
+				}
+
+			});
+			// integer elements 
+			jq("input[fldType=integer]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Integer__c'] = parseInt(jq(this).val());
+				}
+
+			});
+			// checkbox elements
+			jq("input[fldType=bool]").each(function(){
+				console.log("checkbox billing rule value --> "+ jq(this).prop("checked").toString());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Value__c'] = jq(this).prop("checked").toString();
+					console.log("boolean value to the server --> "+ jq(this).prop("checked").toString());
+				}
+
+			});
+			// currency elements
+			jq("input[fldType=currency]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					var billingRuleStrVal;
+					if(isDecDot)
+						billingRuleStrVal = jq(this).val().replace(/,/g,'');
+					else
+					{
+						billingRuleStrVal = jq(this).val().replace(/\./g,'');
+						billingRuleStrVal = billingRuleStrVal.replace(/,/g,'.');
+					}
+					billingRule[ifsNamespace+'Currency__c'] = parseFloat(billingRuleStrVal);
+					console.log("currency value to server --> "+billingRuleStrVal);
+				}
+
+			});
+			// percent or double elements
+			jq("input[fldType=double]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					var billingRuleStrVal;
+					if(isDecDot)
+						billingRuleStrVal = jq(this).val().replace(/,/g,'');
+					else
+					{
+						billingRuleStrVal = jq(this).val().replace(/\./g,'');
+						billingRuleStrVal = billingRuleStrVal.replace(/,/g,'.');
+					}
+					if(jq(this).hasClass("percentinp"))
+						billingRule[ifsNamespace+'Percent__c'] = parseFloat(billingRuleStrVal);
+					else
+						billingRule[ifsNamespace+'Double__c'] = parseFloat(billingRuleStrVal);
+					console.log("percent value to server --> "+billingRuleStrVal);
+				}
+
+			});
+			// date input elements
+			jq("input[fldType=date]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Date__c'] = toUTC(jq.datepicker.parseDate(locDateFormat,jq(this).val()));
+				}
+
+			});
+			// select elements 
+			jq("select[fldType=select]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Value__c'] = jq(this).val();
+				}
+
+			});
+
+			jq("div[id=billing_actions]").css("display","none");
+			displayLoading("Loading");
+			Visualforce.remoting.Manager.invokeAction(
+				'{!$RemoteAction.SF1_SingleInvoiceController.getInvoiceStat}',
+				oppId,
+				billingScenarioId,
+				sfdcUrl,
+				billingRules,
+				populateInvoiceStat 
+			);
+
+		}
+
+		function populateInvoiceStat(result,event)
+		{
+			hideLoading();
+			if(event.status)
+			{
+				jq("li[id=invStatMsg]").empty();
+
+				var ifsStatus = result.status;
+				if(ifsStatus.success)
+				{
+					// ----------- debug start ---------------------
+					console.log("template Id --> "+result.templateId);
+					console.log("owner Email --> "+result.ownerEmail);
+					console.log("invoiceId --> "+result.invoiceId);
+					console.log("invStatus --> "+result.invStatus);
+					console.log("invNumber --> "+result.invNumber);
+					console.log("invAttachmentId --> "+result.invAttachmentId);
+					// ----------- debug end ---------------------
+					isPreprocessing = result.isPreprocessing;
+					var isInvoiceable = false;
+
+					if(result.objId==null)
+					{
+						jq("span[id=nonconform]").html("<p style=\"font-size:0.8em;\">The opportunity does not conform to the billing rules.</p>");
+						jq("span[id=nonconform]").css("display","block");
+						jq("table[id=conform]").css("display","none");
+						jq("ul[id=invoiceStatusPanel]").empty();
+					}
+					else if(result.objId!=null && result.invoiceId==null)
+					{
+						var invoiceRecHtml = "Not Done";
+						jq("div[id=invStatMsg]").html(invoiceRecHtml);
+						jq("div[id=invPdf]").html("<img src=\"{!URLFOR($Resource.invoicesforsalesforce1,'img/unknown_120.png')}\" style=\"width:60px;padding-top:5px;padding-bottom:5px;\"/>");
+						jq("span[id=nonconform]").css("display","none");
+						jq("table[id=conform]").css("display","table");
+						isInvoiceable = true;
+					}
+					else
+					{
+						invAttId = result.invAttachmentId;
+						var invoiceStatus;
+						if(result.invStatus=="Created Only")
+							invoiceStatus = result.invStatus;
+						else
+						{
+							if(result.isEmailed && !result.isPrinted)
+								invoiceStatus = "Emailed";
+							else if(!result.isEmailed && result.isPrinted)
+								invoiceStatus = "Printed";
+							else if(result.isEmailed && result.isPrinted)
+								invoiceStatus = "Emailed/Printed";
+						}
+
+						var invoiceRecHtml = "<a href=\"/"+result.invoiceId+"\" style=\"text-decoration:none;\">"+invoiceStatus+"</a>";
+						jq("div[id=invStatMsg]").html(invoiceRecHtml);
+						jq("div[id=invPdf]").html("<a href=\"#\" onclick=\"javascript:openInvoicePdf();\"><img src=\"{!URLFOR($Resource.invoicesforsalesforce1,'img/pdf_120.png')}\" style=\"width:60px;padding-top:5px;padding-bottom:5px;\"/></a>");
+
+						if(result.isRecreateble)
+						{
+							jq("span[id=nonconform]").css("display","none");
+							isInvoiceable = true;
+
+						}
+						else
+						{
+							jq("span[id=nonconform]").html("<p style=\"font-size:0.8em;\">You do not have permission to reprocess this invoice. Contact your system administrator</p>");
+							jq("span[id=nonconform]").css("display","block");
+							isInvoiceable = false;
+						}
+						jq("table[id=conform]").css("display","table");
+					}
+
+					var isDisabled = result.isDisabled;
+					if(isDisabled)
+						isInvoiceable = false;
+
+					if(isInvoiceable)
+					{
+						//---------------------------
+						// Enable the Submit button
+						// --------------------------
+						try
+						{
+							Sfdc.canvas.publisher.publish({name: 'publisher.setValidForSubmit',payload:true});
+						}
+						catch(e)
+						{
+							console.log("publisher exception status: "+e.status+"  statusText: "+e.statusText+"  parent version: "+e.parentVersion+"  payload: "+e.payload);
+						}
+
+						// Hook the Submit button to the process invoice remote method via js 
+						try
+						{
+							Sfdc.canvas.publisher.subscribe({name: 'publisher.post',onData:function(e) {
+			            		gotoSubmitInvoice();
+			       			}});
+						}
+						catch(e)
+						{
+							console.log("publisher exception status: "+e.status+"  statusText: "+e.statusText+"  parent version: "+e.parentVersion+"  payload: "+e.payload);
+						}
+					}
+					if(!isDisabled)
+					{
+						jq("input[id=checkbox-draft]").prop("checked",true).checkboxradio("refresh");	
+						jq("input[id=checkbox-print]").prop("checked",false).checkboxradio("refresh");	
+						jq("input[id=checkbox-email]").prop("checked",false).checkboxradio("refresh");	
+						jq("input[id=checkbox-draft]").checkboxradio("enable");	
+						jq("input[id=checkbox-print]").checkboxradio("enable");	
+						jq("input[id=checkbox-email]").checkboxradio("enable");	
+					}
+					else
+					{
+						jq("input[id=checkbox-draft]").prop("checked",false).checkboxradio("refresh");	
+						jq("input[id=checkbox-print]").prop("checked",false).checkboxradio("refresh");	
+						jq("input[id=checkbox-email]").prop("checked",false).checkboxradio("refresh");	
+
+						jq("input[id=checkbox-draft]").checkboxradio("disable");	
+						jq("input[id=checkbox-print]").checkboxradio("disable");	
+						jq("input[id=checkbox-email]").checkboxradio("disable");	
+						jq("span[id=nonconform]").html("<p style=\"font-size:0.8em;\">There is no invoice template assigned to the opportunity. Assign one to proceed.</P>");
+						jq("span[id=nonconform]").css("display","block");
+					}
+					jq("div[id=billing_actions]").css("display","block");
+					scrollBottomOfPage();
+				}
+				else
+				{
+					var errors = result.status.errors;
+					var errorMsg = "<div>";
+					jq.each(errors,function(idx,value){
+						errorMsg+="<p>"+value+"</p>";
+					});
+					displayPopup("Processing Information",errorMsg);
+				}
+
+			}	
+			else if(event.type=="exception")
+			{
+				// handle exception	
+				displayPopup("Processing Information","<p>"+event.message+"<p>")	;	
+			}
+			else
+			{
+				// handle exception			
+				displayPopup("Processing Information","<span>Remote Method did not succeed</span><p>"+event.message+"<p>")	;	
+			}
+		}
+
+		function gotoSubmitInvoice()
+		{
+			// validate the billing rules inputs
+			var isValid = jq("form[id=invoiceForm]").valid();
+			if(!isValid)
+			{
+				//---------------------------
+				// Disable the Submit button
+				// --------------------------
+				try
+				{
+					Sfdc.canvas.publisher.publish({name: 'publisher.setValidForSubmit',payload:false});
+				}
+				catch(e)
+				{
+					console.log("publisher exception status: "+e.status+"  statusText: "+e.statusText+"  parent version: "+e.parentVersion+"  payload: "+e.payload);
+				}
+
+				jq("div[id=billing_actions]").css("display","none");
+				console.log("invalid input");
+			}
+			else
+			{
+				if(isPreprocessing)
+					preprocessInvoice();
+				else
+					submitInvoice();
+			}
+		}
+
+		function preprocessInvoice()
+		{
+			// Collect all the billing rules values
+			// ------- debug start ---------------------------------------------------
+			for(var i=0 ;i<billingRules.length;i++)
+			{
+				console.log(" Billing rule field (Submit invoice) --> "+billingRules[i][ifsNamespace+'FieldLabel__c']);
+				console.log(" Billing rule query text (Submit invoice) --> "+billingRules[i][ifsNamespace+'QueryText__c']);
+				console.log(" Billing rule value (Submit invoice) --> "+billingRules[i][ifsNamespace+'Value__c']);
+				console.log(" Billing rule variable (Submit invoice) --> "+billingRules[i][ifsNamespace+'Variable__c']);
+			}
+			// ------- debug ebd ---------------------------------------------------
+
+			// Populate the billing rules values 
+			// input elements
+			jq("input[fldType=string]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Value__c'] = jq(this).val();
+				}
+
+			});
+			// integer elements
+			jq("input[fldType=integer]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Integer__c'] = parseInt(jq(this).val());
+				}
+
+			});
+			// checkbox elements
+			jq("input[fldType=bool]").each(function(){
+				console.log("checkbox billing rule value --> "+ jq(this).prop("checked").toString());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Value__c'] = jq(this).prop("checked").toString();
+					console.log("boolean value to the server --> "+ jq(this).prop("checked").toString());
+				}
+
+			});
+			// currency elements
+			jq("input[fldType=currency]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					var billingRuleStrVal;
+					if(isDecDot)
+						billingRuleStrVal = jq(this).val().replace(/,/g,'');
+					else
+					{
+						billingRuleStrVal = jq(this).val().replace(/\./g,'');
+						billingRuleStrVal = billingRuleStrVal.replace(/,/g,'.');
+					}
+					billingRule[ifsNamespace+'Currency__c'] = parseFloat(billingRuleStrVal);
+					console.log("currency value to server --> "+billingRuleStrVal);
+				}
+
+			});
+			// percent or double elements
+			jq("input[fldType=double]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					var billingRuleStrVal;
+					if(isDecDot)
+						billingRuleStrVal = jq(this).val().replace(/,/g,'');
+					else
+					{
+						billingRuleStrVal = jq(this).val().replace(/\./g,'');
+						billingRuleStrVal = billingRuleStrVal.replace(/,/g,'.');
+					}
+					if(jq(this).hasClass("percentinp"))
+						billingRule[ifsNamespace+'Percent__c'] = parseFloat(billingRuleStrVal);
+					else
+						billingRule[ifsNamespace+'Double__c'] = parseFloat(billingRuleStrVal);
+					console.log("percent value to server --> "+billingRuleStrVal);
+				}
+
+			});
+			// date input elements
+			jq("input[fldType=date]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Date__c'] = toUTC(jq.datepicker.parseDate(locDateFormat,jq(this).val()));
+				}
+
+			});
+			// select elements
+			jq("select[fldType=select]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Value__c'] = jq(this).val();
+				}
+			});						
+			
+			displayLoading("Preprocessing");
+			Visualforce.remoting.Manager.invokeAction(
+					'{!$RemoteAction.SF1_SingleInvoiceController.preProcessInvoice}',
+					oppId,
+					billingScenarioId,
+					billingRules,
+					handleInvoicePreProcessingResults 
+			);
+
+		}
+
+		function handleInvoicePreProcessingResults(result,event)
+		{
+			hideLoading();
+			if(event.status)
+			{
+				if(result.success)
+				{
+					submitInvoice();
+				}
+				else
+				{
+					var errors = result.errors;
+					var errorMsg = "<div>";
+					jq.each(errors,function(idx,value){
+						errorMsg+="<p>"+value+"</p>";
+					});
+					displayPopup("Processing Information",errorMsg);
+				}
+			}
+			else if(event.type=="exception")
+			{
+				// handle exception	
+				displayPopup("Processing Information","<p>"+event.message+"<p>")	;	
+			}
+			else
+			{
+				// handle exception			
+				displayPopup("Processing Information","<span>Remote Method did not succeed</span><p>"+event.message+"<p>")	;	
+			}
+		} 
+
+		function submitInvoice()
+		{
+			// Collect all the billing rules values
+			// ------- debug start ---------------------------------------------------
+			for(var i=0 ;i<billingRules.length;i++)
+			{
+				console.log(" Billing rule field (Submit invoice) --> "+billingRules[i][ifsNamespace+'FieldLabel__c']);
+				console.log(" Billing rule query text (Submit invoice) --> "+billingRules[i][ifsNamespace+'QueryText__c']);
+				console.log(" Billing rule value (Submit invoice) --> "+billingRules[i][ifsNamespace+'Value__c']);
+				console.log(" Billing rule variable (Submit invoice) --> "+billingRules[i][ifsNamespace+'Variable__c']);
+			}
+			// ------- debug ebd ---------------------------------------------------
+
+			// Populate the billing rules values 
+			// input elements
+			jq("input[fldType=string]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Value__c'] = jq(this).val();
+				}
+
+			});
+			// integer elements
+			jq("input[fldType=integer]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Integer__c'] = parseInt(jq(this).val());
+				}
+
+			});
+			// checkbox elements
+			jq("input[fldType=bool]").each(function(){
+				console.log("checkbox billing rule value --> "+ jq(this).prop("checked").toString());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Value__c'] = jq(this).prop("checked").toString();
+					console.log("boolean value to the server --> "+ jq(this).prop("checked").toString());
+				}
+
+			});
+			// currency elements
+			jq("input[fldType=currency]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					var billingRuleStrVal;
+					if(isDecDot)
+						billingRuleStrVal = jq(this).val().replace(/,/g,'');
+					else
+					{
+						billingRuleStrVal = jq(this).val().replace(/\./g,'');
+						billingRuleStrVal = billingRuleStrVal.replace(/,/g,'.');
+					}
+					billingRule[ifsNamespace+'Currency__c'] = parseFloat(billingRuleStrVal);
+					console.log("currency value to server --> "+billingRuleStrVal);
+				}
+
+			});
+			// percent or double elements
+			jq("input[fldType=double]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					var billingRuleStrVal;
+					if(isDecDot)
+						billingRuleStrVal = jq(this).val().replace(/,/g,'');
+					else
+					{
+						billingRuleStrVal = jq(this).val().replace(/\./g,'');
+						billingRuleStrVal = billingRuleStrVal.replace(/,/g,'.');
+					}
+					if(jq(this).hasClass("percentinp"))
+						billingRule[ifsNamespace+'Percent__c'] = parseFloat(billingRuleStrVal);
+					else
+						billingRule[ifsNamespace+'Double__c'] = parseFloat(billingRuleStrVal);
+					console.log("percent value to server --> "+billingRuleStrVal);
+				}
+
+			});
+			// date input elements
+			jq("input[fldType=date]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Date__c'] = toUTC(jq.datepicker.parseDate(locDateFormat,jq(this).val()));
+				}
+
+			});
+			// select elements
+			jq("select[fldType=select]").each(function(){
+				console.log("billing rule value --> "+ jq(this).val());
+				var billingRuleId = jq(this).attr("billingConditionId");
+				console.log("billing rule Id --> "+ billingRuleId);
+				var billingRuleIdx = getBillingRuleIdx(billingRules,billingRuleId);
+				if(billingRuleIdx!=-1)
+				{
+					var billingRule = billingRules[billingRuleIdx];
+					console.log("billing rule --> "+ billingRule);
+					billingRule[ifsNamespace+'Value__c'] = jq(this).val();
+				}
+
+			});			
+
+			// check the billing action
+			var draft = jq("input[id=checkbox-draft]").prop("checked").toString();
+			var print = jq("input[id=checkbox-print]").prop("checked").toString();
+			var email = jq("input[id=checkbox-email]").prop("checked").toString();
+
+			// invoice date and custom message
+			var invDate = toUTC(jq.datepicker.parseDate(locDateFormat,jq("input[id=invoiceDate]").val()));
+			var custMsg = jq("textarea[id=customMsg]").val();		
+
+			displayLoading("Processing");
+			Visualforce.remoting.Manager.invokeAction(
+					'{!$RemoteAction.SF1_SingleInvoiceController.processInvoice}',
+					oppId,
+					billingScenarioId,
+					sfdcUrl,
+					billingRules,
+					draft,
+					print,
+					email,
+					custMsg,
+					isOutOfSyncOverride,
+					invDate,
+					handleInvoiceProcessingResults 
+			);
+		}
+
+		function handleInvoiceProcessingResults (result,event) 
+		{
+			hideLoading();
+			if(event.status)
+			{
+				var ifsStatus = result.status;
+				if(ifsStatus.success)
+				{
+					var invStatus = result.invoiceStatus;
+					console.log("invoice status --> "+invStatus);
+					if(invStatus=="Missing Data" || invStatus=="Processing Error")
+					{
+						if(invStatus=="Missing Data")
+						{
+							var missingDataHtml = "<div>";
+							if(result.noOfMissingMFs>0)
+							{
+								var mflds = result.missingMergeFields;
+								missingDataHtml+="<span>The following merge fields used in the invoice template are missing data</span>"+
+													"<table>";
+								for(var i=0;i<mflds.length;i++)
+								{
+									var mfld = mflds[i];
+									missingDataHtml+="<tr><td><strong>"+mfld.fieldName+"</strong></td></tr>";
+								}
+								missingDataHtml+="</table>";
+							}
+							if(result.noOfMissingMFs>0 && result.noOfMissingLICols>0)
+								missingDataHtml+="<hr />";
+							if(result.noOfMissingLICols>0)
+							{
+								var mcols = result.missingLineItemCols;
+								missingDataHtml+="<span>The following fields used in the invoice items table columns are missing data</span>"+
+													"<table>";
+								for(var j=0;j<mcols.length;j++)
+								{
+									var mcol = mcols[j];
+									missingDataHtml+="<tr><td><strong>"+mcol.fieldName+"</strong></td></tr>";
+								}
+								missingDataHtml+="</table>";
+							}
+							missingDataHtml+="</div>";
+							console.log(missingDataHtml);
+
+							var invStatHtml = "<a href=\"javascript:toggleStatusPanel('Missing Data','"+missingDataHtml+"');\" style=\"text-decoration:none;color:red;\" >"+invStatus+"</a>";
+							jq("div[id=invStatMsg]").html(invStatHtml);
+
+						}
+						else if(invStatus=="Processing Error")
+						{
+							var procErrorHtml = "<div>";
+							var procErrors = result.processingErrors;
+							for(var k=0;k<procErrors.length;k++)
+							{
+								var procError = procErrors[k];
+								procErrorHtml+="<p>"+procError+"</p>";
+							}
+							procErrorHtml+="</div>";
+							var invStatHtml = "<a href=\"javascript:toggleStatusPanel('Processing Errors','"+procErrorHtml+"');\" style=\"text-decoration:none;color:red;\" >"+invStatus+"</a>";
+							jq("div[id=invStatMsg]").html(invStatHtml);
+						}
+					}
+					else if(invStatus=="Out-of-Sync")
+					{
+							var invStatHtml = "<a href=\"javascript:toggleOosPanel();\" style=\"text-decoration:none;color:red;\" >"+invStatus+"</a>";
+							jq("div[id=invStatMsg]").html(invStatHtml);
+					}
+					else if(invStatus=="Created Only" || invStatus=="Processed")
+					{
+						var invoiceId = result.invoiceId;
+						gotoInvoice(invoiceId);
+					}
+				}
+				else
+				{
+					var errors = result.status.errors;
+					var errorMsg = "<div>";
+					jq.each(errors,function(idx,value){
+						errorMsg+="<p>"+value+"</p>";
+					});
+					displayPopup("Processing Information",errorMsg);
+				}
+			}	
+			else if(event.type=="exception")
+			{
+				// handle exception	
+				displayPopup("Processing Information","<p>"+event.message+"<p>")	;	
+			}
+			else
+			{
+				// handle exception			
+				displayPopup("Processing Information","<span>Remote Method did not succeed</span><p>"+event.message+"<p>")	;	
+			}
+			
+		}
+
+		function gotoInvoice(invoiceId)
+		{
+			sforce.one.navigateToSObject(invoiceId);
+		}
+
+		function getBillingRuleIdx(billingConditions, billingConditionId)
+		{
+			var idx = -1;
+			for(var i=0 ;i<billingConditions.length;i++)
+			{
+				var billingCondition = billingConditions[i];
+				if(billingCondition.Id==billingConditionId)
+				{
+					idx = i;
+					break;
+				}
+			}
+			return idx;
+		}		
+
+		function openInvoicePdf()
+		{
+			sforce.one.navigateToSObject(invAttId);
+		}
+
+
+		function displayLoading(msg)
+		{
+
+		    jq.mobile.loading( "show", {
+		            text: msg,
+		            textVisible: true,
+		            theme: "a",
+		            textonly: false,
+		            html: ""
+		    });
+
+		}
+
+		function hideLoading()
+		{
+			jq.mobile.loading( "hide" );
+		}
+
+		function displayPopup(title, htmlMsg)
+		{
+			jq("div[id=statusMsg]").empty();
+			jq("div[id=statusDlgBox]").find("h1").html(title);
+			jq("div[id=statusMsg]").append(htmlMsg);
+			jq("div[id=statusDlgBox]").popup("open");
+		}
+
+		function displayOosPopup()
+		{
+			jq("div[id=oosDlgBox]").popup("open");
+		}
+
+
+		function toggleStatusPanel(title, htmlMsg)
+		{
+			jq("h3[id=statusPanelTitle]").html(title);
+			jq("div[id=statusPanelCont]").html(htmlMsg);
+			jq("div[id=statusPanel]").slideToggle("slow");
+		}
+
+		function toggleOosPanel()
+		{
+			jq("div[id=oosPanel]").slideToggle("slow");
+		}
+
+		function closePanel(ctl)
+		{
+			jq(ctl).parent("div").slideToggle("slow");
+		}
+
+		function toUTC(date) 
+		{
+			if(date!=null)
+			    return Date.UTC(
+			        date.getFullYear()
+			        , date.getMonth()
+			        , date.getDate()
+			        , date.getHours()
+			        , date.getMinutes()
+			        , date.getSeconds()
+			        , date.getMilliseconds()
+			    );
+		} 
+
+		function manageBillingActions(ctl)
+		{
+   			if(jq(ctl).attr("id")=="checkbox-draft")
+   			{
+   				if(jq("input[id=checkbox-draft]").prop("checked"))
+   				{
+		   			jq("input[id=checkbox-print]").prop("checked",false).checkboxradio("refresh");				
+		   			jq("input[id=checkbox-email]").prop("checked",false).checkboxradio("refresh");				
+   				}
+   				else
+   				{
+		   			jq("input[id=checkbox-print]").prop("checked",false).checkboxradio("refresh");				
+		   			jq("input[id=checkbox-email]").prop("checked",true).checkboxradio("refresh");				
+   				}
+   			}
+   			else if(jq(ctl).attr("id")=="checkbox-print")
+   			{
+   				if(jq("input[id=checkbox-print]").prop("checked"))
+   				{
+		   			jq("input[id=checkbox-draft]").prop("checked",false).checkboxradio("refresh");				
+
+   				}
+   				else
+   				{
+	   				if(jq("input[id=checkbox-email]").prop("checked"))
+   					{
+			   			jq("input[id=checkbox-draft]").prop("checked",false).checkboxradio("refresh");				
+   					}
+   					else
+   					{
+			   			jq("input[id=checkbox-draft]").prop("checked",true).checkboxradio("refresh");				
+   					}
+   				}
+   			}
+   			else if(jq(ctl).attr("id")=="checkbox-email")
+   			{
+   				if(jq("input[id=checkbox-email]").prop("checked"))
+   				{
+		   			jq("input[id=checkbox-draft]").prop("checked",false).checkboxradio("refresh");				
+
+   				}
+   				else
+   				{
+	   				if(jq("input[id=checkbox-print]").prop("checked"))
+   					{
+			   			jq("input[id=checkbox-draft]").prop("checked",false).checkboxradio("refresh");				
+   					}
+   					else
+   					{
+			   			jq("input[id=checkbox-draft]").prop("checked",true).checkboxradio("refresh");				
+   					}
+   				}
+   			}
+		}
+
+		function overrideOutOfSyncCheck(val)
+		{
+			isOutOfSyncOverride = val;
+			console.log("override out of sync --> "+isOutOfSyncOverride);
+			jq("div[id=oosPanel]").slideToggle("slow");
+
+		}
+
+		function scrollBottomOfPage()
+		{
+			jq("body").animate({scrollTop: jq('body').get(0).scrollHeight}, 1000);
+		}
+
+	</script> 
+
+	<div data-role="page" data-theme="a" id="singleOppInvPage"> 
+		<div data-role="content">
+			<!-- Billing scenario select -->
+			<div class="ui-corner-all custom-corners ifs1_section" id="billing_scenarios_list" >
+			  <div class="ui-bar ui-bar-a">
+			    <h3>1. Select the billing scenario</h3>
+			  </div>
+			  <div class="ui-body ui-body-a">
+				<fieldset data-role="controlgroup">
+				    <legend>Billing Scenario</legend>
+					<select id="billing_scenario_select" style="z-index:1;" onchange="billingScenarioChange(this);" >
+					</select>
+				</fieldset>
+			  </div>
+			</div>			
+
+
+			<!-- Invoice date and custom message collapsables-->
+			<div id="invoicedatePanel" style="display:none;margin-top:-10px;">
+				<div data-role="collapsible" data-enhanced="true" class="ui-collapsible ui-collapsible-inset ui-corner-all ui-collapsible-collapsed" data-mini="true">
+				    <h4 class="ui-collapsible-heading ui-collapsible-heading-collapsed">
+				        <a href="#" class="ui-collapsible-heading-toggle ui-btn ui-btn-icon-left ui-icon-plus">
+				        Invoice Date
+				        <div class="ui-collapsible-heading-status"> click to expand contents</div>
+				        </a>
+				    </h4>
+				    <div class="ui-collapsible-content ui-collapsible-content-collapsed" aria-hidden="true">
+				    	<input id="invoiceDate" data-role="date" type="text" readonly="true" />
+				    </div>
+				</div>	
+				<div data-role="collapsible" data-enhanced="true" class="ui-collapsible ui-collapsible-inset ui-corner-all ui-collapsible-collapsed" data-mini="true">
+				    <h4 class="ui-collapsible-heading ui-collapsible-heading-collapsed">
+				        <a href="#" class="ui-collapsible-heading-toggle ui-btn ui-btn-icon-left ui-icon-plus">
+				        Custom Message
+				        <div class="ui-collapsible-heading-status"> click to expand contents</div>
+				        </a>
+				    </h4>
+				    <div class="ui-collapsible-content ui-collapsible-content-collapsed" aria-hidden="true">
+				    	<textarea id="customMsg" cols="40" rows="8" name="textarea" placeholder="custom message"></textarea>
+				    </div>
+				</div>	
+			</div>
+
+			<!-- Billing rules set -->
+			<form id="invoiceForm" novalidate="novalidate">
+				<div class="ui-corner-all custom-corners ifs1_section" id="billing_rules_list" style="display:none;">
+				  <div class="ui-bar ui-bar-a">
+				    <h3>2. Set the billing rules</h3>
+				  </div>
+				  <div class="ui-body ui-body-a">
+					<div id="billing_rules">
+					</div>
+					<a href="javascript:gotoBillingActions();" class="ui-btn">Next</a>
+				  </div>
+				</div>
+			</form>			
+
+
+			<!-- Billing actions set -->
+			<div class="ui-corner-all custom-corners ifs1_section" id="billing_actions" style="display:none;">
+			  <div class="ui-bar ui-bar-a">
+			    <h3>3. Set the billing action</h3>
+			  </div>
+			  <div class="ui-body ui-body-a">
+			    <span id="nonconform" style="display:none;"></span>
+				<table id="conform" cellpadding="0" cellspacing="0" border="0" width="100%" style="display:none;">
+					<tr style="text-align:-webkit-center;">
+						<td style="vertical-align:top;width:49%;">
+							<fieldset data-role="controlgroup">
+								<legend>Invoice Status</legend>
+									<table cellpadding="0" cellspacing="0" border="0">
+										<tr>
+											<td style="text-align:center;">
+												<div id="invStatMsg" style="padding-top:10px;">
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td style="text-align:center;">
+												<div id="invPdf" style="padding-top:15px;">
+												</div>
+											</td>
+										</tr>
+									</table>
+							</fieldset>
+						</td>
+						<td style="width:1%">&nbsp;</td>
+						<td style="vertical-align:top;width:50%;">
+							<div id="billing_action">
+								<fieldset data-role="controlgroup" data-iconpos="right">
+								    <legend>Billing Action</legend>
+								    <input name="checkbox-draft" id="checkbox-draft" type="checkbox" onchange="manageBillingActions(this);" />
+								    <label for="checkbox-draft">Draft</label>
+								    <input name="checkbox-print" id="checkbox-print" type="checkbox" onchange="manageBillingActions(this);" />
+								    <label for="checkbox-print">Print</label>
+								    <input name="checkbox-email" id="checkbox-email" type="checkbox" onchange="manageBillingActions(this);" />
+								    <label for="checkbox-email">Email</label>
+								</fieldset>								
+							</div>
+						</td>
+					</tr>
+				</table>
+			  </div>
+			</div>			
+
+
+		</div>
+
+		<!-- panels-->
+
+		<div id="statusPanel" style="display:none;position:absolute;bottom:0;z-index:1000;font-size:0.90em;width:100%;" class="ui-corner-all custom-corners">
+		  <div class="ui-bar ui-bar-a ui-btn-icon-right ui-icon-delete" onclick="closePanel(this);">
+		    <h3 id="statusPanelTitle"></h3>
+		  </div>
+		  <div class="ui-body ui-body-a" style="padding-bottom:40%;">
+			<fieldset data-role="controlgroup">
+				<div id="statusPanelCont"></div>
+			</fieldset>
+		  </div>
+		</div>	
+
+		<div id="oosPanel" style="display:none;position:absolute;bottom:0;z-index:1000;font-size:0.90em;width:100%;" class="ui-corner-all custom-corners">
+		  <div class="ui-bar ui-bar-a ui-btn-icon-right ui-icon-delete" onclick="closePanel(this);">
+		    <h3 id="statusPanelTitle">Out-of-Sync</h3>
+		  </div>
+		  <div class="ui-body ui-body-a" style="padding-bottom:30%;">
+			<fieldset data-role="controlgroup">
+		    	<p>The existing invoice data is different than the current opportunity data. </p>
+		    	<p>Would you like to bypass the out-of-sync check and reprocess this invoice ?. If you do click Yes, and Submit again.</p>
+		    	<div style="text-align:center;">
+			    	<a href="#" onclick="javascript:overrideOutOfSyncCheck(true);" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-a" >Yes</a>
+	        		<a href="#" onclick="javascript:overrideOutOfSyncCheck(false);" class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-a" data-transition="flow">No</a>
+	    		</div>
+			</fieldset>
+		  </div>
+		</div>	
+
+
+		<!-- popups-->
+
+		<div data-role="popup" id="statusDlgBox" data-overlay-theme="a" data-theme="a" data-dismissible="true" style="max-width:400px;">
+			<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+		    <div data-role="header" data-theme="a">
+		    	<h1 style="margin:0;">Processing Information</h1>
+		    </div>
+		    <div role="main" class="ui-content" id="statusMsg">
+		    </div>
+		</div>	
+		<div data-role="popup" id="oosDlgBox" data-overlay-theme="a" data-theme="a" data-dismissible="true" style="max-width:400px;">
+			<a href="#" data-rel="back" class="ui-btn ui-corner-all ui-shadow ui-btn-a ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+		    <div data-role="header" data-theme="a">
+		    	<h1 style="margin:0;">Out-of-Sync</h1>
+		    </div>
+		    <div role="main" class="ui-content" id="oosMsg">
+		    	<p>The existing invoice data is different than the current opportunity data. </p>
+		    	<p>Set the by-pass out-of-sync check off and click Submit again to reprocess this invoice.</p>
+		    	<div style="text-align:center;">
+				    <input name="checkbox-oos" id="checkbox-oos" type="checkbox" onchange="setOosCheck(this);" />
+				    <label for="checkbox-oos">By-pass out-of-sync check</label>
+
+        		</div>
+		    </div>
+		</div>
+	</div>
+	<div id="dataContainer" style="display:none;"></div>
+
+</apex:page>

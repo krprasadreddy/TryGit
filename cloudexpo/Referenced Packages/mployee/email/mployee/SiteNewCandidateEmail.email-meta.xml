@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <description>Email to new candidates when registered via site</description>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <letterhead>Letterhead_Benefit</letterhead>
+    <name>Site: New Candidate Email</name>
+    <style>freeForm</style>
+    <subject>Register confirmation</subject>
+    <textOnly>Beste {!Contact.FirstName},
+
+Welkom bij &lt;&lt;Your Company Name&gt;&gt;! Je gebruikersnaam en wachtwoord vind je hieronder.
+
+Gebruikersnaam: {!MF_Recruitment_Candidate__c.authUserName__c}
+Wachtwoord:{!MF_Recruitment_Candidate__c.authPassword__c}
+
+
+Nogmaals welkom bij &lt;&lt;Your Company Name&gt;&gt;!
+
+{!User.FirstName} {!User.LastName}</textOnly>
+    <type>html</type>
+</EmailTemplate>

@@ -1,0 +1,59 @@
+<apex:page id="fileNotFound" 
+           docType="html-5.0" 
+           controller="mployee.SiteTemplateController" 
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false" 
+           language="nl-NL"
+           title="{!$Label.site.file_not_found}"          
+>
+	<apex:composition template="{!$Site.Template}">    	
+    	<apex:define name="body">
+    	
+			<div class="container">
+				
+				<div class="row">
+					
+					<div class="col-md-12">
+						
+						<div class="error-container">
+							<h1>404!</h1>
+							
+							<h2>								
+								<apex:outputText styleClass="title" value="{!$Label.site.page_not_found_detail}">
+									<apex:param value="{!$Site.OriginalUrl}"/>
+                  				</apex:outputText>
+							</h2>
+							
+							<div class="error-details">								
+								<apex:outputText value="{!$Label.site.stay_tuned}"/>							
+							</div> <!-- /error-details -->
+							
+							<div class="error-actions">
+								<a href="../" class="btn btn-primary btn-lg">
+									<i class="icon-chevron-left"></i>
+									&nbsp;
+									Back to Dashboard						
+								</a>
+								<apex:outputText escape="false" value=" {!$Label.site.get_in_touch}">
+									<apex:param value="mailto:{!$Site.AdminEmailAddress}"/>
+									<apex:param value="{!$Label.site.email_us}"/>
+								</apex:outputText>	
+								
+								
+							</div> <!-- /error-actions -->
+										
+						</div> <!-- /error-container -->			
+						
+					</div> <!-- /span12 -->
+					
+				</div> <!-- /row -->
+				
+			</div> <!-- /container -->   	
+     
+		</apex:define>
+	</apex:composition>
+	<site:previewAsAdmin />
+</apex:page>

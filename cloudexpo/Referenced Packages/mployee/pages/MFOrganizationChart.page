@@ -1,0 +1,279 @@
+<apex:page controller="mployee.MF_Organisation_Chart" tabStyle="Organization__tab">
+
+<style>
+.table{
+    padding:5px; 
+    border:#666 thin solid;
+}
+.table .odd {
+    background-color:#FFFFB0;
+}
+table .table td {
+padding:5px;
+    border:#666 thin solid;
+}
+.google-visualization-orgchart-node {
+    background-color:#FFFFB0;
+}
+.employeePanel {
+    width: 150px;
+    height: 200px;
+    float:left;
+    margin-right:10px;
+    margin-bottom:10px;
+    border: solid thin grey;
+    padding:10px
+}
+
+</style>
+<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"/>
+<apex:includeScript value="https://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"/>
+<script type='text/javascript' src='https://www.google.com/jsapi'></script>
+<script type='text/javascript'>
+    google.load('visualization', '1', {packages:['orgchart']});
+    google.setOnLoadCallback(drawOrgChart);
+    
+    function drawOrgChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Name');
+        data.addColumn('string', 'Manager');
+        
+        <apex:repeat value="{!Organizations}" var="u">
+            data.addRow([
+              {v:'{!u.id}', f:'{!u.Name}'}, '{!u.mployee__Parent__c}']);
+        </apex:repeat>        
+        
+        var orgChart = new google.visualization.OrgChart(document.getElementById('orgChart'));
+        orgChart.draw(data, {allowHtml:true, allowCollapse:true});
+        
+        // When the orgchart is selected, update the Position chart.
+        google.visualization.events.addListener(orgChart, 'select', selectOrgChart);
+
+        
+        function selectOrgChart() {         
+            var selection = orgChart.getSelection();
+            var message = '';
+            for (var i = 0; i < selection.length; i++) {
+                var item = selection[i];
+                if (item.row != null) {
+                    var orgId   = data.getValue(item.row, 0);
+                    var orgName = data.getFormattedValue(item.row,0);
+                    //alert('orgId: ' + orgId + ' orgName: ' +orgName ); 
+                }
+            }            
+                
+            drawPosChart(orgId, orgName);
+            var firstName = document.getElementById("firstName").value;
+            document.getElementById("OrgId").value = orgId;
+            document.getElementById("OrgName").value = orgName;
+            
+            searchServer(firstName,orgId);            
+        }
+        
+    }
+    
+    function drawPosChart(orgId, orgName) {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Name');
+        data.addColumn('string', 'Manager');
+        
+        mployee.MF_Organisation_Chart.getOrganizationsPos(orgId, function(result, event){
+            if (event.status) {
+                // Add the selected Org from the orgChart
+                data.addRow([{v:orgId, f:orgName}, '']);
+                // Add the child Orgs
+                for (i=0;i< result.length; i++) {
+                    var id     = result[i].Id;
+                    var name   = result[i].Name;
+                    var parent = result[i].Organization__c;
+                    data.addRow([{v:id, f:name}, parent]);                                      
+                }
+                //drawPosTable(orgId);              
+                
+                var posChart = new google.visualization.OrgChart(document.getElementById('posChart'));
+                posChart.draw(data, {allowHtml:true, allowCollapse:true});
+                
+                // When the orgchart is selected, update the Position chart.
+                google.visualization.events.addListener(posChart, 'select', selectPosChart);
+                
+           } else if (event.type === 'exception') {
+               document.getElementById("responseErrors").innerHTML = event.message;               
+           } else {
+               document.getElementById("responseErrors").innerHTML = event.message;               
+           }
+       }, {escape:true});
+    }
+
+    function selectPosChart() {     
+    }
+    
+    function doSearch() {       
+        searchServer(
+          document.getElementById("firstName").value,
+          document.getElementById("OrgId").value                    
+          );          
+    }
+        
+    function changeView(){
+        var view = document.getElementById("view").options[document.getElementById("view").selectedIndex].value;
+        changeViewState(view);
+    }    
+
+    
+</script>
+
+<apex:sectionHeader title="Organization Chart" subtitle="Organization Chart"/>
+<apex:enhancedList type="MF_Organization__c" rowsPerPage="10" id="listview" height="300"/> 
+<apex:pageBlock title="Chart">
+    <apex:pageBlockSection title="Organization Chart" columns="2">
+        <apex:pageBlockSectionItem >
+            <div class="chartFrame" id='orgChart'></div>
+        </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem >
+            <div class="chartFrame" id='posChart'></div>
+        </apex:pageBlockSectionItem>
+        
+    </apex:pageBlockSection> 
+</apex:pageBlock>
+    
+
+
+
+
+
+
+
+
+
+<apex:form >
+    <apex:pageMessages id="errors" />
+    <table>             
+      <tr>
+        <td></td>
+        <td style="font-weight:bold;">{!$ObjectType.mployee__MF_EmployeeJob__c.Fields.mployee__EmployeeFile__c.label}</td>
+        <td style="font-weight:bold;">&nbsp;</td>
+        <td style="font-weight:bold;">&nbsp;</td>
+      </tr>   
+      <tr>
+        <td></td>
+        <td><input type="text" id="firstName" onkeyup="doSearch();"/></td>
+        <td><input type="hidden" id="OrgId"/>
+            <input type="hidden" id="OrgName"/>
+        
+        </td>
+        <td><!--<select id="view" onchange="changeView();">            
+              <option value="table">Table</option>
+              <option value="panel">Panel</option>
+            </select> -->
+        </td>
+      </tr>
+    </table>
+    <apex:outputPanel id="results" >
+      
+    <apex:actionFunction name="searchServer" action="{!runSearch}" rerender="results,debug,errors">
+        <apex:param name="firstName" value="" />        
+        <apex:param name="OrgId" value="" />
+    </apex:actionFunction>
+    
+    <apex:actionFunction name="changeViewState" action="{!changeViewState}"  rerender="results,debug,errors">
+        <apex:param name="firstParam" assignTo="{!viewState}" value="" />
+    </apex:actionFunction>
+
+        <!-- Start Panel view -->
+        <apex:pageBlock rendered="{!viewState == 'panel'}">
+            <apex:repeat value="{!jobsEmployee}" var="job">
+                <div class="employeePanel">
+                  JOB: <apex:outputField value="{!job.Name}"/><br />
+                  <apex:outputField value="{!job.mployee__EmployeeFile__c}"/>                      
+                  <apex:outputField value="{!job.mployee__ContractorFile__c}"/>
+                  <apex:outputField value="{!job.mployee__TempFile__c}"/>                    
+                </div>
+            </apex:repeat>
+            <div style="clear:both"></div>        
+        </apex:pageBlock>
+        <!-- End Panel view -->
+        
+        <!-- Start Table view -->
+        <apex:pageBlock mode="edit" rendered="{!viewState == 'table'}">
+            <apex:pageBlockTable value="{!jobsEmployee}" var="job" >
+     
+                <apex:column >
+                    <apex:facet name="header">
+                        <apex:commandLink value="{!$ObjectType.mployee__MF_EmployeeFile__c.Fields.Name.Label}" action="{!toggleSort}" rerender="results,debug">
+                            <apex:param name="sortField" value="Name" assignTo="{!sortField}"/>
+                        </apex:commandLink>
+                    </apex:facet>
+                    <apex:outputField value="{!job.Name}"/>
+                </apex:column>              
+                
+                <apex:column > 
+                    <apex:facet name="header">
+                        <apex:commandLink value="{!$ObjectType.mployee__MF_EmployeeJob__c.Fields.mployee__EmployeeFile__c.label}" action="{!toggleSort}" rerender="results,debug">
+                            <apex:param name="sortField" value="EmployeeFile__c" assignTo="{!sortField}"/>
+                        </apex:commandLink>
+                    </apex:facet>
+                    <apex:outputField value="{!job.mployee__EmployeeFile__c}"/>                    
+                    <apex:outputField value="{!job.mployee__ContractorFile__c}"/>
+                    <apex:outputField value="{!job.mployee__TempFile__c}"/>
+                    
+               </apex:column>
+                
+                <apex:column >
+                    <apex:facet name="header" >
+                        <apex:commandLink value="{!$ObjectType.mployee__MF_EmployeeJob__c.Fields.mployee__Type__c.Label}" action="{!toggleSort}" rerender="results,debug">
+                            <apex:param name="sortField" value="Type__c" assignTo="{!sortField}"/>
+                        </apex:commandLink>
+                    </apex:facet>
+                    <apex:outputField value="{!job.mployee__Type__c}"/>
+                </apex:column>
+                
+                <apex:column >
+                    <apex:facet name="header">
+                        <apex:commandLink value="{!$ObjectType.mployee__MF_EmployeeJob__c.Fields.mployee__Organisation_Position__c.Label}" action="{!toggleSort}" rerender="results,debug">
+                            <apex:param name="sortField" value="Organisation_Position__c" assignTo="{!sortField}"/>
+                        </apex:commandLink>
+                    </apex:facet>
+                    <apex:outputField value="{!job.mployee__Organisation_Position__c}"/>&nbsp;<apex:outputText >{!job.Organisation_Position__r.mployee__Note__c}</apex:outputText>
+                </apex:column>
+
+                <apex:column >
+                    <apex:facet name="header">
+                        <apex:commandLink value="{!$ObjectType.mployee__MF_Organisation_Position__c.Fields.mployee__Organization__c.Label}" action="{!toggleSort}" rerender="results,debug">
+                            <apex:param name="sortField" value="Organisation_Position__r.Organization__c" assignTo="{!sortField}"/>
+                        </apex:commandLink>
+                    </apex:facet>
+                    <apex:outputField value="{!job.Organisation_Position__r.mployee__Organization__c}"/>
+                </apex:column>              
+                
+                <apex:column >
+                    <apex:facet name="header">
+                        <apex:commandLink value="{!$ObjectType.mployee__MF_EmployeeJob__c.Fields.mployee__DateStart__c.Label}" action="{!toggleSort}" rerender="results,debug">
+                            <apex:param name="sortField" value="DateStart__c" assignTo="{!sortField}"/>
+                        </apex:commandLink>
+                    </apex:facet>
+                    <apex:outputField value="{!job.mployee__DateStart__c}"/>
+                </apex:column>
+                
+                <apex:column >
+                    <apex:facet name="header">
+                        <apex:commandLink value="{!$ObjectType.mployee__MF_EmployeeJob__c.Fields.mployee__DateEnd__c.Label}" action="{!toggleSort}" rerender="results,debug">
+                            <apex:param name="sortField" value="DateEnd__c" assignTo="{!sortField}"/>
+                        </apex:commandLink>
+                    </apex:facet>
+                    <apex:outputField value="{!job.mployee__DateEnd__c}"/>
+                </apex:column>
+     
+            </apex:pageBlockTable>   
+        </apex:pageBlock>
+        <!-- End Table view -->
+    
+    </apex:outputPanel> 
+    <apex:pageBlock title="Debug - SOQL" id="debug" rendered="false">
+        <apex:outputText value="{!debugSoql}" />
+    </apex:pageBlock>
+    <div id="responseErrors"></div>
+    
+</apex:form>
+    
+
+</apex:page>

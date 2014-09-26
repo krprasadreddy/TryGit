@@ -1,0 +1,1148 @@
+<apex:page controller="kognoz1.InvoiceManagerController" tabStyle="Invoice_Manager_1__tab" title="Invoice Manager"> 
+<!--  <apex:page standardController="Opportunity" extensions="InvoiceManagerController" recordSetVar="opportunities" tabStyle="Invoice_Manager_1__tab" title="Invoice Manager"> -->
+
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/ifspagination.js')}"></script>
+
+<style type="text/css">
+	.queryTableQBCol1{width:25%;}
+	.queryTableQBCol2{width:15%;}
+	.queryTableQBCol3{width:15%;}
+	.queryTableQBCol4{width:15%;text-align:center;}
+	.queryTableQBCol5{width:30%;}
+</style>
+
+<script type="text/javascript" > 
+    
+   var postingMode = "Automatic";
+    $(function(){
+        $("#errorInfoPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Processing information'
+        });
+        $("#customMessagePanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Invoices Custom Message',
+                buttons:[{text: "Done",
+        					click: function() {
+        						var msg = $("#customMessage").val();
+        						var lineBreaks = $("#customMessage").val().match(/[\\\n]/g);
+        						if(lineBreaks!=null)
+        							msg = msg.replace(/[\\\n]/g,"#lb#");
+        						$("input[id$=customMessageContField]").val(msg); 
+        						$(this).dialog("close"); 
+        					}
+    					},
+    					{text: "Cancel",
+        					click: function() {
+        						$(this).dialog("close"); 
+        					}
+    					}] 
+        });
+        
+        windowWidth = $(window).width();
+        
+        $(window).bind("resize",function(event){
+           windowNewWidth = $(window).width();
+           var widthChange = windowNewWidth - windowWidth; 
+        	windowWidth=windowNewWidth;
+        	tblWidth+=widthChange;
+        	tblWidthPlus+=widthChange;
+        	updateTableScrolling();
+        });
+    });
+
+    var isFetched = false; 
+    var windowWidth;
+    var windowNewWidth;
+    function SelOppClass() {}
+    var selectedOpps; 
+
+    function validateBillingRules()
+    {
+    	var isValid = true;
+		if(!validateOppBillingRuleInput())
+			isValid = false;
+		if(!validateOppLineItemBillingRuleInput())
+			isValid = false;    	
+		if(!validateRevenueScheduleBillingRuleInput())
+			isValid = false;    	
+    	return isValid;
+    }
+    
+    function displayFetchingTable()
+    {
+         isFetched = true;
+         $("div[id$=imTableHeadersContainer]").empty();
+         $("span[id*=invoiceManagerTable]").empty();
+         $("span[id=statusMsg]").html("Loading ...");
+         $("#statusMsgContainer").css("display","block");
+         $("span[id*=countersPanel]").css("display","none");
+         $("span[id*=printoutsPanel]").css("display","none");
+         $("span[id$=qbPostModePanel]").css("display","none");
+         $("span[id$=procInvButtonPanel]").css("display","none");
+         $("span[id$=postInvButtonPanel]").css("display","none");
+         $("span[id*=secondStepMsg]").html("&nbsp;");
+    }
+    
+    function hideFetchingTable()
+    {
+        var isError = $("input[id*=errorInController]").val();
+        $("span[id=statusMsg]").empty();
+        $("#statusMsgContainer").css("display","none");
+        $("span[id*=countersPanel]").css("display","block");
+        $("span[id*=printoutsPanel]").css("display","block");
+        $("span[id$=qbPostModePanel]").css("display","block");
+        $("span[id$=procInvButtonPanel]").css("display","block");
+        $("span[id$=postInvButtonPanel]").css("display","block");
+        $("input[id$='mail']").each(function() {
+            if ($(this).attr("disabled") == true)
+                $(this).parent().parent().addClass("trUnable");
+        });
+          if(isError=="true")
+          {
+              var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+              if(errorsJsonObjStr)
+              {
+                var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+                var errorHtml="";
+                for(var i=0;i<errorsJsonObj.length;i++)
+                {
+                    errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+                }
+                $("span[id*=errorPanel]").html(errorHtml);
+              }
+              $("#errorInfoPanel").dialog("open");
+          }
+
+          var selMode;
+		  $("input[id*=postModeSelector]").each(function(){
+		  	if($(this).attr("checked")==true)
+		  		selMode=$(this).val();
+		  });
+          var sndStepMsgAuto="2. Select opportunities by setting the required billing action for each: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and click the \"Process Invoices\" button. Successfully processed invoices are automatically posted to your configured external system.";
+          var sndStepMsgManual="2. Select opportunities by setting the required billing action for each: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and click the \"Process Invoices\" button. Select opportunites with an invoice by checking <strong>Post</strong> and click the \"Post Invoices\" button to post them to your configured external system";
+		  if(selMode=="Automatic")
+		  	$("span[id*=secondStepMsg]").html(sndStepMsgAuto);
+		  else
+		  	$("span[id*=secondStepMsg]").html(sndStepMsgManual);
+
+          updateTableScrolling();
+    }
+    
+        function displayLoading()
+        {
+          $("span[id*=invoiceManagerTable]").empty();
+          $("div[id$=imTableHeadersContainer]").empty();
+          $("span[id=statusMsg]").html("Loading ...");
+          $("#statusMsgContainer").css("display","block");
+        }
+        
+        function hideLoading()
+        {
+          var isError = $("input[id*=errorInController]").val();
+          $("span[id=statusMsg]").empty();
+          $("#statusMsgContainer").css("display","none");
+          $("input[id$='mail']").each(function() {
+            if ($(this).attr("disabled") == true)
+                $(this).parent().parent().addClass("trUnable");
+          });
+          if(isError=="true")
+          {
+              var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+              if(errorsJsonObjStr)
+              {
+                var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+                var errorHtml="";
+                for(var i=0;i<errorsJsonObj.length;i++)
+                {
+                    errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+                }
+                $("span[id*=errorPanel]").html(errorHtml);
+              }
+              $("#errorInfoPanel").dialog("open");
+          }
+          updateTableScrolling();
+        }
+
+		function displayPostModeStatus()
+		{
+          $("span[id*=invoiceManagerTable]").empty();
+          $("div[id$=imTableHeadersContainer]").empty();
+          
+          var selMode;
+		  $("input[id*=postModeSelector]").each(function(){
+		  	if($(this).attr("checked")==true)
+		  		selMode=$(this).val();
+		  });
+		  var msg;
+		  if(selMode=="Automatic")
+		  	msg="Switching to Automatic posting mode ..";
+		  else
+		  	msg="Switching to Manual posting mode ..";
+          
+          $("span[id=statusMsg]").html(msg);
+          $("#statusMsgContainer").css("display","block");
+		}
+
+
+        function hidePostModeStatus()
+        {
+          var selMode;
+		  $("input[id*=postModeSelector]").each(function(){
+		  	if($(this).attr("checked")==true)
+		  		selMode=$(this).val();
+		  });
+          $("input[id$='mail']").each(function() {
+            if ($(this).attr("disabled") == true)
+                $(this).parent().parent().addClass("trUnable");
+          });
+          var sndStepMsgAuto="2. Select opportunities by setting the required billing action for each: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and click the \"Process Invoices\" button. The successfully processed invoices are automatically posted to your configured external system.";
+          var sndStepMsgManual="2. Select opportunities by setting the required billing action for each: <strong>Email</strong>, <strong>Print</strong>, or <strong>Create Only</strong>, and click the \"Process Invoices\" button. Select opportunites with an invoice by checking <strong>Post</strong> and click the \"Post Invoices\" button to post them to your configured external system";
+		  if(selMode=="Automatic")
+		  {
+		  	$("span[id*=secondStepMsg]").html(sndStepMsgAuto);
+		  	postingMode="Automatic";
+		  }
+		  else
+		  {
+		  	$("span[id*=secondStepMsg]").html(sndStepMsgManual);
+		  	postingMode="Manual";
+		  }
+
+          $("span[id=statusMsg]").empty();
+          $("#statusMsgContainer").css("display","none");
+          updateTableScrolling();
+        }
+
+		
+        function displayQBPush()
+        {
+          $("span[id*=invoiceManagerTable]").empty();
+          $("div[id$=imTableHeadersContainer]").empty();
+          $("span[id=statusMsg]").html("Posting invoices  ...");
+          $("#statusMsgContainer").css("display","block");
+        }
+        
+        function hideQBPush()
+        {
+          var isError = $("input[id*=errorInController]").val();
+          $("span[id=statusMsg]").empty();
+          $("#statusMsgContainer").css("display","none");
+          $("input[id$='mail']").each(function() {
+            if ($(this).attr("disabled") == true)
+                $(this).parent().parent().addClass("trUnable");
+          });
+          if(isError=="true")
+          {
+              var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+              if(errorsJsonObjStr)
+              {
+                var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+                var errorHtml="";
+                for(var i=0;i<errorsJsonObj.length;i++)
+                {
+                    errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+                }
+                $("span[id*=errorPanel]").html(errorHtml);
+              }
+              $("#errorInfoPanel").dialog("open");
+          }
+          updateTableScrolling();
+        }
+
+
+		function openCustomMessagePanel()
+		{
+			var msg = $("input[id$=customMessageContField]").val();
+    		var lineBreaks = $("#customMessage").val().match(/[\\\n]/g);
+    		if(lineBreaks!=null)
+    			msg = msg.replace(/#lb#/g,"\n");
+			$("#customMessage").val(msg);
+			$("#customMessagePanel").dialog("open");
+		}
+
+		function disableEnterKey(e)
+	    {
+	         var key;     
+	         if(window.event)
+	             key = window.event.keyCode; //IE
+	         else
+	             key = e.which; //firefox     
+	         return (key != 13);
+	    }
+
+		function resetInvDateError()
+		{
+    		if($("input[id$=invoiceDate]").hasClass("error"))
+    		{
+				$("input[id$=invoiceDate]").parent().siblings("div.errorMsg").remove();
+				$("input[id$=invoiceDate]").removeClass("error");
+			}
+		}
+    
+    	function validateInvoiceDate()
+    	{
+    		var isValidInvoiceDate = true;
+    		
+    		if($("input[id$=invoiceDate]").hasClass("error"))
+    			isValidInvoiceDate = false;
+    		else if($("input[id$=invoiceDate]").val()=="")
+    		{
+    			$("input[id$=invoiceDate]").addClass("error");
+    			$("input[id$=invoiceDate]").parent().parent().append('<div class="errorMsg" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;"><strong>Error: </strong>You must enter a valid invoice date</div>');
+    			isValidInvoiceDate = false;
+    		}
+    		
+    		return isValidInvoiceDate;
+    	}
+
+	    function displayPreprocessingInvoices()
+	    {
+	        var noOfOpps = {!noOfOpps};
+	        if(noOfOpps==0 && !isFetched)
+	        {
+	            alert("The list is empty. Fetch opportunities first.");
+	            return false;
+	        }
+	        else
+	        {
+		         $("div[id$=imTableHeadersContainer]").empty();
+	             $("span[id*=invoiceManagerTable]").empty();
+	             $("span[id=statusMsg]").html("Preprocessing invoices ...");
+	             $("#statusMsgContainer").css("display","block");
+	            return true;
+	        }   
+	    }
+	
+	    function hidePreprocessingInvoices()
+	    {
+	         var isError = $("input[id*=errorInController]").val();
+	        $("span[id=statusMsg]").empty();
+	        $("#statusMsgContainer").css("display","none");
+	        if(isError=="true")
+	        {
+
+	          var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+	          if(errorsJsonObjStr)
+	          {
+	            var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+	            var errorHtml="";
+	            for(var i=0;i<errorsJsonObj.length;i++)
+	            {
+	                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+	            }
+	            $("span[id*=errorPanel]").html(errorHtml);
+	          }
+	          $("#errorInfoPanel").dialog("open");
+	        }
+	        else if(validateInvoiceDate())
+				internalPreprocessingOpportunities();	        		
+	        		//processInvoices();
+	    }
+
+
+    function displayCreatingProcessingInvoices()
+    {
+        var noOfOpps = {!noOfOpps};
+        if(noOfOpps==0 && !isFetched)
+        {
+            alert("The list is empty. Fetch opportunities first.");
+            return false;
+        }
+        else
+        {
+	         $("div[id$=imTableHeadersContainer]").empty();
+             $("span[id*=invoiceManagerTable]").empty();
+             $("span[id=statusMsg]").html("Processing invoices ...");
+             $("#statusMsgContainer").css("display","block");
+            return true;
+        }   
+    }
+
+    function hideCreatingProcessingInvoices()
+    {
+         var isError = $("input[id*=errorInController]").val();
+        $("span[id=statusMsg]").empty();
+        $("#statusMsgContainer").css("display","none");
+        if(isError=="true")
+        {
+          var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+          if(errorsJsonObjStr)
+          {
+            var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+            var errorHtml="";
+            for(var i=0;i<errorsJsonObj.length;i++)
+            {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+            }
+            $("span[id*=errorPanel]").html(errorHtml);
+          }
+          $("#errorInfoPanel").dialog("open");
+        }
+        else
+        {
+        	if(postingMode=="Automatic")
+        		autoPushQBInvoices();
+        }
+    }
+
+
+    function hideInternalPreproc()
+    {
+         var isError = $("input[id*=errorInController]").val();
+        $("span[id=statusMsg]").empty();
+        $("#statusMsgContainer").css("display","none");
+        if(isError=="true")
+        {
+          var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+          if(errorsJsonObjStr)
+          {
+            var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+            var errorHtml="";
+            for(var i=0;i<errorsJsonObj.length;i++)
+            {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+            }
+            $("span[id*=errorPanel]").html(errorHtml);
+          }
+          $("#errorInfoPanel").dialog("open");
+        }
+		else if(validateInvoiceDate())
+		{
+				if(postingMode=="Automatic")
+	        		processInvoicesAuto();
+	        	else
+	        		processInvoicesManual();
+	    }        
+    }
+
+
+    function viewNotDoneScript()
+    {
+        clearSelectedOpps();
+        viewNotDone(); // action function
+    }
+
+    function viewCreatedOnlyScript()
+    {
+        clearSelectedOpps();
+        viewCreatedOnly();  // action function
+    }
+
+    function viewProcessedScript()
+    {
+        clearSelectedOpps();
+        viewProcessed();  // action function
+    }
+
+        function checkTableSize()
+        {
+          var noOfOpportunities = {!noOfOpps};
+          if(noOfOpportunities==0 && !isFetched)
+          {
+              alert("The list is empty. Fetch opportunities first.");
+              return false;
+          }
+          else        
+              return true;
+        
+        }
+
+        /*
+             functions to deal with table bottom controls 
+              associated with pagination
+        */
+        function setDisplayTableSize(pageSizeSelection,pageSize)
+        {
+            if(!checkTableSize())
+            {
+                $("#pageSizeSelector").removeClass("ifsselectorOpen");
+                $(pageSizeSelection).addClass("ifsoptSelected");
+                updatePageSize();
+            }
+            else
+            { 
+                $("#pageSizeSelector").removeClass("ifsselectorOpen");
+                $(pageSizeSelection).addClass("ifsoptSelected");
+		        $("div[id$=imTableHeadersContainer]").empty();
+                $("span[id*=invoiceManagerTable]").empty();
+                $("input[id*=pageSizeContField]").val(pageSize);
+                captureSelectedOpps();
+                changePageSize(); // action function
+            }  
+        }
+        
+        function updatePageSize()
+        {
+            var pageSize = $("input[id*=pageSizeContField]").val();
+            if(pageSize=="")
+                pageSize=10;
+        
+            $("tr[id^='trsize']").each(function(index) {
+                if($(this).attr("ps")==pageSize)
+                {
+                    $(this).removeClass("ifsoptUnselected");
+                    $(this).addClass("ifsoptSelected");
+                }
+                else
+                {
+                    $(this).removeClass("ifsoptSelected");
+                    $(this).addClass("ifsoptUnselected");
+                
+                }
+             });
+        }
+
+		function updateTableScrolling()
+		{
+	         var pageSize = $("input[id*=pageSizeContField]").val();
+			 var noOfOpps = $("input[id$=noOfOppsContField]").val();
+	            if(pageSize==10)
+	            {
+		        $("#imTableHeadersContainer").css("width",tblWidthPlus+"px");
+		        $("#imTableHeaders").css("width",tblWidth+"px");
+		        $("#imTableContainer").css("width",tblWidth+"px");
+		        $("table[id$=apxTable]").css("width",tblWidth+"px"); 
+			 }
+	            else if(noOfOpps <= 10 && pageSize==10)
+	            {
+		        $("#imTableHeadersContainer").css("width",tblWidthPlus+"px");
+		        $("#imTableHeaders").css("width",tblWidth+"px");
+		        $("#imTableContainer").css("width",tblWidth+"px");
+		        $("table[id$=apxTable]").css("width",tblWidth+"px"); 
+			 }
+	            else if(noOfOpps > 10 && pageSize > 10)
+	            {
+		        $("#imTableHeadersContainer").css("width",tblWidthPlus+"px");
+		        $("#imTableHeaders").css("width",tblWidth+"px");
+		        $("#imTableContainer").css("width",tblWidthPlus+"px");
+		        $("table[id$=apxTable]").css("width",tblWidth+"px"); 
+			 }
+	            else if(noOfOpps <= 10 && pageSize > 10)
+	            {
+		        $("#imTableHeadersContainer").css("width",tblWidthPlus+"px");
+		        $("#imTableHeaders").css("width",tblWidth+"px");
+		        $("#imTableContainer").css("width",tblWidth+"px");
+		        $("table[id$=apxTable]").css("width",tblWidth+"px"); 
+			 }
+		}
+
+        function updateCurrentPage()
+        {
+            $("input[id*=pageInputVal]").val() = $("input[id*=currentPageContField]").val();
+            captureSelectedOpps();
+        }
+        
+        function deselectPage()
+        {
+            IFS_ListPaginator.hideSelector('pageSelectionsSelector');
+            var selectedInPageCounter = 0;
+            $("input[id$=print]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"print"))
+                {
+                    if(!isSelected(id,"mail"))
+                    {
+                        selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                        selectedInPageCounter++;
+                    }
+                    $(this).attr("checked",false);
+                    $(this).parent().parent().removeClass("trSelected");
+                }
+            });
+            $("input[id$=mail]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"mail"))
+                {
+                    selectedInPageCounter++;
+                    selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                    $(this).attr("checked",false);
+                    $(this).parent().parent().removeClass("trSelected");
+                }
+            });
+            $("input[id$=onlycreate]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"onlycreate"))
+                {
+                    selectedInPageCounter++;
+                    selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                    $(this).attr("checked",false);
+                    $(this).parent().parent().removeClass("trSelected");
+                }
+            });
+// post start
+            $("input[id$=post]").each(function(){
+                var id = $(this).siblings("span").attr("oppId");
+                if(isSelected(id,"post"))
+                {
+                    selectedInPageCounter++;
+                    selectedOpps = $.grep(selectedOpps,function(o){return o.oppId!=id;});
+                    $(this).attr("checked",false);
+                    $(this).parent().parent().removeClass("trSelected");
+                }
+            });
+// post end
+            $("input[id$=onlyCreateHeader]").attr("checked",false);
+            $("input[id$=printHeader]").attr("checked",false);
+            $("input[id$=mailHeader]").attr("checked",false);
+            $("input[id$=postHeader]").attr("checked",false);
+            updateSelectedCounter(-selectedInPageCounter);
+        }
+        
+        function deselectAll()
+        {
+            IFS_ListPaginator.hideSelector('pageSelectionsSelector');
+            updateSelectedCounter(-selectedOpps.length);
+            clearSelectedOpps();
+            selectedOpps = [];
+        }
+        
+        function updateSelectedCounter(value)
+        {
+            var textSel = $("span[id$='selectionPan']").html();
+            var innerValue = textSel.replace(/[^0-9]/g, "");
+            var intInnerValue = parseInt(innerValue);
+            intInnerValue = intInnerValue + value;
+            if (intInnerValue > 0)
+                $("#pageSelectionsSelector").addClass("ifsselectCountHi");
+            else
+                $("#pageSelectionsSelector").removeClass("ifsselectCountHi");
+            $("span[id$='selectionPan']").html(intInnerValue+" Selected");
+            $("#clearAll").html(intInnerValue);
+        }
+
+        function goToPageScript(pageNumber)
+        {
+            var noOfOpportunities = {!noOfOpps};
+            if(noOfOpportunities==0 && !isFetched)
+            {
+                alert("The list is empty. Fetch opportunities first");
+            }
+            else
+            {
+                if(!isNumber(pageNumber))
+                    alert("Invalid number. Enter a valid page number");
+                else
+                {
+                    $("input[id*=currentPageContField]").val(pageNumber);
+                    captureSelectedOpps();
+                    goToPage();
+                }               
+            }
+        }
+
+        
+        function firstPageScript()
+        {
+            captureSelectedOpps();
+            firstPage(); // action function
+        }
+
+        function lastPageScript()
+        {
+            captureSelectedOpps();
+            lastPage(); // action function
+        }
+
+        function nextPageScript()
+        {
+            captureSelectedOpps();
+            nextPage(); // action function
+        }
+
+        function previousPageScript()
+        {
+            captureSelectedOpps();
+            previousPage(); // action function
+        }
+        
+        function isNumber(n) 
+        {
+          return !isNaN(parseFloat(n)) && isFinite(n);
+        }
+        
+        function captureSelectedOpps()
+        {
+            var selOppsXML = "<Objects>";
+            $(selectedOpps).each(function(idx){
+                var oppId = (selectedOpps[idx].oppId=="null")?"":selectedOpps[idx].oppId;
+                var templId = (selectedOpps[idx].templateId=="null")?"":selectedOpps[idx].templateId;
+                var invId = (selectedOpps[idx].invoiceId=="null")?"":selectedOpps[idx].invoiceId;
+                var extId = (selectedOpps[idx].externalId=="null")?"":selectedOpps[idx].externalId;
+                selOppsXML+= "<Object id=\""+oppId+"\" email=\""+selectedOpps[idx].email+"\" print=\""+selectedOpps[idx].print+"\" createonly=\""+selectedOpps[idx].createonly+"\" post=\""+selectedOpps[idx].post+
+                                      "\"  templateid=\""+templId+"\" invoiceid=\""+invId+"\" invoicenum=\""+selectedOpps[idx].invoiceNum+"\" invoiceemailed=\""+selectedOpps[idx].invoiceEmailed+"\" invoiceprinted=\""+selectedOpps[idx].invoicePrinted+"\" emailcontactid=\""+selectedOpps[idx].emailContactId+"\" invstatus=\""+selectedOpps[idx].invStatus+"\" externalid=\""+selectedOpps[idx].externalId+"\" ccemails=\""+selectedOpps[idx].ccemails+"\" owneremail=\""+selectedOpps[idx].owneremail+"\" contactName=\""+selectedOpps[idx].contactName+"\" />";  
+            });
+            selOppsXML+= "<\/Objects>";
+            $("input[id*=selectedOppsXMLContField]").val(selOppsXML);
+            
+        }
+
+        function captureSelectedOppsForProcessing()
+        {
+            var isProcessing = false;
+            if(selectedOpps.length > 0)
+            {
+            	for(var i=0;i<selectedOpps.length;i++)
+            	{
+					if(selectedOpps[i].email=="true" || selectedOpps[i].print=="true" || selectedOpps[i].createonly=="true")
+					{
+						isProcessing=true;
+						break;
+					}
+            	}
+            }
+            if(!isProcessing)
+                alert("No opportunities were selected for processing. Select opportunities to proceed processing their invoices");
+            return isProcessing;
+        }
+
+        function captureSelectedOppsForPosting()
+        {
+            var isPosting = false;
+            if(selectedOpps.length > 0)
+            {
+            	for(var i=0;i<selectedOpps.length;i++)
+            	{
+					if(selectedOpps[i].post=="true")
+					{
+						isPosting=true;
+						break;
+					}
+            	}
+            }
+            if(!isPosting)
+                alert("No opportunities were selected for posting their invoices to your configured external system. Select opportunities with an invoice by checking their Post column to proceed posting them.");
+            return isPosting;
+        }
+
+
+</script>
+
+<apex:form >
+    <apex:sectionHeader subtitle="Billing Scenario: {!billingScenarioSelectedName}" title="Invoice Manager" help="{!ifsHelpUrl}"/>
+
+        <div class="ifsWizardBlock ifsTertiaryPalette" style="width:100%">
+            <div class="ifsWizardTitle ifsTertiaryPalette">        
+                <div class="ifsRightTitle">Step 2 of 2</div>
+                <h2>Step 2: Process invoices</h2>
+            </div>
+            <div class="ifsBody ">
+                <div class="ifsWizardHeader">
+                      <div class="ifsTopButtons" style="white-space: nowrap;">
+                        <apex:commandButton value="Back" action="{!back}" immediate="true"/>
+                      </div>
+                </div>
+            </div>  
+        </div>  
+  
+
+        <table cellspacing="0" cellpadding="0" width="100%" style="margin-top:10px;margin-bottom:10px;">
+        	<tr>
+        		<td style="text-align:left;vertical-align:middle;" width="35%">
+		        	1. Set the billing rules values as necessary and fetch the opportunities
+		        </td>
+		        <td align="right">
+		        	<table cellspacing="1" cellpadding="1" width="100%">
+		        		<tr>
+		        			<td align="right" style="vertical-align:middle;" width="70%">
+		        				<apex:outputPanel id="invoiceDatePanel">
+		        				<table>
+		        					<tr>
+		        						<td align="right" style="vertical-align:middle;">
+					        				<apex:outputPanel >Invoice Date: </apex:outputPanel>
+			        					</td>
+			        					<td align="right" style="vertical-align:middle;"> 
+					        				<apex:inputField value="{!billingScenarioObjSelected.kognoz1__Session_Invoice_Date__c}" onkeypress="return disableEnterKey(event)" onchange="resetInvDateError();" id="invoiceDate"/>
+			        					</td>
+			        				</tr>
+			        			</table>
+		        				</apex:outputPanel>
+		        			</td>
+		        			<td align="right" style="vertical-align:middle;">
+		        				<a href="#" onclick="openCustomMessagePanel();" >Add a custom message to your invoices</a>
+		        			</td>
+		        		</tr>
+		        	</table>
+		        </td>
+        	</tr>
+        </table>
+        <!-- Opportunity and Line Item billing rules -->
+        <div class="ifsWizardBody">
+            <div>
+                <div class="ifsPageBlock ifsSecondaryPalette" style="border-top:1px solid #DBDBDB;-moz-border-radius-topleft:10px;-moz-border-radius-topright:10px;"> <!-- border-bottom:1px solid #DBDBDB;border-top:1px solid #DBDBDB; -->
+                    <div class="ifsBody">
+                        
+                        <!-- FETCH BUTTON  -->
+                        <div style="border-bottom:1px solid #DBDBDB;"> <!-- style="border-bottom:1px solid #DBDBDB;border-top:1px solid #DBDBDB;border-left:1px solid #DBDBDB;border-right:1px solid #DBDBDB;" -->
+	                        <apex:actionStatus onstart="displayFetchingTable();" onstop="hideFetchingTable();" id="fetchingTable"/>                                        
+	                        <apex:commandButton value="Fetch Opportunities" action="{!fetchOpportunities}" status="fetchingTable" onclick="if(!validateBillingRules()) return false;clearSelectedOpps();" reRender="oppBillingRulesPanel1,oppBillingRulesPanel2,oppBillingRulesPanel3,oppBillingRulesPanel4,oppLineItemBillingRulesPanel1,oppLineItemBillingRulesPanel2,oppLineItemBillingRulesPanel3,oppLineItemBillingRulesPanel4,revenueScheduleBillingRulesPanel1,revenueScheduleBillingRulesPanel2, revenueScheduleBillingRulesPanel3,revenueScheduleBillingRulesPanel4, opportunitiesPanel, invMgrTableHeaderPanel, viewListPanel, viewFiltersPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField,secondStepMsgPanel" oncomplete="updatePageSize();" style="margin-left:41%;margin-bottom:5px;margin-top:5px;"/> <!-- InvoiceManagerTblControlPanel,InvoiceManagerTbl -->
+                        </div>
+                        
+                        <table width="100%" style="background-color:#F8F8F8;border-bottom:1px solid #DBDBDB;">
+                            <tr>
+                                <td>
+                                	<apex:outputPanel rendered="{!AND(showOppBillingRules,showOppLineItemBillingRules,showRevenueScheduleBillingRules)}" layout="block">
+	                                    <apex:outputPanel layout="block" style="float:left; margin-right:2%; width:30%">
+	                                        <c:OpportunityBillingRules cont="{!controller}" id="oppBillingRulesPanel1"/>
+	                                    </apex:outputPanel>
+	                                    <apex:outputPanel layout="block" style="float:left;margin-right:2%; width:30%">
+	                                        <c:OppLineItemBillingRule cont="{!controller}" id="oppLineItemBillingRulesPanel1"/>
+	                                    </apex:outputPanel>
+	                                    <apex:outputPanel layout="block" style="float:left; margin-right:2%;width:30%">
+	                                        <c:RevenueScheduleBillingRules cont="{!controller}" id="revenueScheduleBillingRulesPanel1"/>
+	                                    </apex:outputPanel>
+                                    </apex:outputPanel>
+                                	<apex:outputPanel rendered="{!AND(showOppBillingRules,NOT(showOppLineItemBillingRules),showRevenueScheduleBillingRules)}" layout="block">
+	                                    <apex:outputPanel layout="block" style="float:left; margin-right:2%; width:45%">
+	                                        <c:OpportunityBillingRules cont="{!controller}" id="oppBillingRulesPanel2"/>
+	                                    </apex:outputPanel>
+	                                    <apex:outputPanel layout="block" style="float:left; width:0%">
+	                                        <c:OppLineItemBillingRule cont="{!controller}" id="oppLineItemBillingRulesPanel2"/>
+	                                    </apex:outputPanel>
+	                                    <apex:outputPanel layout="block" style="float:left; width:45%">
+	                                        <c:RevenueScheduleBillingRules cont="{!controller}" id="revenueScheduleBillingRulesPanel2"/>
+	                                    </apex:outputPanel>
+                                    </apex:outputPanel>
+                                	<apex:outputPanel rendered="{!AND(showOppBillingRules,showOppLineItemBillingRules,NOT(showRevenueScheduleBillingRules))}" layout="block">
+	                                    <apex:outputPanel layout="block" style="float:left; margin-right:2%; width:45%">
+	                                        <c:OpportunityBillingRules cont="{!controller}" id="oppBillingRulesPanel3"/>
+	                                    </apex:outputPanel>
+	                                    <apex:outputPanel layout="block" style="float:left; width:45%">
+	                                        <c:OppLineItemBillingRule cont="{!controller}" id="oppLineItemBillingRulesPanel3"/>
+	                                    </apex:outputPanel>
+	                                    <apex:outputPanel layout="block" style="float:left; width:0%">
+	                                        <c:RevenueScheduleBillingRules cont="{!controller}" id="revenueScheduleBillingRulesPanel3"/>
+	                                    </apex:outputPanel>
+                                    </apex:outputPanel>
+                                	<apex:outputPanel rendered="{!AND(showOppBillingRules,NOT(showOppLineItemBillingRules),NOT(showRevenueScheduleBillingRules))}" layout="block">
+	                                    <apex:outputPanel layout="block" style="float:left; margin-right:2%; width:45%">
+	                                        <c:OpportunityBillingRules cont="{!controller}" id="oppBillingRulesPanel4"/>
+	                                    </apex:outputPanel>
+	                                    <apex:outputPanel layout="block" style="float:left; width:0%">
+	                                        <c:OppLineItemBillingRule cont="{!controller}" id="oppLineItemBillingRulesPanel4"/>
+	                                    </apex:outputPanel>
+	                                    <apex:outputPanel layout="block" style="float:left; width:0%">
+	                                        <c:RevenueScheduleBillingRules cont="{!controller}" id="revenueScheduleBillingRulesPanel4"/>
+	                                    </apex:outputPanel>
+                                    </apex:outputPanel>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    
+                </div>
+            </div>
+        </div>
+
+
+        <apex:outputPanel layout="block" style="margin-top:15px;margin-bottom:10px;"  id="secondStepMsgPanel">
+        	<apex:outputPanel rendered="{!(noOfOpps > 0)}" id="secondStepMsg">
+        		&nbsp;
+        	</apex:outputPanel>	 
+	        <apex:outputPanel rendered="{!(noOfOpps == 0)}">
+	        	&nbsp;
+	        </apex:outputPanel>
+	    </apex:outputPanel>	 
+        <div class="ifsWizardBody">
+            <div>
+                <div class="ifsPageBlock ifsSecondaryPalette" style="border-top:1px solid #DBDBDB;-moz-border-radius-topleft:10px;-moz-border-radius-topright:10px;">
+                    <div class="ifsBody" style="min-height:40px;">
+
+                      <apex:outputPanel id="invMgrTableHeaderPanel">
+                          <apex:panelGrid width="100%" columns="5" columnClasses="queryTableQBCol1, queryTableQBCol2, queryTableQBCol3, queryTableQBCol4, queryTableQBCol5" styleClass="stage2Table" style="margin-top: 4px;">
+                               <apex:outputPanel id="printoutsPanel" styleClass="stage2Table">
+                                   <apex:panelGrid rendered="{!(noOfOpps > 0)}" columns="3" width="100%" columnClasses="printoutTable1, printoutTable2,printoutTable3" styleClass="stage2Table">
+                                        <apex:outputPanel style="margin-left:2px; font-weight:bold;"> Printouts:</apex:outputPanel>
+                                            <apex:selectList id="printoutsList" value="{!selectedPrintoutDoc}" size="1">
+                                                <apex:selectOptions value="{!printoutsList}" />
+                                            </apex:selectList>
+                                            <apex:commandLink value="View" rendered="{!(noOfDocsInPrinoutFolder > 0)}" action="{!viewPrintout}" target="_blank" styleClass="docOpenLink"/>
+                                            <apex:outputPanel rendered="{!(noOfDocsInPrinoutFolder == 0)}">&nbsp;</apex:outputPanel>
+                                    </apex:panelGrid>   
+                                </apex:outputPanel>
+                                 <apex:panelGroup rendered="{!(noOfOpps > 0)}" id="procInvButtonPanel">
+                                 <!-- CREATE/PROCESS INVOICES BUTTON -->
+<!-- 
+                                     <apex:actionStatus onstart="if(!displayCreatingProcessingInvoices()) return false;" onstop="hideCreatingProcessingInvoices();" id="loadingTable"/>  
+                                     <apex:commandButton value="Process Invoices" rendered="{!qbPostingMode=='Automatic'}" id="processButtonAuto" onclick="if(!captureSelectedOppsForProcessing()) return false; captureSelectedOpps();" action="{!createProcessInvoices}" status="loadingTable" rerender="errorInController,errorBagJSONContField" style="margin-left:15px;"/>
+                                     <apex:commandButton value="Process Invoices" rendered="{!qbPostingMode=='Manual'}" id="processButtonManual" onclick="if(!captureSelectedOppsForProcessing()) return false; captureSelectedOpps();" action="{!createProcessInvoices}" rerender="opportunitiesPanel,errorInController,errorBagJSONContField,invMgrTableHeaderPanel,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,viewsList,viewFiltersList,noOfOppsContField,currentPageContField,pageSizeContField " status="loadingTable" style="margin-left:15px;"/>
+ -->
+
+                                     <apex:actionStatus onstart="if(!displayCreatingProcessingInvoices()) return false;" onstop="hideCreatingProcessingInvoices();" id="loadingTable"/>  
+									 <apex:actionStatus onstart="if(!displayCreatingProcessingInvoices()) return false;" onstop="hideInternalPreproc();" id="loadingTable2"/>                                     
+									 <apex:actionStatus onstart="if(!displayPreprocessingInvoices()) return false;" onstop="hidePreprocessingInvoices();" id="preprocessingOpportunitiesStatus"/>  
+                                     <apex:commandButton value="Process Invoices" rendered="{!AND(isPreprocessing, qbPostingMode=='Automatic')}" id="processButtonAutoPre" onclick="if(!captureSelectedOppsForProcessing()) return false; captureSelectedOpps();" action="{!preprocessOpportunityInvoices}" status="preprocessingOpportunitiesStatus" rerender="errorInController,errorBagJSONContField" style="margin-left:15px;"/>
+                                     <apex:commandButton value="Process Invoices" rendered="{!AND(NOT(isPreprocessing), qbPostingMode=='Automatic')}" id="processButtonAutoNoPre" onclick="if(!captureSelectedOppsForProcessing()) return false; captureSelectedOpps();" action="{!internalPreprocessingOpportunities}" status="loadingTable2" rerender="errorInController,errorBagJSONContField" style="margin-left:15px;"/>
+                                     
+                                     <apex:commandButton value="Process Invoices" rendered="{!AND(isPreprocessing,qbPostingMode=='Manual')}" id="processButtonManualPre" onclick="if(!captureSelectedOppsForProcessing()) return false; captureSelectedOpps();" action="{!preprocessOpportunityInvoices}" rerender="errorInController,errorBagJSONContField,invMgrTableHeaderPanel,cotas,flechas,actualPagePan,selectedOppsJSONContField,viewsList,viewFiltersList,noOfOppsContField,currentPageContField,pageSizeContField " status="preprocessingOpportunitiesStatus" style="margin-left:15px;"/>
+                                     <apex:commandButton value="Process Invoices" rendered="{!AND(NOT(isPreprocessing),qbPostingMode=='Manual')}" id="processButtonManualNoPre" onclick="if(!captureSelectedOppsForProcessing()) return false; captureSelectedOpps();" action="{!internalPreprocessingOpportunities}" rerender="errorInController,errorBagJSONContField,invMgrTableHeaderPanel,cotas,flechas,actualPagePan,selectedOppsJSONContField,viewsList,viewFiltersList,noOfOppsContField,currentPageContField,pageSizeContField " status="loadingTable2" style="margin-left:15px;"/>
+
+
+                                 </apex:panelGroup>
+                                 <apex:panelGroup rendered="{!(noOfOpps > 0)}" id="qbPostModePanel">
+                                 <!-- TOGGLE AUTOMAIC/MANUAL  POSTING -->
+                                     <apex:actionStatus onstart="displayPostModeStatus();" onstop="hidePostModeStatus();" id="postModeStatus"/>  
+									<fieldset style="margin-top:-5px;padding:2px;width:100%; background-color: rgb(248, 248, 248);border:1px solid #DBDBDB;">
+										<legend style="font-weight:normal;">Posting Mode</legend>
+										<apex:selectRadio value="{!qbPostingMode}" id="postModeSelector">
+											<apex:selectOptions value="{!qbPostingModeOptions}" />
+											<apex:actionSupport event="onclick" status="postModeStatus" rerender="opportunitiesPanel,errorInController,errorBagJSONContField,invMgrTableHeaderPanel,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,viewsList,viewFiltersList,noOfOppsContField,currentPageContField,pageSizeContField,secondStepMsgPanel,processButtonAuto,processButtonManual"/>
+										</apex:selectRadio>
+									</fieldset>
+                                 </apex:panelGroup>
+                                 <apex:panelGroup rendered="{!noOfOpps > 0}" id="postInvButtonPanel">
+                                 <!-- POST INVOICES  BUTTON -->
+                                     <apex:actionStatus onstart="displayQBPush();" onstop="hideQBPush();" id="quickbooksPush"/>   
+                                     <apex:commandButton value="Post Invoices"  disabled="{!qbPostingMode=='Automatic'}" onclick="if(!captureSelectedOppsForPosting()) return false; captureSelectedOpps();" action="{!manualPushQBOppInvoices}" rerender="opportunitiesPanel,errorInController,errorBagJSONContField,invMgrTableHeaderPanel,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,viewsList,viewFiltersList,noOfOppsContField,currentPageContField,pageSizeContField " status="quickbooksPush" style="margin-left:15px;"/> 
+                                 </apex:panelGroup>
+                                <apex:outputPanel id="countersPanel" style="margin-left:0%; font-weight:bold">
+                                    <apex:panelGrid rendered="{!(noOfOpps > 0)}" columns="3" width="75%" style="float:right" styleClass="stage2Table">
+                                        <apex:panelGroup >
+                                            <a href="" onclick="viewNotDoneScript()" style="cursor:default;color:red;" >Not Done: {!countNotDone}</a> 
+                                        </apex:panelGroup>
+                                        <apex:panelGroup >
+                                            <a href="" onclick="viewCreatedOnlyScript()" style="margin-right:0%;cursor:default;color:orange;">Created Only: {!countOnlyCreated}</a>  
+                                        </apex:panelGroup>
+                                        <apex:panelGroup >  
+                                             <a href="" onclick="viewProcessedScript()" style="margin-right:0%;cursor:default;color:green;">Processed: {!countProcessed}</a>  
+                                        </apex:panelGroup>  
+                                    </apex:panelGrid>   
+                                </apex:outputPanel>
+                          </apex:panelGrid>
+                     </apex:outputPanel>
+
+                    </div>
+                </div>
+            </div>
+            <!-- The View and Filters pannel -->
+            <div class="invoiceManagerTableHeader" id="InvoiceManagerTblControlPanel">   
+                <apex:panelGrid columns="2" width="100%" styleClass="stage2Table">
+                    <apex:outputPanel id="viewListPanel" > 
+                        <apex:panelGrid columns="2" width="50%" columnClasses="viewListPanelTable1, viewListPanelTable2" styleClass="stage2Table">
+                            <apex:panelGroup style="padding-top:1px">
+                            <h2 style="color:white;">Views</h2>
+                            </apex:panelGroup>
+                            <apex:selectList id="viewsList" value="{!tableViewSelected}" size="1">
+                                <apex:selectOptions value="{!tableViewOptionList}" />
+                                <apex:actionStatus onstart="displayLoading();" onstop="hideLoading();" id="loadingTable1"/>  
+                                <apex:actionSupport event="onchange" action="{!viewChange}" onsubmit="if(!checkTableSize()) return false; clearSelectedOpps();" rerender="opportunitiesPanel,errorInController,errorBagJSONContField,selectedOppsJSONContField,cotas,selectionPan,flechas,actualPagePan,viewsList,viewFiltersList,noOfOppsContField " status="loadingTable1" oncomplete="updatePageSize();"/>
+                            </apex:selectList>
+                        </apex:panelGrid>
+                    </apex:outputPanel>
+                    
+                    <apex:outputPanel id="viewFiltersPanel" style="">
+                        <apex:panelGrid columns="2" width="50%" style="float:right" columnClasses="filterListPanelTable1, filterListPanelTable2" styleClass="stage2Table">
+                            <apex:panelGroup style="valing">
+                                <span style="float:right; padding-top:1px;vertical-align:middle;">
+                                    <h2 style="color:white;vertical-align:middle;">View Filters</h2>
+                                </span>
+                            </apex:panelGroup>
+                            <apex:panelGroup >
+                                <apex:selectList id="viewFiltersList" value="{!tableFilterSelected}" size="1" style="width:150px; float:right;vertical-align:middle;">
+                                    <apex:selectOptions value="{!tableFilterOptionList}" /> 
+                                    <apex:actionSupport event="onchange" action="{!filterChange}" reRender="opportunitiesPanel,errorInController,errorBagJSONContField,selectedOppsJSONContField,cotas,selectionPan,flechas,actualPagePan,noOfOppsContField " onsubmit="if(!checkTableSize()) return false;clearSelectedOpps();"  status="loadingTable1" oncomplete="updatePageSize();"/>
+                                </apex:selectList>
+                            </apex:panelGroup>
+                        </apex:panelGrid>   
+                    </apex:outputPanel>
+                </apex:panelGrid>
+            </div>
+        </div>
+
+        <!-- ###########################################
+        
+                ACTION FUNCTIONS
+        
+         ###############################################-->
+        <apex:actionFunction action="{!viewNotDone}" name="viewNotDone" status="loadingTable1" reRender="opportunitiesPanel,viewListPanel,viewFiltersPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField " oncomplete="updatePageSize();"/>   
+        <apex:actionFunction action="{!viewCreatedOnly}" name="viewCreatedOnly" status="loadingTable1" reRender="opportunitiesPanel,viewListPanel,viewFiltersPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField " oncomplete="updatePageSize();"/>   
+        <apex:actionFunction action="{!viewProcessed}" name="viewProcessed" status="loadingTable1" reRender="opportunitiesPanel,viewListPanel,viewFiltersPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField " oncomplete="updatePageSize();"/>   
+
+        <apex:actionFunction action="{!changePageSize}" name="changePageSize" status="loadingTable1" reRender="opportunitiesPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField " oncomplete="updatePageSize();"/>    
+        <apex:actionFunction action="{!nextPage}" name="nextPage" status="loadingTable1" reRender="opportunitiesPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField " oncomplete="updatePageSize();"/>  
+        <apex:actionFunction action="{!previousPage}" name="previousPage" status="loadingTable1" reRender="opportunitiesPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField " oncomplete="updatePageSize();"/>  
+        <apex:actionFunction action="{!firstPage}" name="firstPage" status="loadingTable1" reRender="opportunitiesPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField " oncomplete="updatePageSize();"/>  
+        <apex:actionFunction action="{!lastPage}" name="lastPage" status="loadingTable1" reRender="opportunitiesPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField " oncomplete="updatePageSize();"/>   
+        <apex:actionFunction action="{!goToPage}" name="goToPage" status="loadingTable1" reRender="opportunitiesPanel,errorInController,errorBagJSONContField,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,noOfOppsContField,currentPageContField,pageSizeContField" oncomplete="updatePageSize();"/>   
+ 
+        <apex:actionStatus onstart="displayQBPush();" onstop="hideQBPush();" id="qbPushStatus"/>  
+        <apex:actionFunction action="{!autoPushQBOppInvoices}" name="autoPushQBInvoices" status="qbPushStatus" reRender="opportunitiesPanel,errorInController,errorBagJSONContField,invMgrTableHeaderPanel,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,viewsList,viewFiltersList,noOfOppsContField,currentPageContField,pageSizeContField" oncomplete="updatePageSize();"/>
+        <apex:actionFunction action="{!createProcessInvoices}" name="processInvoicesManual" status="loadingTable" reRender="opportunitiesPanel,errorInController,errorBagJSONContField,invMgrTableHeaderPanel,cotas,selectionPan,flechas,actualPagePan,selectedOppsJSONContField,viewsList,viewFiltersList,noOfOppsContField,currentPageContField,pageSizeContField,invoiceDatePanel" oncomplete="updatePageSize();"/>
+        <apex:actionFunction action="{!createProcessInvoices}" name="processInvoicesAuto" status="loadingTable" reRender="errorInController,errorBagJSONContField,invMgrTableHeaderPanel,cotas,flechas,actualPagePan,selectedOppsJSONContField,viewsList,viewFiltersList,noOfOppsContField,currentPageContField,pageSizeContField,invoiceDatePanel" oncomplete="updatePageSize();"/>
+		<apex:actionFunction action="{!internalPreprocessingOpportunities}" name="internalPreprocessingOpportunities" status="loadingTable2" reRender="errorInController,errorBagJSONContField,invMgrTableHeaderPanel,cotas,flechas,actualPagePan,selectedOppsJSONContField,viewsList,viewFiltersList,noOfOppsContField,currentPageContField,pageSizeContField,invoiceDatePanel" />
+        
+        <!-- ############################################################################3 -->
+        <!--                    COMMUNICATION WITH THE CONTROLLER                          -->
+        <!-- ############################################################################3 -->
+        <apex:inputText value="{!isError}" id="errorInController" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+         <apex:inputText value="{!selectedObjsXML}" id="selectedOppsXMLContField" style="display:none"/> 
+        <apex:inputText value="{!selectedObjsJSON}" id="selectedOppsJSONContField" style="display:none"/>
+
+        <apex:inputText value="{!pageSize}" id="pageSizeContField" style="display:none"/>
+        <apex:inputText value="{!currentPage}" id="currentPageContField" style="display:none"/>
+        <apex:inputText value="{!noOfOpps}" id="noOfOppsContField" style="display:none"/> 
+        <!-- <apex:inputText value="{!noOfDocsInPrinoutFolder}" id="noOfDocsInPrinoutFolderContField" style="display:none"/> --> 
+        <apex:inputText value="{!customMessage}" id="customMessageContField" style="display:none"/>
+
+</apex:form>
+
+    <div class="ifsBody "> 
+        <apex:outputPanel id="opportunitiesPanel" style="width:100%">
+		       <c:InvoiceManagerPostTable cont="{!controller}"/>
+        </apex:outputPanel>
+    </div>      
+
+<apex:form >
+     <!-- STAR OF THE OPPORTUNITIES/INVOICES TABLE BOTTOM PAGES NAVIGATION -->
+        <apex:outputPanel id="bottomNavPanel" styleClass="ifsbottomNavigationPanel" layout="block">
+          <div class="ifspaginator">
+            <span class="ifsleft">
+                <span class="ifsselectorTarget" id="pageSizeSelector"
+                    onmousedown="IFS_ListPaginator.showSelector('pageSizeSelector')"
+                    onmouseover="IFS_ListPaginator.hoverSelector(this)"
+                    onmouseout="IFS_ListPaginator.unhoverSelector(this);IFS_ListPaginator.hideSelector(this);">
+                    <apex:outputPanel id="cotas"> 
+                        {!lowerEndPage}-{!upperEndPage} of {!noOfOpps}
+                    </apex:outputPanel>
+                    
+                    <span>  
+                        <table class="ifsselector rpp" id="pageSizeSelectorOptionsTable"  cellpadding="0" cellspacing="0"> 
+                            <tbody>
+                                <tr class="ifsopt ifsoptSelected" id="trsize10" ps="10" onmouseover="if(this.className.indexOf('ifsoptHover') < 0) { this.className += ' ifsoptHover' }" onmouseout="this.className = this.className.replace('ifsoptHover', '')" onclick="setDisplayTableSize(this, 10)"><td class="ifsoptUnselected">Display</td><td class="ifsrppOpt">10</td><td class="ifsoptUnselected">records per page</td></tr>
+                                <tr class="ifsopt ifsoptUnselected" id="trsize25" ps="25" onmouseover="if(this.className.indexOf('ifsoptHover') < 0) { this.className += ' ifsoptHover' }" onmouseout="this.className = this.className.replace('ifsoptHover', '')" onclick="setDisplayTableSize(this, 25)"><td class="ifsoptUnselected">Display</td><td class="ifsrppOpt">25</td><td class="ifsoptUnselected">records per page</td></tr>
+                                <tr class="ifsopt ifsoptUnselected" id="trsize50" ps="50" onmouseover="if(this.className.indexOf('ifsoptHover') < 0) { this.className += ' ifsoptHover' }" onmouseout="this.className = this.className.replace('ifsoptHover', '')" onclick="setDisplayTableSize(this, 50)"><td class="ifsoptUnselected">Display</td><td class="ifsrppOpt">50</td><td class="ifsoptUnselected">records per page</td></tr>
+                            </tbody>
+                        </table>
+                    </span>
+
+                    <img alt="" class="ifsselectArrow" src="/s.gif"/>
+                </span>
+                <span class="ifsselectorTarget ifsselectCount" id="pageSelectionsSelector"
+                    onmousedown="IFS_ListPaginator.showSelector('pageSelectionsSelector')"
+                    onmouseover="IFS_ListPaginator.hoverSelector(this)"
+                    onmouseout="IFS_ListPaginator.unhoverSelector(this);IFS_ListPaginator.hideSelector(this);"> 
+                    <apex:outputPanel id="selectionPan"> {!noOfOppSelected} Selected</apex:outputPanel>
+                    <div class="ifsselector ifsselection" id="pageSelectionsOptions"> 
+                        <div class="ifsopt" onmouseover="if(this.className.indexOf('ifsoptHover') < 0) { this.className += ' ifsoptHover' }" onmouseout="this.className = this.className.replace('ifsoptHover', '')" onclick="deselectPage()">
+                            Deselect Page 
+                        </div>
+                        <div class="ifsopt" onmouseover="if(this.className.indexOf('ifsoptHover') < 0) { this.className += ' ifsoptHover' }" onmouseout="this.className = this.className.replace('ifsoptHover', '')" onclick="deselectAll()">
+                            Clear All Selections (-<span id="clearAll">0</span>)
+                        </div>
+                    </div>
+                    <img alt="" class="ifsselectArrow" src="/s.gif"/>
+                </span>
+            </span>
+    
+            <!-- first previous next last LINKS -->
+            <apex:outputPanel styleClass="ifsprevNextLinks" id="flechas">
+                <!-- FIRST  -->
+                <apex:outputPanel styleClass="ifsprevNext" rendered="{!lowerEndPage > pageSize}">
+                    <a href="javascript:firstPageScript();" ><img alt="" src="/s.gif" class="ifsfirst"/></a>
+                </apex:outputPanel>
+                <apex:outputPanel styleClass="ifsprevNext" rendered="{!upperEndPage <= pageSize}">
+                    <img alt="" src="/s.gif" class="ifsfirstoff"/>
+                </apex:outputPanel>
+                <!-- PREVIOUS -->
+                <span class="ifsprevNext">
+                    
+                </span>
+                <apex:outputPanel styleClass="ifsprevNext" rendered="{!lowerEndPage > pageSize}">
+                    <a href="javascript:previousPageScript()" style="text-decoration:none;"><img alt="" src="/s.gif"  class="ifsprev" />Previous</a>
+                </apex:outputPanel>
+                <apex:outputPanel styleClass="ifsprevNext" rendered="{!lowerEndPage <= pageSize}">
+                    <img alt="" src="/s.gif" class="ifsprevoff"/> Previous
+                </apex:outputPanel>
+                
+                <!-- NEXT -->
+                <apex:outputPanel styleClass="ifsprevNext" rendered="{!noOfOpps <= upperEndPage}">
+                    Next
+                    <img alt="" src="/s.gif" class="ifsnextoff"/>
+                </apex:outputPanel>
+                <apex:outputPanel styleClass="ifsprevNext" rendered="{!noOfOpps > upperEndPage}">
+                    <a href="javascript:nextPageScript()" style="text-decoration:none;">Next<img alt=""    src="/s.gif" class="ifsnext"/></a>
+                </apex:outputPanel>
+                
+                <!-- LAST  -->
+                <apex:outputPanel styleClass="ifsprevNext" rendered="{!currentPage < noOfPages}">
+                    <a href="javascript:lastPageScript()">
+                        <img alt="" src="/s.gif" class="ifslast"/>
+                    </a>
+                </apex:outputPanel>
+                <apex:outputPanel styleClass="ifsprevNext" rendered="{!currentPage >= noOfPages}">
+                        <img alt="" src="/s.gif" class="ifslastoff"/>
+                </apex:outputPanel>
+            </apex:outputPanel>
+            <!-- end first previous next last LINKS -->
+            <apex:outputPanel id="actualPagePan"> <span class="ifsright">Page<input class="ifspageInput" maxlength="4" 
+                onchange="goToPageScript(this.value)" 
+                onkeydown="IFS_ListPaginator.keyHandle(event)" 
+                value="{!currentPage}" id="pageInputVal"/>of {!noOfPages}</span>
+                <apex:inputText id="actualPageToController" value="{!currentPage}" style="display:none"/>
+            </apex:outputPanel>
+          </div>
+          <div class="ifsclearingBox"></div>
+        </apex:outputPanel>
+     <!-- END OF THE OPPORTUNITIES/INVOICES TABLE BOTTOM PAGES NAVIGATION -->       
+</apex:form>
+
+
+
+    
+        <!-- ###########################################
+        
+                ERROR HANDLING MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="errorInfoPanel" style="display:none;">
+            <apex:outputPanel id="errorPanel">
+            </apex:outputPanel>
+        </div>  
+
+        <!-- ###########################################
+        
+                CUSTOM MESSAGE MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="customMessagePanel" style="display:none;">
+            <div >
+            	<p>Use the text area to add an optional custom message to all the invoices processed in this billing session. The custom message will be displayed according to the Custom Message merge field in your invoice templates.</p>
+            	<textarea cols="60" rows="5" id="customMessage"/>
+            </div>
+        </div>  
+
+        <!-- ###########################################
+        
+                ACTION STATUS
+        
+         ###############################################-->
+        <div id="statusMsgContainer" class="statusPopup" >
+			<div  class="popupStatus1" >
+			</div>
+            <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+            	<div style="text-align:center;margin-top:15px;" > 
+            		<table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+            			<tr>
+			                <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+			                <td><span id="statusMsg" style="z-index:153;"></span></td>
+	                	</tr>
+	                </table>
+                </div>
+            </div>
+        </div>
+
+
+</apex:page>

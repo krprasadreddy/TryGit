@@ -1,0 +1,286 @@
+<apex:page id="MFJobApplicationToEmployee" 
+	standardController="mployee__MF_Recruitment_JobApplication__c"
+	extensions="mployee.MFJobApplicationToEmployeeController"
+	tabStyle="mployee__MF_Recruitment_JobApplication__c">
+
+    <apex:sectionHeader title="{!page.title}"
+        subtitle="{!page.subtitle}"  
+        description="{!page.description}"
+    />
+    <apex:pageMessages />
+
+    <apex:form id="adminform">
+        <apex:pageBlock title="{!$ObjectType.mployee__MF_Recruitment_JobApplication__c.label}: {!mployee__MF_Recruitment_JobApplication__c.Name}" rendered="{!renderMap['startEmployee']}">
+            <apex:pageBlockButtons >
+            	<apex:commandButton disabled="true" value="{!$Label.GLIB_HTML_BACK}"/>
+  				<apex:commandButton action="{!stepEmployee}" value="{!$Label.GLIB_HTML_NEXT}" rendered="{!!config['isSeconded']}"/>
+  				<apex:commandButton action="{!cancel}" value="{!$Label.GLOBAL_ACTION_CANCEL}"/>
+  			</apex:pageBlockButtons>
+            
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_EmployeeFile__c.label} {!$Label.MF_Information}" columns="1" rendered="{!config['isSeconded']}">                
+                <apex:outputField value="{!mployee__MF_Recruitment_JobApplication__c.Candidate__r.mployee__EmployeeFile__c}" />                
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.label} {!$Label.MF_Information}" columns="1">                
+                <apex:outputField value="{!mployee__MF_Recruitment_JobApplication__c.mployee__Candidate__c}" />
+                <apex:outputField value="{!candidate.mployee__State__c}"/>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.label} {!$Label.MF_Information}" columns="1">
+                <apex:outputField value="{!mployee__MF_Recruitment_JobApplication__c.mployee__Vacancy__r.mployee__Account__c}" /> 
+                <apex:outputField value="{!mployee__MF_Recruitment_JobApplication__c.mployee__Vacancy__r.mployee__Position__r.Name}" />    
+            </apex:pageBlockSection>
+            
+        </apex:pageBlock>
+        
+        <apex:pageBlock title="{!$Label.GLOBAL_ACTION_NEW} {!$ObjectType.mployee__MF_EmployeeFile__c.label}" mode="edit" id="employee" rendered="{!renderMap['employee']}">
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!stepStartEmployee}" value="{!$Label.GLIB_HTML_BACK}"/>
+                <apex:commandButton action="{!stepAssignment}" value="{!$Label.GLIB_HTML_NEXT}"/>               
+                <apex:commandButton action="{!cancel}" value="{!$Label.GLOBAL_ACTION_CANCEL}"/>
+            </apex:pageBlockButtons>
+                        
+            <apex:panelGrid columns="2" width="100%" id="theGrid" rendered="false">
+				<apex:pageBlock title="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.label}"  >
+					<apex:pageBlockSection columns="1" >
+						<apex:inputField value="{!candidate.mployee__NameFirst__c}" html-disabled="disabled" />
+		                <apex:inputField value="{!candidate.mployee__NameLast__c}" html-disabled="disabled"/>
+		                <apex:inputField value="{!candidate.mployee__Gender__c}" html-disabled="disabled"/>
+		                <apex:inputField value="{!candidate.mployee__Contact__c}" html-disabled="disabled"/>
+		                <apex:inputField value="{!candidate.mployee__BirthDate__c}" html-disabled="disabled"/>
+		                <apex:inputField value="{!candidate.mployee__AddressStreet__c}" html-disabled="disabled"/>
+		                <apex:inputField value="{!candidate.mployee__AddressZip__c}" html-disabled="disabled"/>
+		                <apex:inputField value="{!candidate.mployee__AddressCity__c}" html-disabled="disabled"/>
+						<apex:inputField value="{!candidate.mployee__AddressCountry__c}" html-disabled="disabled"/>
+		                <br/>
+		                <br/>
+		            </apex:pageBlockSection>
+				</apex:pageBlock>
+			    	
+			    <apex:pageBlock title="{!$ObjectType.mployee__MF_EmployeeFile__c.label}"  >
+				    <apex:pageBlockSection columns="1">				    	
+		                <apex:inputField value="{!employee.mployee__NameFirst__c}" />
+		                <apex:inputField value="{!employee.mployee__NameLast__c}" />
+		                <apex:inputField value="{!employee.mployee__gender__c}" />
+		                <apex:inputField value="{!employee.mployee__ContactInformation__c}" />
+		                <apex:inputField value="{!employee.mployee__Birthdate__c}" />
+		                <apex:inputField value="{!employee.mployee__AddressStreet__c}" />
+		                <apex:inputField value="{!employee.mployee__AddressZIP__c}" />
+		                <apex:inputField value="{!employee.mployee__AddressCity__c}" />
+		                <apex:inputField value="{!employee.mployee__AddressCountry__c}" />
+		                <apex:inputField value="{!employee.mployee__EmployeeNumber__c}"/>
+		                <apex:inputField value="{!employee.mployee__SSN__c}" />
+	                </apex:pageBlockSection>
+			    </apex:pageBlock>
+			</apex:panelGrid>
+			
+			
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.label} - {!$ObjectType.mployee__MF_EmployeeFile__c.label}" collapsible="false" rendered="true">
+                <apex:outputText value="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.label}" />
+                <apex:outputText value="{!$ObjectType.mployee__MF_EmployeeFile__c.label}" />            
+                
+                <apex:outputField value="{!candidate.mployee__NameFirst__c}"/>
+                <apex:inputField value="{!employee.mployee__NameFirst__c}" />
+                
+                <apex:outputField value="{!candidate.mployee__NameLast__c}"/>
+                <apex:inputField value="{!employee.mployee__NameLast__c}" />
+                
+                <apex:outputField value="{!candidate.mployee__Gender__c}"/>
+                <apex:inputField value="{!employee.mployee__gender__c}" />
+                
+                <apex:outputField value="{!candidate.mployee__Contact__c}" />
+                <apex:inputField value="{!employee.mployee__ContactInformation__c}" />
+                
+                <apex:outputField value="{!candidate.mployee__BirthDate__c}"/>
+                <apex:inputField value="{!employee.mployee__Birthdate__c}" />
+                
+                <apex:outputField value="{!candidate.mployee__AddressStreet__c}"/>
+                <apex:inputField value="{!employee.mployee__AddressStreet__c}" />
+                
+                <apex:outputField value="{!candidate.mployee__AddressZip__c}"/>
+                <apex:inputField value="{!employee.mployee__AddressZIP__c}" />
+                
+                <apex:outputField value="{!candidate.mployee__AddressCity__c}"/>
+                <apex:inputField value="{!employee.mployee__AddressCity__c}" />
+                
+                <apex:outputField value="{!candidate.mployee__AddressCountry__c}"/>
+                <apex:inputField value="{!employee.mployee__AddressCountry__c}" />
+                
+                <br/>
+                <apex:inputField value="{!employee.mployee__EmployeeNumber__c}"/>
+                
+                <br/>
+                <apex:inputField value="{!employee.mployee__SSN__c}" />
+            
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        
+        <apex:pageBlock title="{!$Label.GLOBAL_ACTION_CREATE} {!$ObjectType.mployee__Assignment__c.label}" id="assignmentDetail" rendered="{!renderMap['assignmentDetail']}">
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!stepEmployee}" value="{!$Label.GLIB_HTML_BACK}"/>
+                <apex:commandButton action="{!stepSummery}" value="{!$Label.GLIB_HTML_NEXT}"/>              
+                <apex:commandButton action="{!cancel}" value="{!$Label.GLOBAL_ACTION_CANCEL}"/>
+            </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.label}" >
+                <apex:inputField value="{!vacancy.mployee__State__c}" />
+            </apex:pageBlockSection>            
+            <!-- Project -->
+            <apex:pageBlockSection title="{!$ObjectType.mployee__Project__c.label}" rendered="{!renderMap['assignmentSection']}" >
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </apex:pageBlockSection>           
+            
+            <!-- Assignment -->
+            <apex:pageBlockSection title="{!$ObjectType.mployee__Assignment__c.label}" rendered="{!renderMap['assignmentSection']}" >
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            </apex:pageBlockSection>
+            
+            <!-- EmployeeFile -->
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_EmployeeFile__c.label}" id="assignmentDetailEmployee" >
+                <!-- Name -->
+                <apex:outputField value="{!employee.Name}" />
+                <!-- Record State -->
+                <apex:inputField value="{!employee.mployee__State__c}" rendered="false" />
+                <apex:pageBlockSectionItem rendered="true"/>
+             
+                <!-- placeholder apex:inputCheckbox -->
+                <apex:pageBlockSectionItem rendered="true" >
+                
+                </apex:pageBlockSectionItem>
+                <!-- Employed Since -->
+                <apex:inputField value="{!employee.mployee__EmployedSince__c}" required="true"  id="employedSince" >                
+                    <apex:actionSupport event="onchange" action="{!setContractDateStart}" rerender="assignmentDetailContract"/>
+                </apex:inputField>
+                                
+                
+                <!-- placeholder apex:inputCheckbox -->
+                <apex:pageBlockSectionItem >
+                
+                </apex:pageBlockSectionItem>
+                <!-- Exit Date -->
+                <apex:inputField value="{!employee.mployee__ExitDate__c}" id="exitDate" >
+                	<apex:actionSupport event="onchange" action="{!setContractDateEnd}" rerender="assignmentDetailContract"/>
+                </apex:inputField>                                
+            
+            </apex:pageBlockSection>
+            
+            <!-- Contract -->
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Contract__c.label}" id="assignmentDetailContract" >
+            	
+            	<apex:outputField value="{!contract.mployee__DateStart__c}" />
+            	<apex:outputField value="{!contract.mployee__DateEnd__c}" />
+            	
+            	<apex:inputCheckbox label="{!$Label.JA_TO_EMPLOYEE_isCalculateProbation}"  value="{!config['isCalculateProbation']}">
+                    <apex:actionSupport event="onchange" action="{!toggleDateEndProbation}" rerender="assignmentDetailContract"/>  
+                </apex:inputCheckbox>
+            	<apex:inputField value="{!contract.mployee__DateEndProbation__c}" rendered="{!renderMap['DateEndProbation']}" id="DateEndProbation" />
+            	<apex:outputField value="{!contract.mployee__DateEndProbation__c}" rendered="{!!renderMap['DateEndProbation']}"  />
+            	
+            	<apex:pageBlockSectionItem >
+            		<apex:inputText value="{!duration}" id="theTextInput">
+            			<apex:actionSupport event="onchange" action="{!setDateEndProbation}" rerender="assignmentDetailContract"/>
+            		</apex:inputText> 
+            		<apex:selectList value="{!durationType}" > 
+			            <apex:selectOption itemValue="day" itemLabel="{!$Label.GLOBAL_DAY}"/>
+			            <apex:selectOption itemValue="month" itemLabel="{!$Label.GLOBAL_MONTH}"/>
+			            <apex:actionSupport event="onchange" action="{!setDateEndProbation}" rerender="assignmentDetailContract"/>
+			        </apex:selectList>
+            	</apex:pageBlockSectionItem>  
+            	
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        
+        <!-- Step Summery -->
+        <apex:pageBlock id="summeryDetail" rendered="{!renderMap['summeryDetail']}">
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!stepAssignment}" value="{!$Label.GLIB_HTML_BACK}"/>
+                <apex:commandButton action="{!save}" value="{!$Label.GLIB_ACTION_SAVE}" />                
+                <apex:commandButton action="{!reset}" value="{!$Label.GLIB_ACTION_RESET}"/>
+            </apex:pageBlockButtons>
+            
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.label}" columns="1" id="vacancySummery">
+                <apex:outputField value="{!vacancy.mployee__State__c}" />          
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.label}" columns="2" id="candidateSummery">
+                <apex:outputField value="{!candidate.mployee__NameFull__c}" />
+                <apex:pageBlockSectionItem />
+                                
+                <apex:outputField value="{!candidate.mployee__State__c}" rendered="false"/>               
+                <apex:outputField value="{!candidate.mployee__Q_DateAvailable__c}" rendered="false"/>
+                
+                <apex:outputField value="{!candidate.mployee__CurrentEmployer__c}"/>
+                <apex:outputField value="{!candidate.mployee__CurrentlyEmployed__c}"/>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_EmployeeFile__c.label}" columns="2" id="employeeSummery">
+                <apex:outputField value="{!employee.Name}" />               
+                <apex:outputField value="{!employee.mployee__Birthdate__c}" />
+                                    
+                <apex:outputField value="{!employee.mployee__AddressStreet__c}" />
+                <apex:outputField value="{!employee.mployee__EmployeeNumber__c}" />
+                
+                <apex:outputField value="{!employee.mployee__AddressZIP__c}"/>
+                <apex:outputField value="{!employee.mployee__SSN__c}"/>
+                
+                <apex:outputField value="{!employee.mployee__AddressCity__c}"/>
+                <apex:outputField value="{!employee.mployee__EmployedSince__c}"/>
+                
+                <apex:outputField value="{!employee.mployee__AddressCountry__c}"/>
+                <apex:outputField value="{!employee.mployee__ExitDate__c}"/>
+                
+                <apex:pageBlockSectionItem />
+                <apex:outputField value="{!employee.mployee__State__c}"/>
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="{!$ObjectType.mployee__MF_Contract__c.label}" id="assignmentDetailContract" >            	
+            	<apex:outputField value="{!contract.mployee__DateStart__c}" />
+            	<apex:outputField value="{!contract.mployee__DateEnd__c}" />
+            	
+            	<apex:pageBlockSectionItem />
+            	<apex:outputField value="{!contract.mployee__DateEndProbation__c}"  />
+            </apex:pageBlockSection>
+            
+            <!-- placeholder assignmentSummery -->
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

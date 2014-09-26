@@ -1,0 +1,97 @@
+<apex:page standardStylesheets="false" showHeader="false" >
+
+
+<apex:stylesheet value="{!URLFOR($Resource.mployee__mployee, 'mployee/assets/css/template.css')}"  />
+<apex:stylesheet value="{!URLFOR($Resource.mployee__mployee, 'mployee/assets/js/jquery/ui/css/mployee-theme/jquery-ui-1.8.16.custom.css')}"  />
+
+<!-- Include the Jquery Script files -->
+<apex:includeScript value="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/js/jquery/core/jquery-1.6.4.js')}"  />
+<apex:includeScript value="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/js/jquery/ui/js/jquery-ui-1.8.16.custom.min.js')}"  />
+<apex:includeScript value="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/js/edit.js')}"  />
+
+
+<!-- End of Javascript files -->
+    <div id="border-top" class="h_blue"></div>
+    
+    
+    <div id="content-box">
+        <div id="toolbar-box">
+            <div class="m">                
+                <apex:insert name="toolbar"/>                
+            </div>
+        </div>        
+              
+        <apex:pageMessages />
+        <div id="element-box">
+            <div class="m">
+                <apex:insert name="body"/>
+                <div class="clr"></div>
+                <apex:insert name="bottom"/>
+            </div>
+        </div>
+    </div>
+        
+    <div id="footer">
+        <apex:insert name="footer"/>
+    </div>  
+
+
+<apex:define name="body">
+<div id="cpanel" class="AdminCpanel">
+    <div class="adminform">
+        <!-- Start Cpanel left-->
+        
+        <div class="cpanel-left">
+        
+        <apex:form >
+            <div id="cpanel">                
+                <!-- Employees -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.mployee__MF_EmployeeFile__c}/o" title="{!$ObjectType.mployee__MF_EmployeeFile__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_employees_employees.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_EmployeeFile__c.labelPlural}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+                <!-- HR Contracts -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.mployee__MF_Contract__c}/o" title="{!$ObjectType.mployee__MF_Contract__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-featured.png')}"/>
+                             
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+<!-- MF_Recruitment_JobApplication__c -->
+                <div>
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.mployee__MF_Recruitment_JobApplication__c}/o" title="{!$ObjectType.mployee__MF_Recruitment_JobApplication__c.labelPlural}">
+                            
+                            <apex:image id="theImage" value="{!$Resource.jQuery1}" width="50" height="50"/>                          
+                             <span>{!$ObjectType.mployee__MF_Recruitment_JobApplication__c.labelPlural}</span>      
+                         </apex:outputLink>
+                    </div>
+                </div>                
+                <!-- MF_Documents__c -->
+               
+            </div>
+        </apex:form>
+        </div>
+        
+        <!-- End Cpanel left-->
+        
+        <!-- Start Cpanel right-->
+        <div class="cpanel-right">            
+        
+        </div>
+        <!-- End Cpanel right-->
+    </div>
+    <div class="clr"></div>
+</div>
+<div class="clr"></div>
+
+</apex:define>
+
+
+</apex:page>

@@ -1,0 +1,33 @@
+<apex:component id="attachmentuploader" controller="mployee.com_AttachmentUploaderController" allowDML="true" layout="none">
+
+	
+	<apex:attribute assignTo="{!parentId}" name="candidateId" description="parentid" type="Id" required="false" />
+	
+	<apex:form id="adminForm" styleClass="form-horizontal" forceSSL="true">
+		
+		<!-- ProfilePicture -->
+		<h3><apex:outputText value="Profiel Photo"/></h3>
+		
+		<div class="fileinput fileinput-new" data-provides="fileinput">
+			<div class="fileinput-new thumbnail" style="width: 200px; height: 150px;">
+				<apex:image id="avatar" styleClass="img-thumbnail" rendered="true" style="height:100px" url="{!URLFOR($Resource.mployee__templateBootstrap, 'assets/img/avatar_male_dark_200x200.png' )}"/>												    
+			</div>
+			<div class="fileinput-preview fileinput-exists thumbnail" style="max-width: 200px; max-height: 150px;"></div>
+			<div>
+			    <span class="btn btn-default btn-file">
+			    	<span class="fileinput-new">Select image</span>
+			    	<span class="fileinput-exists">Change</span>												    	
+			    	<apex:inputFile id="upload" value="{!profilePhoto.attachment.Body}" filename="{!profilePhoto.attachment.name}"/>
+			    	
+			    </span>
+			    <a href="#" class="btn btn-default fileinput-exists" data-dismiss="fileinput">Remove</a>
+			    &nbsp;
+			    <apex:commandButton styleClass="btn btn-default" value="{!$Label.GLOBAL_ACTION_SAVE}" action="{!saveProfilePhoto}"/>
+			</div>
+		</div>
+	
+	
+	</apex:form>
+	
+	
+</apex:component>

@@ -1,0 +1,443 @@
+<apex:page id="AdminModule" controller="mployee.AdminModuleController" showHeader="false" standardStylesheets="false">
+	
+	
+	
+	<apex:composition template="mployee__AdminTemplateAcme">
+		
+		<apex:define name="javascript">
+			<apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite,'assets/js/plugins/datetimepicker/bootstrap-datetimepicker.js')}"  /> 
+			<apex:includeScript value="{!URLFOR($Resource.templateUnicorn,	'assets/js/select2.min.js')}"  />
+			
+			<apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/js/plugins/formhelpers/bootstrap-formhelpers-selectbox.js')}"  />
+			<apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/js/plugins/formhelpers/bootstrap-formhelpers-languages.js')}"  />
+			<apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/js/plugins/formhelpers/bootstrap-formhelpers-languages.codes.js')}"  />
+			
+			<script type="text/javascript">
+		    	function languageChanged(e){                    
+	                $('[id$=language__c]').val( e.value );                
+	            }			    
+			
+			    (function($){	
+		            
+			        $(document).ready(function()
+			        {
+			            $('select').select2();
+			            $('.datetimepicker').removeAttr('onfocus');
+			            $('.datetimepicker').next().removeClass('dateFormat').addClass('dateHide').empty(); 
+			            $('.datetimepicker').datetimepicker({
+			            	autoclose:true,
+		                   	language: 'nl-NL',
+		                   	endDate: new Date(),
+		                   	startView:2,
+		                   	//minViewMode:2,
+		                   	todayBtn: true,
+		                   	format: 'dd-mm-yyyy hh:ii'
+			            });
+			            
+			            
+		            	
+			             
+			            $('*[rel=tooltip]').tooltip()
+			    
+			            // Turn radios into btn-group
+			            $('table.radio.btn-group tbody tr td label').addClass('btn');
+			            $("table.radio.btn-group tbody tr td label:not(.active)").click(function()
+			            {
+			                var label = $(this);
+			                
+			                //var input = $('#' + label.attr('for'));
+			                var input = $(this).prev();
+			    
+			                if (!input.prop('checked')) {
+			                    label.closest('.btn-group').find("label").removeClass('active btn-success btn-danger btn-primary btn-warning');
+			                    if (input.val() == 1) {
+			                        label.addClass('active btn-success');
+			                    } else if (input.val() == 0) {
+			                        label.addClass('active btn-danger');
+			                    } else {
+			                        label.addClass('active btn-warning');
+			                    }
+			                    input.prop('checked', true);
+			                }
+			            });
+			            $("table.btn-group tbody tr td input[checked=checked]").each(function()
+			            {
+			                if ($(this).val() == 1) {
+			                    $(this).next().addClass('active btn-success');
+			                    //$("label[for=" + $(this).attr('id') + "]").addClass('active btn-primary');
+			                } else if ($(this).val() == 0) {
+			                    $(this).next().addClass('active btn-danger');
+			                    //$("label[for=" + $(this).attr('id') + "]").addClass('active btn-danger');
+			                } else {
+			                    $(this).next().addClass('active btn-warning');
+			                    //$("label[for=" + $(this).attr('id') + "]").addClass('active btn-success');
+			                }
+			            });
+			            
+			            
+			        })
+			    })(jQuery);
+			    
+			    //var j$ = jQuery.noConflict();       
+		    </script>
+		
+		</apex:define>
+		
+		<apex:define name="css">
+			<apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/css/plugins/datetimepicker/datetimepicker.css')}"/>
+			<apex:stylesheet value="{!URLFOR($Resource.mployee__templateUnicorn, 'assets/css/select2.css')}"/>
+			<apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/css/plugins/formhelpers/bootstrap-formhelpers.css')}"/>
+			<apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/css/plugins/formhelpers/bootstrap-formhelpers-countries.flags.css')}"/>
+						
+			<style type="text/css">
+				.form-actions {
+					padding: 19px 20px 20px;
+					margin: 20px -10px -10px -10px;
+					background-color: #f5f5f5;
+				}
+		        input[type=radio] {
+		            display: none;
+		        }
+		        .form-horizontal .control-group {
+					border-top: 0px solid #ffffff;
+					border-bottom: 1px solid #eeeeee;
+					margin-bottom: 0;
+				}
+				.form-actions {
+					padding-left: 0px;				
+					border-top: 0px solid #e5e5e5;
+				} 
+				table.radio {
+					padding-left:0px;
+				}
+	            [class*="span"] {
+	                margin-left: 0px;
+	            }
+		    </style>
+		</apex:define>
+		
+		
+		
+		<apex:define name="header-menu"> 
+			<c:AdminPageHeader rendered="true" AppMenuItemList="{!AppMenuItemList}" selectedApp="{!app}" sfdcBaseURL="{!sfdcBaseURL}" />
+		</apex:define>
+		
+		<apex:define name="sidebar-left">			
+			<c:adminMod_menu />
+		</apex:define>
+		
+			
+		
+		<apex:define name="content">
+		
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="box">
+						<div class="box-header">
+							<h2><i class="fa fa-edit"></i><span class="break"></span>Wizard</h2>
+							<div class="box-icon">
+								<a href="form-wizard.html#" class="btn-setting"><i class="fa fa-wrench"></i></a>
+								<a href="form-wizard.html#" class="btn-minimize"><i class="fa fa-chevron-up"></i></a>
+								<a href="form-wizard.html#" class="btn-close"><i class="fa fa-times"></i></a>
+							</div>
+						</div>
+						<div class="box-content">
+							
+							<apex:form id="adminform" styleClass="form-horizontal" >
+								
+									
+									
+									<ul class="nav tab-mene nav-tabs">
+									  <li class="active"><a href= "#details" data-toggle="tab">Details</a></li>
+									  <li><a href= "#options" data-toggle="tab">Options</a></li>
+									  <li><a href= "#debug" data-toggle="tab">Debug</a></li>				 
+									</ul>
+									 
+									<div class="tab-content">
+									  
+									    <div class="tab-pane active" id="details">
+									  		<div class="row-fluid">				  		
+									  		<div class="col-md-6">
+									  			
+									  			
+									  			<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.name.Label}" for="name"/>
+												    <div class="col-sm-10">
+														<apex:inputField value="{!module.Name}" id="name" styleClass="form-control"/>
+												    </div>
+											  	</apex:outputpanel>						  	
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.mployee__showtitle__c.Label}" for="showtitle__c"/>
+												    <div class="col-sm-10">
+														<apex:selectRadio value="{!module.mployee__showtitle__c}" id="showtitle__c" styleClass="radio btn-group">
+					                                        <apex:selectOption itemValue="1" itemLabel="Show"/>
+					                                        <apex:selectOption itemValue="0" itemLabel="Hide"/>
+					                                    </apex:selectRadio> 
+												    </div>
+											  	</apex:outputpanel>
+											  	
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.mployee__position__c.Label}" for="position__c"/>
+												    <div class="col-sm-10">
+														
+														<apex:selectList value="{!module.mployee__position__c}" styleClass="">
+															<apex:selectOptions value="{!selectOptionsPosition}"/>										
+														</apex:selectList>
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.mployee__published__c.Label}" for="published__c"/>
+												    <div class="col-sm-10">									
+														<apex:selectRadio value="{!module.mployee__published__c}" id="published__c" styleClass="radio btn-group">
+					                                        <apex:selectOptions value="{!selectOptionsPublished}"/>                                        
+					                                    </apex:selectRadio> 
+												    </div>
+											  	</apex:outputpanel>						  	
+												<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.mployee__acces__c.Label}" for="acces__c"/>
+												    <div class="col-sm-10">
+														<apex:inputField value="{!module.mployee__acces__c}" id="acces__c" styleClass="form-control"/>
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.mployee__ordering__c.Label}" for="ordering__c"/>
+												    <div class="col-sm-10">
+												    	<apex:selectList value="{!module.mployee__ordering__c}" styleClass="form-control">
+															<apex:selectOptions value="{!selectOptionsOrdering}"/>
+														</apex:selectList>									
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.mployee__publish_up__c.Label}" for="publish_up__c"/>
+												    <div class="col-sm-10">
+												    	<apex:inputfield styleClass="datetimepicker form-control" value="{!module.mployee__publish_up__c}" />								
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.mployee__publish_down__c.Label}" for="publish_down__c"/>
+												    <div class="col-sm-10">
+												    	<apex:inputfield styleClass="datetimepicker form-control" value="{!module.mployee__publish_down__c}"/>								
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.mployee__language__c.Label}" for="language__c"/>
+												    <div class="col-sm-10">
+												    	<apex:inputfield value="{!module.mployee__language__c}" styleClass="form-control"/>								
+												    </div>
+											  	</apex:outputpanel>
+											  	<apex:outputpanel styleClass="form-group" layout="block">						    
+												    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.mployee__cms_Module__c.Fields.mployee__note__c.Label}" for="note__c"/>
+												    <div class="col-sm-10">
+												    	<apex:inputfield value="{!module.mployee__note__c}" styleClass="form-control"/>								
+												    </div>
+											  	</apex:outputpanel>
+											</div><!-- .span6 -->
+											
+											<div class="col-md-6">
+												<blockquote>
+													<h4>Description</h4>
+													<pre>
+														{!OptionJSON}
+													
+													</pre>
+													<hr/>
+													<div>Lorem ipsum</div>								
+												</blockquote>
+											</div><!-- .span6 -->
+									  	</div><!-- .row-fluid -->				  
+									  </div><!-- #details -->
+									  
+									  <div class="tab-pane" id="options">
+									  	<div class="accordion" id="collapse-group">
+										  	<apex:repeat id="fieldset" value="{!Manifest.config.fields.fieldset}" var="fieldset">
+										  	<div class="accordion-group widget-box">
+						                          <div class="accordion-heading">
+						                              <div class="box-header">
+						                                  <a data-parent="#collapse-group" href="#{!fieldset.name}" data-toggle="collapse" class="">
+						                                      <h2><i class="fa fa-list"></i><span class="break"></span>{!fieldset.name} Options</h2>
+						                                  </a>
+						                              </div>
+						                          </div>
+						                          <div class="accordion-body in collapse" id="{!fieldset.name}">
+						                              <div class="box-content">	
+						                              
+						                              
+						                              	<apex:repeat id="field" value="{!fieldset.field}" var="field">
+										  					
+										  					<apex:outputpanel styleClass="form-group" layout="block">						    
+															    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$Label[field.label]}" for="param"/>
+															    <div class="col-sm-10">
+															    	
+															    	<apex:inputText id="param" styleClass="form-control" value="{!params[field.name]}" />
+															    </div>
+														  	</apex:outputpanel>
+										  					
+										  				</apex:repeat>                                      
+						                              </div>
+						                          </div>
+						                      </div>
+										  	</apex:repeat>
+					                        	<div class="accordion-group widget-box">
+											    <div class="accordion-heading">
+											        <div class="box-header">
+											            <a data-parent="#collapse-group" href="#collapseGTwo" data-toggle="collapse">
+											                <h2><i class="fa fa-list"></i><span class="break"></span>Advanced Options</h2>
+											                
+											            </a>
+											        </div>
+											    </div>
+											    <div class="accordion-body collapse" id="collapseGTwo">
+											        <div class="box-content">
+											        	
+											        	<apex:outputpanel styleClass="form-group" layout="block">						    
+														    <apex:outputLabel styleClass="col-sm-2 control-label" value="Alternatieve weergave" for="name"/>
+														    <div class="col-sm-10">
+																<apex:selectList value="{!params['layout']}" styleClass="span3">
+																	<apex:selectOption itemValue="default" itemLabel="Default"/>
+																	<apex:selectOption itemValue="base" itemLabel="Base"/>
+																	<apex:selectOption itemValue="unicorn" itemLabel="Unicorn"/>
+																</apex:selectList>
+														    </div>
+													  	</apex:outputpanel>
+													  						                          
+										                <apex:outputpanel styleClass="form-group" layout="block">						    
+														    <apex:outputLabel styleClass="col-sm-2 control-label" value="Module class achtervoegsel" for="moduleclass_sfx"/>
+														    <div class="col-sm-10">
+																<apex:inputText id="moduleclass_sfx"  value="{!params['moduleclass_sfx']}" styleClass="form-control"/>
+														    </div>
+													  	</apex:outputpanel>
+														
+					                                   
+					                                    
+														<apex:outputpanel styleClass="form-group" layout="block">	
+															<apex:outputLabel styleClass="col-sm-2 control-label" value="Caching" for="cache"/>
+															<div class="col-sm-10">
+																<apex:selectList value="{!params['cache']}" styleClass="span3">
+																	<apex:selectOption itemValue="0" itemLabel="Use Global"/>
+														            <apex:selectOption itemValue="1" itemLabel="No caching"/>
+																</apex:selectList>
+															</div>
+														</apex:outputpanel>
+														
+														<apex:outputpanel styleClass="form-group" layout="block">									    
+														    <apex:outputLabel styleClass="col-sm-2 control-label" value="Cachetijd" for="cache_time"/>
+														    <div class="col-sm-10">
+														    	<apex:inputText id="cache_time"  value="{!params['cache_time']}" styleClass="form-control" />											
+														    </div>
+													  	</apex:outputpanel>
+													  	
+													  	<apex:outputpanel styleClass="form-group" layout="block">									    
+														    <apex:outputLabel styleClass="col-sm-2 control-label" value="Module Tag" for="cache_time"/>
+														    <div class="col-sm-10">
+														    	<apex:selectList value="{!params['module_tag']}" styleClass="span3">
+																	<apex:selectOption itemValue="div" itemLabel="div"/>
+									                               		<apex:selectOption itemValue="section" itemLabel="section"/>
+									                               		<apex:selectOption itemValue="aside" itemLabel="aside"/>
+									                               		<apex:selectOption itemValue="nav" itemLabel="nav"/>
+									                               		<apex:selectOption itemValue="address" itemLabel="address"/>
+									                               		<apex:selectOption itemValue="article" itemLabel="article"/>
+																</apex:selectList>								
+														    </div>
+													  	</apex:outputpanel>
+													  	<apex:outputpanel styleClass="form-group" layout="block">									    
+														    <apex:outputLabel styleClass="col-sm-2 control-label" value="Bootstrap Size" for="bootstrap_size"/>
+														    <div class="col-sm-10">
+														    	<apex:selectList value="{!params['bootstrap_size']}" styleClass="span3">
+																	<apex:selectOption itemValue="0" itemLabel="0"/>
+									                               		<apex:selectOption itemValue="1" itemLabel="1"/>
+									                               		<apex:selectOption itemValue="2" itemLabel="2"/>
+									                               		<apex:selectOption itemValue="3" itemLabel="3"/>
+									                               		<apex:selectOption itemValue="4" itemLabel="4"/>
+									                               		<apex:selectOption itemValue="5" itemLabel="5"/>
+									                               		<apex:selectOption itemValue="6" itemLabel="6"/>
+																</apex:selectList>											
+														    </div>
+													  	</apex:outputpanel>
+														<apex:outputpanel styleClass="form-group" layout="block">									    
+														    <apex:outputLabel styleClass="col-sm-2 control-label" value="Header Tag" for="header_tag"/>
+														    <div class="col-sm-10">
+														    	<apex:selectList value="{!params['header_tag']}" styleClass="span3">												
+								                               		<apex:selectOption itemValue="h1" itemLabel="h1"/>
+								                               		<apex:selectOption itemValue="h2" itemLabel="h2"/>
+								                               		<apex:selectOption itemValue="h3" itemLabel="h3"/>
+								                               		<apex:selectOption itemValue="h4" itemLabel="h4"/>
+								                               		<apex:selectOption itemValue="h5" itemLabel="h5"/>
+								                               		<apex:selectOption itemValue="h6" itemLabel="h6"/>
+								                               		<apex:selectOption itemValue="p" itemLabel="p"/>
+																</apex:selectList>										
+														    </div>
+													  	</apex:outputpanel>
+													  	<apex:outputpanel styleClass="form-group" layout="block">									    
+														    <apex:outputLabel styleClass="col-sm-2 control-label" value="Koptekst class" for="header_class"/>
+														    <div class="col-sm-10">
+														    	<apex:inputText id="header_class"  value="{!params['header_class']}" styleClass="form-control"/>										
+														    </div>
+													  	</apex:outputpanel>
+					                                    
+														
+														
+														
+					                                    
+					                                    
+											        </div>
+											    </div>
+											</div>
+									  	</div>
+									  		
+										
+						                  
+										
+									  </div><!-- #options -->	
+									  <div class="tab-pane" id="debug">
+										  	<div class="row-fluid">				  		
+										  		<div class="col-md-6">
+										  			<pre>
+										  			{!Manifest.config.fields.fieldset}
+										  			</pre>
+										  		</div>
+										  	</div>
+										</div>			
+									</div>
+									
+									<div class="clearfix"/>
+								
+									<div class="form-actions">					
+										<apex:commandLink styleClass="btn btn-small btn-success" action="{!save}" id="save" >
+											<i class="icon-edit"></i> Save
+										</apex:commandLink>					
+										&nbsp;
+										<apex:commandLink styleClass="btn btn-small" action="{!saveAndClose}" id="saveandclose" >
+											<i class="icon-ok"></i> Save &amp; Close
+										</apex:commandLink>
+										&nbsp;
+										<apex:commandLink styleClass="btn btn-small" action="{!saveAndNew}" id="saveandnew" >
+											<i class="icon-plus"></i> Save &amp; New
+										</apex:commandLink>
+										&nbsp;
+										<apex:commandLink styleClass="btn btn-small" action="{!cancel}" id="cancel" >
+											<i class="icon-remove"></i> Cancel
+										</apex:commandLink>
+										&nbsp;
+										<apex:outputLink target="_blank" styleClass="btn btn-small" value="{!URLFOR($Resource.mployee__templateUnicorn, 'html/help/index.html')}" id="help" >
+											<i class="icon-info-sign"></i> Help
+										</apex:outputLink>
+										
+										
+									</div>	
+							</apex:form>
+						</div>
+						
+					
+					</div>
+				
+				
+		
+			
+			</div>
+			</div>
+		</apex:define>
+	
+	</apex:composition>
+	
+	
+</apex:page>

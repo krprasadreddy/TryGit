@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Letterhead xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <backgroundColor>#CCCCCC</backgroundColor>
+    <bodyColor>#FFFFFF</bodyColor>
+    <bottomLine>
+        <color>#009900</color>
+        <height>5</height>
+    </bottomLine>
+    <description>Letterhead for the approval Process of Expenses</description>
+    <footer>
+        <backgroundColor>#FFFFFF</backgroundColor>
+        <height>100</height>
+        <horizontalAlignment>Center</horizontalAlignment>
+        <logo>mployeeForce/mployee_logo.png</logo>
+        <verticalAlignment>Middle</verticalAlignment>
+    </footer>
+    <header>
+        <backgroundColor>#FFFFFF</backgroundColor>
+        <height>100</height>
+        <horizontalAlignment>Center</horizontalAlignment>
+        <logo>mployeeForce/icon_48_MF_EmployeeSalary.png</logo>
+        <verticalAlignment>Middle</verticalAlignment>
+    </header>
+    <middleLine>
+        <color>#009900</color>
+        <height>5</height>
+    </middleLine>
+    <name>Letterhead Expense</name>
+    <topLine>
+        <color>#009900</color>
+        <height>5</height>
+    </topLine>
+</Letterhead>

@@ -1,0 +1,134 @@
+<apex:page id="profile" 
+           docType="html-5.0" 
+           controller="mployee.SiteProfileUploadController"
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+           language="{!$CurrentPage.parameters.lang}"
+>
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+    
+    	<apex:define name="javascript">
+    		<apex:includeScript value="{!URLFOR($Resource.mployeeSite,'assets/js/plugins/fileinput/bootstrap.js')}"  />
+    	</apex:define>
+    	
+    	<apex:define name="css">
+    		<apex:stylesheet value="{!URLFOR($Resource.mployeeSite,'assets/css/plugins/fileinput/bootstrap.css')}"/>
+    	</apex:define>    		
+    		
+    	
+        <apex:define name="body">
+        	<apex:messages />
+        	<div class="container">
+                <div class="row well">
+                	<apex:form styleClass="form-horizontal" id="adminform">
+                		
+                		<!-- Side Bar -->						
+						<ul class="nav {!siteSettings.navStyleClass} nav-stacked col-xs-4 col-md-push-8">
+							<li class="nav-header"><apex:outputText styleClass="hidden-phone" value="{!$Label.GLIB_HTML_SELECT_ACTION}"/></li>
+							
+							<li><apex:commandLink action="{!save}" rendered="{!IF($CurrentPage.parameters.action == 'picture',false,true)}"><span class="glyphicon glyphicon-check"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE}"/></apex:commandLink></li>
+							<li>
+								<apex:commandLink action="{!saveProfilePhoto}" rendered="{!IF($CurrentPage.parameters.action == 'picture',true,false)}">
+									<span class="glyphicon glyphicon-check"/>&nbsp;
+									<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_OBJECT}">
+										<apex:param value="{!fileTypeLabel}"/>
+									</apex:outputText>
+								</apex:commandLink>
+							</li>
+							
+							
+                        	<li><apex:commandLink action="{!cancel}"><span class="glyphicon glyphicon-remove"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_CANCEL}"/></apex:commandLink></li>
+						</ul>
+						
+						
+						
+						
+						
+						
+						<div class="col-xs-8 col-md-pull-4">
+							
+							
+						
+							<fieldset>
+	                    		<legend><apex:outputText styleClass="hidden-phone" value="{!$ObjectType.Attachment.LabelPlural}"/></legend>
+	                    	
+		                    	<!-- ProfilePicture -->
+				                <apex:outputpanel styleClass="col-md-4" rendered="{!IF($CurrentPage.parameters.action == 'picture',true,false)}" layout="block">						
+		             				<h3><apex:outputText value="Profiel Photo"/></h3>
+		             				<div class="fileinput fileinput-new" data-provides="fileinput">
+										<div class="fileinput-new thumbnail" style="width: 200px; height: 150px;">
+										
+											<apex:image styleClass="img-thumbnail" rendered="{!ISNULL(candidate.ProfilePhotoId__c)}" style="height:100px" url="{!URLFOR($Resource.mployeeSite, 'assets/img/avatar_'+item.Gender__c+'_dark_200x200.png' )}"/>
+							                <apex:image styleClass="img-thumbnail" rendered="{!!ISNULL(candidate.ProfilePhotoId__c)}" style="height:100px" url="{!URLFOR($Action.Attachment.Download, candidate.ProfilePhotoId__c)}"  />
+																			    
+										</div>
+										<div class="fileinput-preview fileinput-exists thumbnail" style="max-width: 200px; max-height: 150px;"></div>
+										<div>
+										    <span class="btn btn-default btn-file">
+										    	<span class="fileinput-new"><apex:outputText value="{!$Label.GLOBAL_ACTION_SELECT_FILE}" /></span>
+										    	<span class="fileinput-exists"><apex:outputText value="{!$Label.GLOBAL_ACTION_CHANGE}" /></span>												    	
+										    	<apex:inputFile id="uploadphoto" value="{!profilePhoto.attachment.Body}" filename="{!profilePhoto.attachment.name}"/>
+										    </span>
+											<a href="#" class="btn btn-default fileinput-exists" data-dismiss="fileinput"><apex:outputText value="{!$Label.GLOBAL_ACTION_REMOVE}" /></a>
+										</div>
+									</div>							                    					
+		                		</apex:outputpanel>								
+	                    		
+							  	
+							  	<apex:outputpanel styleClass="form-group" rendered="{!IF($CurrentPage.parameters.action == 'picture',false,true)}" layout="block">
+									<apex:repeat id="attachments-panels" value="{!NewAttachmentList}" var="item">
+                    						<h3><apex:outputText value="{!item.filetype.label}"/></h3>
+                    						<div class="fileinput fileinput-new" data-provides="fileinput">
+												<div class="input-group">
+												    <div class="form-control uneditable-input span3" data-trigger="fileinput"><i class="glyphicon glyphicon-file fileinput-exists"></i> <span class="fileinput-filename"></span></div>
+												    <span class="input-group-addon btn btn-default btn-file">
+												    	<span class="fileinput-new"><apex:outputText value="{!$Label.GLOBAL_ACTION_SELECT_FILE}" /></span>
+												    	<span class="fileinput-exists"><apex:outputText value="{!$Label.GLOBAL_ACTION_CHANGE}" /></span>
+												    	<apex:inputFile value="{!item.attachment.body}" filename="{!item.attachment.name}"/>
+												    </span>
+												    <a href="#" class="input-group-addon btn btn-default fileinput-exists" data-dismiss="fileinput"><apex:outputText value="{!$Label.GLOBAL_ACTION_REMOVE}" /></a>
+												</div>
+											</div>
+		                    					
+		                    			</apex:repeat>
+							  	
+							  	</apex:outputpanel>
+							  	
+							  	<apex:outputpanel styleClass="form-group" rendered="false" layout="block">
+							  	<apex:repeat value="{!NewAttachmentList}" var="item">
+							  	
+								    
+								    <div class="row">
+										<div class="col-md-3">
+											<apex:selectList styleClass="form-control required" style="height:30px;" value="{!item.filetype.value}" size="1" id="attachmentNew"> 
+			        						<apex:selectOptions value="{!filetypeOptions}"/>
+			        					</apex:selectList> 
+										</div>
+										<div class="col-md-5">											
+											<apex:inputFile value="{!item.attachment.body}" filename="{!item.attachment.name}" styleClass="form-control"/>
+										</div>
+										<div class="col-md-4">
+											<apex:inputText value="{!item.attachment.description}" styleClass="form-control" html-placeholder="{!$ObjectType.Attachment.Fields.Description.label}"/>
+										</div>
+										
+									</div>								    
+							  	
+							  	</apex:repeat>
+							  	</apex:outputpanel>
+							  	
+							  	
+							</fieldset>
+						
+						</div>
+						    
+					</apex:form>
+				</div> <!-- /row -->
+			</div>
+        
+        
+        </apex:define>
+	</apex:composition>
+</apex:page>

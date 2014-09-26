@@ -1,0 +1,56 @@
+<apex:page id="MFEmployeeCompanyCarEndDate"
+			standardController="mployee__MF_EmployeeCompanyCar__c"			
+			extensions="mployee.MF_EmployeeCompanyCarControllerExt"
+			sidebar="false"
+			tabStyle="Employee__tab"
+			>
+ 
+    <apex:sectionHeader title="{!$Label.MF_ReturnCompanyCar} {!mployee__MF_EmployeeCompanyCar__c.EmployeeFile__r.Name}" subtitle="{!mployee__MF_EmployeeCompanyCar__c.CompanyCarInventory__r.Name} ({!mployee__MF_EmployeeCompanyCar__c.CompanyCarInventory__r.mployee__CarBrand__c})"/>
+    <apex:pageMessages />
+    
+    <apex:form >
+        <apex:pageBlock title="{!$Label.MF_EditCompanyCar}" id="CC" mode="edit">
+            
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!save}" value="{!$Label.MF_Save}"/>
+                <apex:commandButton action="{!cancel}" value="{!$Label.MF_Cancel}" onclick="return confirmCancel()" immediate="true"/>   
+            </apex:pageBlockButtons>
+            
+            <apex:actionRegion >
+            
+                <apex:pageBlockSection title="{!$Label.MF_CarReturnDate} ({!mployee__MF_EmployeeCompanyCar__c.EmployeeFile__r.Name}) " columns="1">
+                    <apex:inputField value="{!car.mployee__DateEnd__c}"/>   
+                </apex:pageBlockSection>
+                
+                <!-- Inventory -->
+
+                <apex:pageBlockSection title="{!$Label.MF_EditCompanyCarInventory}">
+                    <apex:pageBlockSectionItem >
+                        <apex:outputLabel value="{!$ObjectType.mployee__MF_Organisation_CompanyCarInventory__c.Fields.mployee__State__c.Label}"/>
+                            <apex:outputPanel >
+                                <apex:inputField value="{!CarInventory.mployee__State__c}" label="stage">
+                                    <apex:actionSupport event="onchange" rerender="CC" status="status"/>
+                                </apex:inputField>
+                                <apex:actionStatus startText="applying value..." id="status"/>
+                            </apex:outputPanel> 
+                    </apex:pageBlockSectionItem>  
+                </apex:pageBlockSection> 
+            </apex:actionRegion>
+            
+            <apex:pageBlockSection title="{!$Label.MF_ReturnLeaseCompany}({!mployee__MF_EmployeeCompanyCar__c.CompanyCarInventory__r.mployee__LeaseCompany__c}) {!$Label.MF_Information}"
+                                   columns="1"
+                                   rendered="{!CarInventory.mployee__State__c == 'Return Lease Company'}">
+                <apex:inputField value="{!CarInventory.mployee__DateReturnLeaseComp__c}" required="true"/>
+                <apex:outputField value="{!CarInventory.mployee__DateEnd__c}"/>
+            </apex:pageBlockSection>
+        </apex:pageBlock>    
+    </apex:form>
+    
+    <script>    
+    function confirmCancel() {
+        var isCancel = confirm("{!$Label.MF_AreYouSure}");
+        if (isCancel) return true;
+        return false;
+    }
+    </script>
+</apex:page>

@@ -1,0 +1,18 @@
+<apex:page standardController="kognoz1__Invoice2__c" recordSetVar="invoices" extensions="kognoz1.MigrateInvoicesToV32Controller" tabStyle="kognoz1__Invoice2__c" title="Migrate Invoices to Package Version 3.2">
+	<apex:form >
+		<apex:sectionHeader title="Recalculation of Invoices Total Amounts and Outstanding Balances" subtitle="Migration of Invoices to Package Version 3.2" />
+		<apex:pageBlock >
+				<apex:pageBlockButtons >
+					<apex:commandButton action="{!migrateInvoices}" value="Migrate"/>
+					<apex:commandButton action="{!cancel}" value="Cancel"/>
+				</apex:pageBlockButtons>
+				<p> Click on the Migrate button to proceed with the migration.</p>
+				<apex:outputPanel rendered="{!isError}" layout="block" style="width:50%;margin-left:10%;border:1px solid black;padding:10px;">
+					There was an error while recalculating the invoices total amounts and outstanding balances.
+					Invoices for Salesforce has been informed and a representative will be contacting you shortly.
+				</apex:outputPanel>
+		</apex:pageBlock>
+	</apex:form>
+
+
+</apex:page>

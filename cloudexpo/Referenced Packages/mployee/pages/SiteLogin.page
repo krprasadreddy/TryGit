@@ -1,0 +1,31 @@
+<apex:page id="loginPage"
+		   docType="html-5.0"
+           showHeader="false"
+           controller="mployee.SiteClass"   
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+           title="{!$Label.site.site_login}"
+>
+
+	<apex:composition template="SiteTemplate{!siteSettings.template.name}">
+  
+    <apex:define name="css">
+        <apex:stylesheet value="{!URLFOR($Resource.templateBase,'assets/css/pages/signin.css')}"/>
+    </apex:define>
+    
+    <apex:define name="body">       
+        <div class="account-container stacked"> 
+            <div class="content clearfix">
+                <c:siteMod_Login id="siteLogin" config="{!siteSettings.modules['mod_login']}"/>
+            </div>
+        </div>
+        
+        
+        
+        
+        
+    </apex:define>
+  </apex:composition>
+</apex:page>

@@ -1,0 +1,51 @@
+<apex:page id="siteTemplate" 
+           docType="html-5.0" 
+           controller="mployee.SiteTemplateController" 
+           showHeader="false"
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false" 
+           language="nl-NL"          
+>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>{!siteConfig.mployee__title__c}</title>
+        <meta name="description" content="{!siteConfig.metaDescription__c}"/>
+        <meta name="keywords" content="{!siteConfig.metaKeywords__c}"/>         
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        
+        <!-- Bootstrap core CSS -->
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBootstrap,'assets/css/bootstrap.css')}"/>        
+        <!-- Bootstrap theme -->
+        
+        <!-- m|ployee core CSS -->
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeSite,'assets/css/font-awesome.css')}"/>
+        
+        <apex:insert name="css"/>
+        
+        <!-- start: JavaScript-->
+        <apex:includeScript value="https://code.jquery.com/jquery.js"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBootstrap,'assets/js/bootstrap.js')}"  />        
+        <!-- m|ployee core JavaScript -->
+        <apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite,'assets/js/plugins/touch/jquery.ui.touch-punch.min.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite,'assets/js/plugins/scroll-to-top/back-to-top.js')}"  />
+        <!-- custum JavaScript -->
+        <apex:insert name="javascript"/>        
+    </head>
+    
+    <body>
+    	  	
+        <c:SiteNavbar />
+        
+       
+        <apex:insert name="body"/>
+        
+        
+        
+    </body>
+
+</html> 
+</apex:page>

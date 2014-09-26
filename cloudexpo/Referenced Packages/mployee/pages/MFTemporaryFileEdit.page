@@ -1,0 +1,86 @@
+<apex:page id="page" standardController="mployee__MF_TemporaryFile__c">
+<apex:variable value="{!mployee__MF_TemporaryFile__c}" var="temp"/>
+<apex:stylesheet value="{!URLFOR($Resource.mployee__mployee, 'mployee/assets/js/jquery/ui/css/mployee-theme/jquery-ui-1.8.16.custom.css')}"  />
+<apex:stylesheet value="{!URLFOR($Resource.mployee__mployee, 'mployee/assets/css/template.css')}"  />
+<apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeView, '/view.css')}"  />
+<!-- Include the Jquery Script files -->
+<apex:includeScript value="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/js/jquery/core/jquery-1.6.4.js')}"  />
+<apex:includeScript value="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/js/jquery/ui/js/jquery-ui-1.8.16.custom.min.js')}"  />
+<apex:includeScript value="{!URLFOR($Resource.mployee__mployeeView, '/view.js')}"  />
+
+<script type="text/javascript">
+init();
+function init(){
+    jQuery.noConflict();
+    jQuery(document).ready( function() {
+        // Checks if the div #toolbar exists if not the function creates the toolbar
+        if (!jQuery('div.toolbar-list').length ) {            
+            createToolbar();
+        }
+        // Checks if the div #RelatedTabs exists if not the function create tabs
+        if (!jQuery('#RelatedTabs').length ) {
+            createTabs();
+        }        
+        //createFieldsets();
+
+        //jQuery('.bPageBlock').css('border', 'none');
+        //jQuery('.bPageBlock').css('background-image', 'none');
+        //jQuery('.bPageBlock').css({'background-color': 'none', 'background-image': 'none'});
+    });
+};
+
+jQuery(function () {
+    var NameElement      = document.getElementById('{!$Component.page.form.pageBlock.pageBlockSectionInformation.Name}');
+    jQuery(NameElement).attr('disabled', 'disabled');
+    var firstNameElement = document.getElementById('{!$Component.page.form.pageBlock.pageBlockSectionName.NameFirst__c}');    
+    var lastNameElement  = document.getElementById('{!$Component.page.form.pageBlock.pageBlockSectionName.NameLast__c}');
+    var firstName        = jQuery(firstNameElement).keyup(mergeName);
+    var lastName         = jQuery(lastNameElement).keyup(mergeName);
+    
+    function mergeName() {
+        var firstNameValue = firstName.val();
+        var lastNameValue  = lastName.val();
+        var name = firstNameValue+ ' '+lastNameValue
+        jQuery(NameElement).val(name);
+    }
+});  
+</script>
+
+<apex:form id="form" >
+<apex:sectionHeader title="Edit Temp" subtitle="{!temp.Name}"/>
+<apex:pageBlock id="pageBlock" title="Temp Edit">
+    <apex:pageBlockButtons >
+        <apex:commandButton action="{!save}" title="Save" value="{!$Label.MF_Save}" />
+        <apex:commandButton action="{!cancel}" title="Cancel" value="{!$Label.MF_Cancel}" />
+    </apex:pageBlockButtons>
+    <apex:pageBlockSection id="pageBlockSectionInformation" title="{!$Label.MFTemporaryFileEdit_Info}" columns="2" >
+        <apex:inputField id="NameFirst__c" value="{!temp.mployee__NameFirst__c}"/>
+        <apex:inputField id="NameLast__c" value="{!temp.mployee__NameLast__c}"/>
+        <apex:inputField id="gender__c" value="{!temp.mployee__Gender__c}"/>
+        <apex:inputField id="Birthdate__c" value="{!temp.mployee__Birthdate__c}"/>
+        
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="pageBlockSectionName" title="Name" columns="2" >
+        <apex:inputField id="State__c" value="{!temp.mployee__State__c}"/>
+        <apex:inputField id="DivisionDepartment__c" value="{!temp.mployee__DivisionDepartment__c}"/>
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="blockSectionAddress" columns="2" title="Address">          
+        <apex:repeat value="{!$ObjectType.mployee__MF_TemporaryFile__c.FieldSets.mployee__Address}" var="address">    
+            <apex:inputField value="{!temp[address]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="blockSectionContractInformation" columns="2" title="Contract Information">          
+        <apex:repeat value="{!$ObjectType.mployee__MF_TemporaryFile__c.FieldSets.mployee__Contract}" var="add">    
+            <apex:inputField value="{!temp[add]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection> 
+
+
+</apex:pageBlock>
+
+</apex:form>
+
+</apex:page>

@@ -1,0 +1,106 @@
+<apex:page id="MFOrganisationPosition"
+	standardController="mployee__MF_Organisation_Position__c"	
+	docType="html-5.0"
+	applyHtmlTag="false"
+	applyBodyTag="false"
+	standardStylesheets="false"
+	showHeader="false"
+	cache="false"
+>
+	<apex:variable value="{!mployee__MF_Organisation_Position__c}" var="item"/>
+	<apex:composition template="mployee__AdminTemplateBootstrap">
+		<apex:define name="css">
+		
+		</apex:define>
+		
+		<apex:define name="javascript">
+			<script type="text/javascript">
+				$(document).ready( function() {
+					initialize();
+					getMarker();
+					$('a[href="#address"]').on('shown.bs.tab', function (e) {
+						
+						getMarker();
+						//getMarkers('mployee__MF_Organisation_Position__c');
+										
+					});
+					
+				});
+			</script>
+		
+		</apex:define>
+		
+		<apex:define name="body">
+			<div class="container-fluid">				
+				<div class="row">
+					<div class="col-md-12">
+						<c:adminMod_GoogleMap />
+					</div>
+				</div>
+			</div>
+		
+		</apex:define>
+		
+		
+		<div class="container-fluid">
+		<div class="row">
+			<ul class="nav nav-tabs">
+			  <!--<li><a href="#info" data-toggle="tab">Information</a></li> -->
+			  <li class="active"><a href="#map" data-toggle="tab">Map</a></li>
+			  <!-- <li><a href="#contact" data-toggle="tab">Contact</a></li> -->		  
+			</ul>
+			
+			<apex:outputpanel layout="block" styleClass="tab-content">
+	        
+				<section class="tab-pane  section profile" id="profile">
+					<div class="container">				
+						<div class="row">
+							<div class="col-md-2">
+								<apex:image value="{!URLFOR($Resource.mployeeSite,'assets/img//mapicons/people/home-2.png')}" />
+							</div>
+							<div class="col-md-10">
+								col-md-8
+							</div>
+						</div>
+					</div>
+				</section>
+				
+				<section class="tab-pane active section address" id="address">
+					<div class="container">				
+						<div class="row">
+							<div class="col-md-2">
+								<address>
+									<strong><apex:outputField value="{!item.Name}" /></strong><br/>
+								  	<apex:outputField value="{!item.LocationStreet__c}" /><br/>
+								  	<apex:outputField value="{!item.LocationPostalCode__c}" />&nbsp;<apex:outputField value="{!item.LocationCity__c}" /><br/>
+								  	<apex:outputField value="{!item.LocationCountryCode__c}" />
+								  	
+								</address>
+							
+							</div>
+							
+							<div class="col-md-10">
+								<c:adminMod_GoogleMap />
+								
+							</div>
+						</div>
+		
+					</div>
+				</section>
+				
+				<section class="tab-pane section contact" id="contact">
+					<div class="container">
+						<div class="row">
+							<div class="col-md-12">
+								col-md-12
+							</div>
+						</div>				
+					</div>	
+				</section>		
+			</apex:outputpanel>
+		</div>
+		</div>
+		
+	
+	</apex:composition>
+</apex:page>

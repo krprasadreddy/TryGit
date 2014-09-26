@@ -1,0 +1,115 @@
+<apex:page sidebar="false" tabstyle="mployee__tab" >
+<apex:composition template="mployee__templateMployee">
+<apex:define name="toolbar">
+    <c:MFToolbar title="Desktop m|ployee"
+        icon="icon-48-article-add"                    
+    />
+</apex:define>
+
+<apex:define name="body">
+<div id="cpanel" class="AdminCpanel">
+    <div class="adminform">        
+        <!-- Start Cpanel left-->
+        <div class="cpanel-left">
+        <apex:form >            
+            <div id="cpanel">
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Page.mployee__MFEmployeeCpanel}" title="{!$ObjectType.mployee__MF_EmployeeFile__c.labelPlural}">
+                             <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_employees_employees.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_EmployeeFile__c.labelPlural}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Page.mployee__MFOrganisationCPanel}" title="{!$ObjectType.mployee__MF_Organization__c.labelPlural}">
+                             <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_organisation.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Organization__c.labelPlural}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>                                
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Page.mployee__MFRecruitmentCPanel}" title="Recruitment">
+                             <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-search.png')}"/>                             
+                             <span>Recruitment</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+                <div class="clr"></div>                
+                <!-- MF_Account__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Account__c}/o" title="{!$ObjectType.mployee__MF_Account__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-contacts-categories.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Account__c.labelPlural}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+                <!-- MF_Contact__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Contact__c}/o" title="{!$ObjectType.mployee__MF_Contact__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-contacts.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Contact__c.labelPlural}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+                <!-- MF_Contract__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Contract__c}/o" title="{!$ObjectType.mployee__MF_Contract__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-featured.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Contract__c.labelPlural}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+                <div class="clr"></div>
+                <!-- MF_ContractorFile__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_ContractorFile__c}/o" title="{!$ObjectType.mployee__MF_ContractorFile__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_engineer.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_ContractorFile__c.labelPlural}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+                <!-- MF_Internship__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Internship__c}/o" title="{!$ObjectType.mployee__MF_Internship__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-groups.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Internship__c.labelPlural}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>                
+                <!-- MF_TemporaryFile__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_TemporaryFile__c}/o" title="{!$ObjectType.mployee__MF_TemporaryFile__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee__MF_TemporaryFile.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_TemporaryFile__c.labelPlural}</span>
+                         </apex:outputLink>                        
+                    </div>
+                </div>
+                
+                <div class="clr"></div>
+            </div>
+        </apex:form>
+        </div>
+        <!-- End Cpanel left-->
+        
+        <!-- Start Cpanel right-->
+        <div class="cpanel-right">            
+            
+        </div>
+        <!-- End Cpanel right-->
+    </div>
+    <div class="clr"></div>
+</div>
+<div class="clr"></div>
+
+</apex:define>
+</apex:composition>
+</apex:page>

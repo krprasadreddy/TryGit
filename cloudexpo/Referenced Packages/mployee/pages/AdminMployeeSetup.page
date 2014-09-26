@@ -1,0 +1,35 @@
+<apex:page id="profileRegister" 
+           docType="html-5.0" 
+           controller="mployee.SiteProfileController"
+           showHeader="true" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="true"
+           setup="true"
+           
+>
+    <apex:composition template="mployee__AdminTemplateBootstrap">
+    	
+    	<apex:define name="javascript">
+    	
+    	</apex:define>
+    	
+    	<apex:define name="css">
+    	
+    	</apex:define>
+    	
+    	<apex:define name="body">
+        	
+        	<div class="container">
+                <div class="row">
+                	BODY
+                </div>
+                
+			</div>
+		</apex:define>
+    
+    
+    </apex:composition>
+
+</apex:page>

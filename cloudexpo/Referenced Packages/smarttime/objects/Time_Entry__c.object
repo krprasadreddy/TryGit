@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <deprecated>false</deprecated>
+    <description>A time entry contains information about a service provisioning for a specific project at a specified time span.</description>
+    <enableActivities>true</enableActivities>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <fields>
+        <fullName>Break__c</fullName>
+        <defaultValue>0</defaultValue>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <inlineHelpText>Indicates how many break hours are included in this time entry, e.g. 1,5. Break hours will be subtracted from the actual billed hours, thus reducing the invoicing amount accordingly.</inlineHelpText>
+        <label>Break (h)</label>
+        <precision>2</precision>
+        <required>true</required>
+        <scale>1</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Description__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <inlineHelpText>Describes what has been done this timespan.</inlineHelpText>
+        <label>Description</label>
+        <length>32768</length>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>5</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Duration__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Working duration (hours)</description>
+        <externalId>false</externalId>
+        <formula>ROUND((DATETIMEVALUE(End__c) - DATETIMEVALUE(Start__c)) * 24 -  Break__c, 2)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <inlineHelpText>Calculated work time (in hours). 
+End - Start - Break = Duration</inlineHelpText>
+        <label>Duration (h)</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>End__c</fullName>
+        <defaultValue>DATETIMEVALUE(TEXT(TODAY()) &amp; &quot; 00:00:00&quot;) + 
+IF(
+	MOD(ROUND((NOW()-DATETIMEVALUE(TODAY()))*24, 2), 1) &gt; 0.25, 
+	IF(
+		MOD(ROUND((NOW()-DATETIMEVALUE(TODAY()))*24, 2), 1) &gt; 0.5,
+		IF(
+			MOD(ROUND((NOW()-DATETIMEVALUE(TODAY()))*24, 2), 1) &gt; 0.75,
+			FLOOR((NOW()-DATETIMEVALUE(TODAY()))*24) + 1, 
+			FLOOR((NOW()-DATETIMEVALUE(TODAY()))*24) + 0.75
+		),
+		FLOOR((NOW()-DATETIMEVALUE(TODAY()))*24) + 0.5
+	),
+	FLOOR((NOW()-DATETIMEVALUE(TODAY()))*24) + 0.25
+) / 24</defaultValue>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <inlineHelpText>Indicates when the provisioning of the service ended</inlineHelpText>
+        <label>End</label>
+        <required>true</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <fields>
+        <fullName>Location__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <inlineHelpText>Indicates where the service was provided (if different from customer&apos;s/service recipient&apos;s account address)</inlineHelpText>
+        <label>Location Address (optional)</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>TextArea</type>
+    </fields>
+    <fields>
+        <fullName>My_Service__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <formula>IF( Service_Provider__r.Id =  $User.Id, 1, 0)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>My Service</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Number</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Project__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <inlineHelpText>The project this time entry belongs to.</inlineHelpText>
+        <label>Project</label>
+        <referenceTo>Project__c</referenceTo>
+        <relationshipLabel>Time Entries</relationshipLabel>
+        <relationshipName>Time_Entries</relationshipName>
+        <relationshipOrder>0</relationshipOrder>
+        <reparentableMasterDetail>true</reparentableMasterDetail>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>MasterDetail</type>
+        <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    </fields>
+    <fields>
+        <fullName>Revenue__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <formula>Duration__c * Project__r.Hourly_Rate__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Revenue</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>Service_Location__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <inlineHelpText>Where the service was provided from</inlineHelpText>
+        <label>Service Location</label>
+        <picklist>
+            <picklistValues>
+                <fullName>Customer</fullName>
+                <default>true</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Service Recipient</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Service_Provider__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <inlineHelpText>Indicates who provided the service.</inlineHelpText>
+        <label>Service Provider</label>
+        <referenceTo>User</referenceTo>
+        <relationshipName>Time_Entries</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Start__c</fullName>
+        <defaultValue>DATETIMEVALUE(TEXT(TODAY()) &amp; &quot; 00:00:00&quot;) + 
+IF(
+	MOD(ROUND((NOW()-DATETIMEVALUE(TODAY())) * 24, 2), 1) &gt; 0.25, 
+	IF(
+		MOD(ROUND((NOW()-DATETIMEVALUE(TODAY())) * 24, 2), 1) &gt; 0.5,
+		IF(
+			MOD(ROUND((NOW()-DATETIMEVALUE(TODAY()))*24, 2), 1) &gt; 0.75,
+			FLOOR((NOW()-DATETIMEVALUE(TODAY())) * 24) - 8 + 1, 
+			FLOOR((NOW()-DATETIMEVALUE(TODAY())) * 24) - 8 + 0.75
+		),
+		FLOOR((NOW()-DATETIMEVALUE(TODAY())) * 24) - 8 + 0.5
+	),
+	FLOOR((NOW()-DATETIMEVALUE(TODAY())) * 24) - 8 + 0.25
+) / 24</defaultValue>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <inlineHelpText>Indicates when the provisioning of the service started</inlineHelpText>
+        <label>Start</label>
+        <required>true</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>DateTime</type>
+    </fields>
+    <label>Time Entry</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>Project__c</columns>
+        <columns>Service_Provider__c</columns>
+        <columns>Start__c</columns>
+        <columns>End__c</columns>
+        <columns>Duration__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <listViews>
+        <fullName>All_entries_current_month</fullName>
+        <columns>NAME</columns>
+        <columns>Project__c</columns>
+        <columns>Service_Provider__c</columns>
+        <columns>Start__c</columns>
+        <columns>End__c</columns>
+        <columns>Duration__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Start__c</field>
+            <operation>equals</operation>
+            <value>THIS_MONTH</value>
+        </filters>
+        <filters>
+            <field>End__c</field>
+            <operation>equals</operation>
+            <value>THIS_MONTH</value>
+        </filters>
+        <label>All entries (current month)</label>
+    </listViews>
+    <listViews>
+        <fullName>All_entries_last_month</fullName>
+        <columns>NAME</columns>
+        <columns>Project__c</columns>
+        <columns>Service_Provider__c</columns>
+        <columns>Start__c</columns>
+        <columns>End__c</columns>
+        <columns>Duration__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Start__c</field>
+            <operation>equals</operation>
+            <value>LAST_MONTH</value>
+        </filters>
+        <filters>
+            <field>End__c</field>
+            <operation>equals</operation>
+            <value>LAST_MONTH</value>
+        </filters>
+        <label>All entries (last month)</label>
+    </listViews>
+    <listViews>
+        <fullName>My_entries_current_month</fullName>
+        <columns>NAME</columns>
+        <columns>Project__c</columns>
+        <columns>Service_Provider__c</columns>
+        <columns>Start__c</columns>
+        <columns>End__c</columns>
+        <columns>Duration__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Start__c</field>
+            <operation>equals</operation>
+            <value>THIS_MONTH</value>
+        </filters>
+        <filters>
+            <field>End__c</field>
+            <operation>equals</operation>
+            <value>THIS_MONTH</value>
+        </filters>
+        <filters>
+            <field>My_Service__c</field>
+            <operation>equals</operation>
+            <value>1</value>
+        </filters>
+        <label>My entries (current month)</label>
+    </listViews>
+    <listViews>
+        <fullName>My_entries_last_month</fullName>
+        <columns>NAME</columns>
+        <columns>Project__c</columns>
+        <columns>Service_Provider__c</columns>
+        <columns>Start__c</columns>
+        <columns>End__c</columns>
+        <columns>Duration__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>Start__c</field>
+            <operation>equals</operation>
+            <value>LAST_MONTH</value>
+        </filters>
+        <filters>
+            <field>End__c</field>
+            <operation>equals</operation>
+            <value>LAST_MONTH</value>
+        </filters>
+        <filters>
+            <field>My_Service__c</field>
+            <operation>equals</operation>
+            <value>1</value>
+        </filters>
+        <label>My entries (last month)</label>
+    </listViews>
+    <nameField>
+        <displayFormat>TE-{YYYY}{MM}-{0}</displayFormat>
+        <label>Time Entry ID</label>
+        <trackHistory>false</trackHistory>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Time Entries</pluralLabel>
+    <searchLayouts>
+        <customTabListAdditionalFields>Project__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>Service_Provider__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>Start__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>End__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>Duration__c</customTabListAdditionalFields>
+        <lookupDialogsAdditionalFields>Project__c</lookupDialogsAdditionalFields>
+        <lookupDialogsAdditionalFields>Service_Provider__c</lookupDialogsAdditionalFields>
+        <lookupDialogsAdditionalFields>Start__c</lookupDialogsAdditionalFields>
+        <lookupDialogsAdditionalFields>End__c</lookupDialogsAdditionalFields>
+        <searchFilterFields>NAME</searchFilterFields>
+        <searchFilterFields>Project__c</searchFilterFields>
+        <searchResultsAdditionalFields>Project__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Service_Provider__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Start__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>End__c</searchResultsAdditionalFields>
+        <searchResultsAdditionalFields>Duration__c</searchResultsAdditionalFields>
+    </searchLayouts>
+    <sharingModel>ControlledByParent</sharingModel>
+    <validationRules>
+        <fullName>Break_less_than_duration</fullName>
+        <active>true</active>
+        <description>Ensures &quot;Break&quot; is less than &quot;Duration&quot;</description>
+        <errorConditionFormula>Duration__c &lt; Break__c</errorConditionFormula>
+        <errorDisplayField>Break__c</errorDisplayField>
+        <errorMessage>You cannot have a longer break than the total time entry time span</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>For_active_projects_only</fullName>
+        <active>true</active>
+        <description>Ensures time entries can only be booked for active projects</description>
+        <errorConditionFormula>Project__r.Active__c = false</errorConditionFormula>
+        <errorDisplayField>Project__c</errorDisplayField>
+        <errorMessage>Please select an active project</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>Start_End_same_date</fullName>
+        <active>true</active>
+        <description>Checks that &quot;Start&quot; and &quot;End&quot; are set to the same date</description>
+        <errorConditionFormula>DATEVALUE( Start__c ) !=  DATEVALUE(End__c)</errorConditionFormula>
+        <errorMessage>Start and End date have to be the same!</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>Start_End_with_full_30_min_interval</fullName>
+        <active>true</active>
+        <description>Ensures that time booking always happens in full 30 minute intervals</description>
+        <errorConditionFormula>MOD(ROUND((End__c - Start__c) * 24, 5), 0.5) &lt;&gt; 0</errorConditionFormula>
+        <errorMessage>Please make sure you book time in 30 minute intervals!</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>Start_less_than_End</fullName>
+        <active>true</active>
+        <description>Checks that &quot;Start&quot; is less than &quot;end&quot;</description>
+        <errorConditionFormula>Start__c  &gt;  End__c</errorConditionFormula>
+        <errorMessage>Start time must not be greater than end time</errorMessage>
+    </validationRules>
+</CustomObject>

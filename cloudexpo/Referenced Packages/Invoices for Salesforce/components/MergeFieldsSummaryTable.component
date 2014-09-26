@@ -1,0 +1,236 @@
+<apex:component controller="kognoz1.MergeFieldsSummaryTable">
+ <apex:attribute name="mainController" type="kognoz1.InvoiceTemplateEditorController" description="Invoice template controller" assignTo="{!cont}" required="true"/>
+    
+<style type="text/css">
+    .containerClassSummaryTable{
+        height:150px;
+        width:180px;
+        overflow:auto;
+        border-color: gray; 
+        border-style: solid;
+        border-width: thin;
+        white-space:nowrap;
+        cursor:default;
+    }
+    .fieldelementselectedSummaryTable{
+        background-color:#D8D8D8;
+    }
+    .expandableselectedSummaryTable{
+        background-color:#81BEF7;
+    }
+    .fieldelementSummaryTable {
+        cursor:default;
+    }
+</style>    
+
+<script type="text/javascript" >
+
+var srstName = null;
+var containersSummaryTable = 0;
+var maxParentsSummaryTable = 3;
+var mergeFieldsMapSummaryTable = new Array();
+var describeSObjectsMapSummaryTable = new Array();
+function describeSObjectSummaryTable(){}
+function describeSFieldSummaryTable(){}
+
+function createObjectDescriptionObjectSummaryTable(obj){
+    var newSObject = new describeSObjectSummaryTable();
+    newSObject.objectName = obj;
+    newSObject.fields = new Array();
+    describeSObjectsMapSummaryTable.push(newSObject);
+}
+
+function createObjectDescriptionObjectFieldsSummaryTable(oName, fName, fLabel, fRef, fRelName, fType,fPrecision, fScale, fLength){
+    var realObjectName = oName.replace('[', '').replace(']', '');
+    var SObjectDescriptor = jQuery.grep(describeSObjectsMapSummaryTable, function(n, i){
+                        if (n.objectName == realObjectName){
+                            var newFields = new Array();
+                            if ($(n).fields != null)
+                                newFields = $(n).fields;
+                            var newField = new describeSFieldSummaryTable();
+                            newField.name = fName;
+                            newField.label = fLabel;
+                            newField.relationshipName = fRelName;
+                            newField.referenceTo = fRef;
+                            newField.type = fType;
+                            newField.precision = fPrecision;
+                            newField.scale = fScale;
+                            newField.length = fLength;
+                            newFields.push(newField);
+                            n.fields.push(newField);
+                        }
+                        return (n.objectName == realObjectName);
+                    });
+}
+
+function loadObjectFieldsAndParentsSummaryTable(SObjectName)
+{
+    
+        var SObjectDescriptor = new Array();
+        if (describeSObjectsMapSummaryTable != null)
+        {
+            SObjectDescriptor = jQuery.grep(describeSObjectsMapSummaryTable, function(n, i){
+                return (n.objectName == SObjectName);
+            });
+            if (SObjectDescriptor.length > 0)
+            {
+                $("#objectsTableSummaryTable tr").append($('<td><div sobj="'+SObjectName+'"class="containerClassSummaryTable" id=\"containerSummaryTable'+containersSummaryTable+'\"></div></td>'));
+                var newdiv = document.getElementById('containerSummaryTable'+containersSummaryTable);
+                containersSummaryTable = containersSummaryTable + 1;                
+                for (i = 0; i < SObjectDescriptor[0].fields.length; i++)
+                {
+                    var fieldDescriptor = SObjectDescriptor[0].fields[i]; //
+                    var selections = $('.expandableselectedSummaryTable').size();
+                    var tds = $("#objectsTableSummaryTable").children().children().children().size();
+                    if(tds <= maxParentsSummaryTable && selections <= (maxParentsSummaryTable-1))
+                    {
+                        if(fieldDescriptor.type.toLowerCase() != 'reference')
+                        {
+                            $(newdiv).append('<span class="fieldelementSummaryTable" objectName="'+fieldDescriptor.name+'">'+fieldDescriptor.label+'</span><br />');
+                        }
+                        else
+                        {
+                            if(selections < (maxParents-1))
+                            {
+                                if(fieldDescriptor.relationshipName=="")
+                                    $(newdiv).append('<span class="expandableSummaryTable" relname="'+fieldDescriptor.relationshipName+'" fieldname="'+fieldDescriptor.name+'" objectName="'+fieldDescriptor.referenceTo+'">'+fieldDescriptor.referenceTo+' > </span><br />');
+                                else
+                                    $(newdiv).append('<span class="expandableSummaryTable" relname="'+fieldDescriptor.relationshipName+'" fieldname="'+fieldDescriptor.name+'" objectName="'+fieldDescriptor.referenceTo+'">'+fieldDescriptor.relationshipName+' > </span><br />');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+    }
+
+    
+    function getTraceSummaryTable(){
+        var trace = 'Opportunity';
+        var tracenames = '';
+        var tracerelations = '';
+        $.each($("#objectsTableSummaryTable tr").children(), function(){
+            $.each($(this).find('span'), function(){
+                if ($(this).hasClass('expandableselectedSummaryTable') == true){
+                    if (trace == '')
+                        trace = $(this).attr('objectname');
+                    else
+                        trace = trace+'.'+$(this).attr('objectname');
+                    if (tracenames == '')
+                        tracenames = $(this).attr('fieldname');
+                    else    
+                        tracenames = tracenames+'.'+$(this).attr('fieldname');
+                    if (tracerelations == '')
+                        tracerelations = $(this).attr('relname');
+                    else    
+                        tracerelations = tracerelations+'.'+$(this).attr('relname');
+                    
+                }
+                else if ($(this).hasClass('fieldelementselectedSummaryTable') == true){
+                    if (trace == '')
+                        trace = $(this).attr('objectname');
+                    else
+                        trace = trace+'.'+$(this).attr('objectname');
+                    if (tracenames == '')
+                        tracenames = $(this).attr('objectname');
+                    else    
+                        tracenames = tracenames+'.'+$(this).attr('objectname');
+                    if (tracerelations == '')
+                        tracerelations = $(this).attr('objectname');
+                    else
+                        tracerelations = tracerelations+'.'+$(this).attr('objectname');
+                    sobjectToTraceSummaryTable = $(this).parent().attr("sobj");
+                    sfieldToTraceSummaryTable = $(this).attr('objectname');
+                }
+            });
+        });
+        $("#objectsTableSummaryTable tr").append($('<td><center><div id="traceContainerSummaryTable">'+trace+'</div><br />'+
+                                            '<div id="tracenamesContainerSummaryTable">'+tracenames+'</div><br />'+
+                                            '<div id="tracerelsContainerSummarySummaryTable">'+tracerelations+'</div><br />'+
+        '<input type="button" value="Insert" onclick="insertMergeFieldInSummaryTable();"/><input type="button" value="Cancel" onclick="cleanupSTmfui();"/></center></td>'));
+        
+        
+    }
+
+    function cleanupSTmfui()
+    {
+        $("#objectsTableSummaryTable td").each(function(idx){
+            if(idx>0)
+                $(this).remove();
+            $(".fieldelementSummaryTable").each(function(){
+                $(this).removeClass('fieldelementselectedSummaryTable')
+            });
+            $(".expandableSummaryTable").each(function(){
+                $(this).removeClass('expandableselectedSummaryTable');
+            });
+        }); 
+    }
+
+
+
+$(document).ready(function() {
+    $("#repeatPanelSummaryTable").html('');
+    $(".expandableSummaryTable").live("click", function(){
+        if ($(this).hasClass('expandableselectedSummaryTable') == false){
+            $(this).parent().children().removeClass('expandableselectedSummaryTable');
+            $(this).parent().children().removeClass('fieldelementselectedSummaryTable');
+            $(this).addClass('expandableselectedSummaryTable');
+            $(this).parent().parent().nextAll().remove();
+                loadObjectFieldsAndParentsSummaryTable($(this).attr('objectName'));
+        }       
+    });
+     $(".fieldelementSummaryTable").live("click", function(){
+        $('.fieldelementSummaryTable').removeClass('fieldelementselectedSummaryTable');
+        $(this).parent().children().removeClass('expandableselectedSummaryTable');
+        $(this).addClass('fieldelementselectedSummaryTable');
+        $(this).parent().parent().nextAll().remove();
+        getTraceSummaryTable();
+     });
+    
+    
+    loadObjectFieldsAndParentsSummaryTable('Opportunity');
+
+}); 
+     
+     
+     
+
+</script>
+
+
+    <div id="repeatPanelSummaryTable">
+    <apex:repeat value="{!objectsDescriptionConstructor}" var="o">
+        <apex:repeat value="{!o.Name}" var="n">
+        <script type="text/javascript">
+            srstName = '{!JSENCODE(n)}';
+            createObjectDescriptionObjectSummaryTable(srstName);
+        </script>   
+        </apex:repeat>
+        <apex:repeat value="{!o.fields}" var="f">
+        <script type="text/javascript">
+            createObjectDescriptionObjectFieldsSummaryTable(srstName, '{!JSENCODE(f.name)}', '{!JSENCODE(f.label)}', '{!JSENCODE(f.referenceTo)}', '{!JSENCODE(f.relName)}', '{!JSENCODE(f.typee)}', '{!JSENCODE(f.precision)}', '{!JSENCODE(f.scale)}',  '{!JSENCODE(f.length)}');
+        </script>
+        </apex:repeat>
+    </apex:repeat>
+    </div>
+    
+<table id="objectsTableSummaryTable">
+    <tr>
+
+    </tr>
+</table>
+<div id="queryPanelSummaryTable" style="display:none">
+<center>
+    <table id="queryTableSummaryTable">
+        
+    </table>
+</center>
+</div>
+
+
+
+
+
+
+</apex:component>

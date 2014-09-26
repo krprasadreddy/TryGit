@@ -1,0 +1,315 @@
+<apex:component id="siteVacancies"
+	controller="mployee.com_SiteVacanciesController"
+    layout="none"
+>
+
+	<apex:attribute name="layout" description="The layout" type="String" default="default" required="false"/>
+	
+    <apex:outputpanel rendered="{!IF(layout=='default',true,false)}">
+        <apex:pageBlock >
+            <apex:pageBlockTable styleClass="table table-striped" value="{!vacancies.values}" var="item" id="vacancyList">                                                                                               
+                <apex:column >
+                    <apex:outputLink value="{!URLFOR($Page.mployee__SiteVacancy, item.id, [id=item.id])}" title="APPLY">
+                        <span class="glyphicon glyphicon-share"/>&nbsp;&nbsp;<apex:outputText value="{!item.position.title}"/>                                        
+                    </apex:outputLink>
+                </apex:column>
+                <apex:column value="{!item.position.location.city}" />
+                <apex:column value="{!item.distance}" />
+                
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+    </apex:outputpanel>
+    
+    <apex:outputpanel rendered="false">
+    
+    </apex:outputpanel>
+    
+    
+	<apex:outputpanel rendered="{!IF(layout=='filter-results',true,false)}">
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/js/jquery.dataTables.min.js')}"  />
+        <script type="text/javascript">
+
+			$.fn.dataTableExt.afnFiltering.push(
+			    function( oSettings, aData, iDataIndex ) {
+			        var iColumn = 2;
+			        //var iMin = document.getElementById('min').value * 1;
+			        var iMin = 0;
+			        console.log('iMin: '+iMin);
+			        var iMax = document.getElementById('max').value * 1;
+			        console.log('iMax: '+iMax); 
+			        var iVersion = aData[iColumn] == "-" ? 0 : aData[iColumn]*1;
+			        console.log('iVersion: '+iVersion);
+			        if ( iMin == "" && iMax == "" )
+			        {
+			            return true;
+			        }
+			        else if ( iMin == "" && iVersion < iMax )
+			        {
+			            return true;
+			        }
+			        else if ( iMin < iVersion && "" == iMax )
+			        {
+			            return true;
+			        }
+			        else if ( iMin < iVersion && iVersion < iMax )
+			        {
+			            return true;
+			        }
+			        return false;
+			    }
+			);
+			
+			
+
+
+            $(document).ready(function(){
+                
+                var oTable = $('.datatable').dataTable({!settings});
+                // Hide the Column Data
+                //fnShowHide(2);
+                fnShowHide(3);
+                
+                /* Add event listeners to the two range filtering inputs */
+			    //$('#min').change( function() { oTable.fnDraw(); } );
+			    $('#max').keyup( function() { oTable.fnDraw(); } );
+                
+                // Custom filtering
+                $("thead input.filter").keyup( function () {
+                    /* Filter on the column (the index) of this element */
+                    oTable.fnFilter( this.value, $("thead input").index(this) );
+                } );
+                // remove the inline style
+                $('.datatable').removeAttr('style');
+                
+                
+                
+                
+            });
+            
+            function fnShowHide( iCol ){
+                /* Get the DataTables object again - this is not a recreation, just a get of the object */
+                var oTable = $('.datatable').dataTable();
+                             
+                var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
+                oTable.fnSetColumnVis( iCol, bVis ? false : true );
+            }            
+        </script>
+        
+        <style>
+        
+            .dataTables_length select{
+                width: 75px;
+                margin-bottom: 0px;
+            }
+            
+            .table th{
+                border-top-right-radius: 0;
+                border-top-left-radius: 0;
+            }
+        
+            /* top-left border-radius */
+            table tr:first-child th:first-child {
+                border-top-left-radius: 4px;
+            }
+            /* top-right border-radius */
+            table tr:first-child th:last-child {
+                border-top-right-radius: 4px;
+            }
+            /* bottom-left border-radius */
+            table tr:last-child td:first-child {
+              border-bottom-left-radius: 4px;
+            }       
+            /* bottom-right border-radius */
+            table tr:last-child td:last-child {
+              border-bottom-right-radius: 4px;
+            }
+            .datatable {
+                margin-top:20px;
+            }
+            .datatable thead th {
+                font-size:14px;
+            }
+            .dataTables_paginate {
+                margin-top: 0px;
+                margin-right: 0px;
+                text-align:center;
+                float:none;
+            }
+            .dataTables_paginate span .ui-state-disabled,
+            .pagination.alternate li.active a {
+                background-color: #414141;
+            }
+            .dataTables_length {
+            	position: inherit;
+            	float: right;
+            }
+        
+        </style>
+      
+        <table class="table datatable">
+            <thead>             
+                <tr>
+                    <th>{!$Label.COM_VACANCIES_TABLE_HEADER_NAME}</th>
+					<th>{!$Label.COM_VACANCIES_TABLE_HEADER_LOCATION}</th>
+					<th>{!$Label.COM_VACANCIES_TABLE_HEADER_DISTANCE}</th>
+					<th></th>                
+                </tr>
+                    
+                <tr>
+                    <th class="ui-state-default" role="columnheader">
+                        <input class="col-xs-6 filter" type="text" name="filter_name" placeholder="{!$Label.COM_VACANCIES_PLACEHOLDER_FILTER_ON_NAME}" />
+                    </th>
+                    <th class="ui-state-default" role="columnheader">
+                        <input class="col-xs-6 filter" type="text" name="filter_location" placeholder="{!$Label.COM_VACANCIES_PLACEHOLDER_FILTER_ON_LOCATION}" />
+                    </th>
+                    <th class="ui-state-default">                    	
+                    	<input id="max" class="col-xs-6" type="text" name="filter_distance" placeholder="{!$Label.COM_VACANCIES_PLACEHOLDER_FILTER_ON_DISTANCE}" />
+                    </th>                 
+                    <th>publish_up</th>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:repeat value="{!vacancies.values}" var="item">
+                <tr>
+                    <td>
+                        <apex:outputLink value="{!URLFOR($Page.mployee__SiteVacancy, item.id, [id=item.id])}" title="APPLY">
+                            <span class="glyphicon glyphicon-share"/>&nbsp;&nbsp;<apex:outputText value="{!item.position.title}"/>                                        
+                        </apex:outputLink>              
+                    </td>
+                    <td>{!item.position.location.city}</td>
+                    <td>{!item.distance}</td>
+                    <td>{!item.expirationDate}</td>                   
+                </tr>
+                </apex:repeat>
+            </tbody>
+        </table>
+        
+         
+    </apex:outputpanel>
+    
+    <apex:outputpanel rendered="{!IF(layout=='filter-default',true,false)}">
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/js/jquery.dataTables.min.js')}"  />
+        <script type="text/javascript">
+        
+        	
+    
+            $(document).ready(function(){
+                
+                var oTable = $('.datatable').dataTable({!settings});
+                // Hide the Column Data
+                fnShowHide(2);
+                fnShowHide(3);                
+                
+                
+                // Custom filtering
+                $("thead input.filter").keyup( function () {
+                    /* Filter on the column (the index) of this element */
+                    oTable.fnFilter( this.value, $("thead input").index(this) );
+                } );
+                // remove the inline style
+                $('.datatable').removeAttr('style');
+            });
+            
+            function fnShowHide( iCol ){
+                /* Get the DataTables object again - this is not a recreation, just a get of the object */
+                var oTable = $('.datatable').dataTable();
+                             
+                var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
+                oTable.fnSetColumnVis( iCol, bVis ? false : true );
+            }            
+        </script>
+        
+        <style>
+        
+            .dataTables_length select{
+                width: 75px;
+                margin-bottom: 0px;
+            }
+            
+            .table th{
+                border-top-right-radius: 0;
+                border-top-left-radius: 0;
+            }
+        
+            /* top-left border-radius */
+            table tr:first-child th:first-child {
+                border-top-left-radius: 4px;
+            }
+            /* top-right border-radius */
+            table tr:first-child th:last-child {
+                border-top-right-radius: 4px;
+            }
+            /* bottom-left border-radius */
+            table tr:last-child td:first-child {
+              border-bottom-left-radius: 4px;
+            }       
+            /* bottom-right border-radius */
+            table tr:last-child td:last-child {
+              border-bottom-right-radius: 4px;
+            }
+            .datatable {
+                margin-top:20px;
+            }
+            .datatable thead th {
+                font-size:14px;
+            }
+            .dataTables_paginate {
+                margin-top: 0px;
+                margin-right: 0px;
+                text-align:center;
+                float:none;
+            }
+            .dataTables_length {
+            	position: inherit;
+            	float: right;
+            }
+            .dataTables_paginate span .ui-state-disabled,
+            .pagination.alternate li.active a {
+                background-color: #414141;
+            }
+        
+        </style>
+    
+       
+        <table class="table datatable">
+            <thead>             
+                <tr>
+                    <th>{!$Label.COM_VACANCIES_TABLE_HEADER_NAME}</th>
+					<th>{!$Label.COM_VACANCIES_TABLE_HEADER_LOCATION}</th>
+					<th>DISTANCE</th>
+					<th>{!$Label.COM_VACANCIES_TABLE_HEADER_DATE}</th>
+                </tr>
+                    
+                <tr>
+                    <th class="ui-state-default" role="columnheader">
+                        <input class="col-xs-6 filter" type="text" name="filter_name" placeholder="{!$Label.COM_VACANCIES_PLACEHOLDER_FILTER_ON_NAME}" />
+                    </th>
+                    <th class="ui-state-default" role="columnheader">
+                        <input class="col-xs-6 filter" type="text" name="filter_location" placeholder="{!$Label.COM_VACANCIES_PLACEHOLDER_FILTER_ON_LOCATION}" />
+                    </th>
+                    <th class="ui-state-default">
+                    	<input type="number" id="max" />
+                    </th>           
+                    <th>publish_up</th>
+                </tr>
+            </thead>
+            <tbody>
+                <apex:repeat value="{!items}" var="item">
+                <tr>
+                    <td>
+                        <apex:outputLink value="{!URLFOR($Page.mployee__SiteVacancy, item.mployee__Vacancy__c, [id=item.mployee__Vacancy__c])}" title="APPLY">
+                            <span class="glyphicon glyphicon-share"/>&nbsp;&nbsp;<apex:outputText value="{!item.Vacancy__r.mployee__Position__r.Name}"/>                                        
+                        </apex:outputLink>              
+                    </td>
+                    <td>{!item.Vacancy__r.mployee__Position__r.LocationCity__c}</td>
+                    
+                    <td>&nbsp;</td>
+                    <td>{!item.publish_up__c}</td>
+                </tr>
+                </apex:repeat>
+            </tbody>
+        </table>
+            
+    </apex:outputpanel>
+
+</apex:component>

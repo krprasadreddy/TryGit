@@ -1,0 +1,31 @@
+<apex:page standardController="mployee__MF_Organisation_PositionVacancy__c" extensions="mployee.MF_RenderAsPDFController" standardStylesheets="false" showHeader="false" renderAs="{!renderAs}">
+<html>
+    <head>
+     
+    <style> 
+    body    {
+        font-family: Arial Unicode MS;
+        font-size:12px;
+    }        
+    </style>
+ 
+    </head>
+    
+    <apex:form >
+        <apex:pageBlock >
+            <apex:pageBlockButtons >                
+                <apex:commandButton action="{!renderAsPDF}" value="PDF"/>
+            </apex:pageBlockButtons>
+            
+            <h1>{!$Label.MF_VacancyText}</h1>
+            
+            <h3>{!$Label.MF_FunctionName}</h3>
+            <p><apex:outputField value="{!mployee__MF_Organisation_PositionVacancy__c.mployee__Position__c}"/></p>
+            
+            <p><apex:outputField value="{!mployee__MF_Organisation_PositionVacancy__c.Position__r.mployee__VacancyText__c}"/></p>
+            
+           
+        </apex:pageBlock>
+    </apex:form>
+</html>
+</apex:page>

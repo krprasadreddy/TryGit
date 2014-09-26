@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>Timesheet_Instruction</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Timesheet Instruction</shortDescription>
+        <value>Please see the &lt;b&gt;Timesheet Instructions&lt;/b&gt; for the app below: &lt;br/&gt;
+&lt;br/&gt;
+1.	Select the Employee for set weekly timesheet&lt;br/&gt;
+2.	Only one employee  can fill up timesheet at one time &lt;br/&gt;
+3.	Click &quot;Save&quot; button which can add records into timesheet object.&lt;br/&gt;
+4.  After clicking &quot;Save&quot; button click &quot;Submit&quot; button to send email for approving timesheet to the manager.&lt;br/&gt;
+5. You can add weekly timesheet i.e. Sunday - Saturday.
+&lt;br/&gt;&lt;br/&gt;
+**&lt;b&gt;Note:&lt;/b&gt; If you would like to edit a timesheet, you must delete it and then recreate it with the modifications or if you can  view timesheet record just click on click on &lt;b&gt;Time # &lt;/b&gt; column data.</value>
+    </labels>
+</CustomLabels>

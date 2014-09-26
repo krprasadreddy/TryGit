@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <encodingKey>ISO-8859-1</encodingKey>
+    <name>Timesheet Reject Template</name>
+    <style>none</style>
+    <subject>Timesheet for {!Timesheet__c.Employee_Name__c} Has Been REJECTED by a Manager</subject>
+    <textOnly>Timestamp: {!Timesheet__c.CreatedDate}
+Project Name :  {!Timesheet__c.Project__c}
+Task : {!Timesheet__c.Task__c}
+Hours : {!Timesheet__c.Hours__c}
+Status : {!Timesheet__c.Status__c}
+Comments
+
+----------</textOnly>
+    <type>custom</type>
+</EmailTemplate>

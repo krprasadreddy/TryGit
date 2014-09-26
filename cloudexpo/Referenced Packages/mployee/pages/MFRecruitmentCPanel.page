@@ -1,0 +1,81 @@
+<apex:page sidebar="false" tabStyle="Recruitment__tab" >
+<apex:composition template="mployee__templateMployee">
+<apex:define name="toolbar">
+    <c:MFToolbar title="Recruitment Manager"
+        icon="icon-48-article-add"                    
+    />
+</apex:define>
+
+<apex:define name="body">
+<div id="cpanel" class="AdminCpanel">
+    <div class="adminform">        
+        <!-- Start Cpanel left-->
+        <div class="cpanel-left">
+            <div id="cpanel">
+                <!-- MF_Recruitment_Candidate -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Recruitment_Candidate__c}/o" title="{!$ObjectType.mployee__MF_Recruitment_Candidate__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_candidate.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Recruitment_Candidate__c.labelPlural}</span>
+                         </apex:outputLink>
+                    </div>
+                </div>
+                <!-- MF_Recruitment_JobApplication__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Recruitment_JobApplication__c}/o" title="{!$ObjectType.mployee__MF_Recruitment_JobApplication__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_recruitment_JobApplication.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Recruitment_JobApplication__c.labelPlural}</span>
+                         </apex:outputLink>
+                    </div>
+                </div>
+                <!-- MF_Organisation_PositionVacancy__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Organisation_PositionVacancy__c}/o" title="{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_organisation_positionVacancy.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.labelPlural}</span>
+                         </apex:outputLink>
+                    </div>
+                </div>
+            </div>        
+        </div>
+        <!-- End Cpanel left-->
+        
+        <!-- Start Cpanel right-->
+        <div class="cpanel-right">        
+            <h3><apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-add.png')}"/>Create New</h3>
+            <br />
+            <br />
+            <ul class="adminformlist">
+              <li>
+                <apex:outputLink value="{!URLFOR($Action.MF_Recruitment_Candidate__c.New)}" title="Add New {!$ObjectType.mployee__MF_Recruitment_Candidate__c.label}">
+                    {!$ObjectType.mployee__MF_Recruitment_Candidate__c.label}
+                </apex:outputLink>
+              </li>              
+              <li>
+                <apex:outputLink value="{!URLFOR($Action.MF_Recruitment_JobApplication__c.New)}" title="Add New {!$ObjectType.mployee__MF_Recruitment_JobApplication__c.label}">
+                    {!$ObjectType.mployee__MF_Recruitment_JobApplication__c.label}
+                </apex:outputLink>
+              </li>
+              <li>
+                <apex:outputLink value="{!URLFOR($Action.MF_Organisation_PositionVacancy__c.New)}" title="Add New {!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.label}">
+                    {!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.label}
+                </apex:outputLink>
+              </li>
+            </ul>        
+        </div>
+        <!-- End Cpanel right-->
+    </div>
+    <div class="clr"></div>
+</div>
+
+<div class="clr"></div>
+
+</apex:define>
+
+
+</apex:composition>
+
+</apex:page>

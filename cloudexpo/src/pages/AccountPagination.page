@@ -1,0 +1,14 @@
+<apex:page standardController="Opportunity" recordSetVar="opportunities" tabstyle="opportunity" sidebar="false" extensions="AccountPagination"> 
+  <apex:form >
+	  <apex:pageBlock >
+	  <apex:outputText value="{!RecordSize}"/>
+	    <apex:pageBlockTable value="{!opportunities}" var="a">
+	      <apex:column value="{!a.name}"/>
+	    </apex:pageBlockTable> 
+	  </apex:pageBlock>
+	  <apex:panelGrid columns="2">
+	     <apex:commandButton value="Next" action="{!next}"/>
+	     <apex:commandButton value="Previous" action="{!previous}"/>
+	  </apex:panelGrid> 
+  </apex:form>
+</apex:page>

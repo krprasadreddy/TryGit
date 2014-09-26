@@ -1,0 +1,219 @@
+<apex:page standardController="kognoz1__SalesTerm__c" extensions="kognoz1.SalesTermEditController" tabStyle="Invoices_Configuration__tab" title="Sales Term Edit">
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+
+	<style type="text/css">
+		 .bsCustomInp{width:100%;}
+		.dataCol1
+		{
+		    padding: 2px 2px 2px 10px;
+		    text-align: left;
+		}
+	</style>
+	
+	<script type="text/javascript">
+	
+		$(function(){
+			var paymentTermType = $("input[id$=paymentTermTypeContField]").val();
+			var isPaidEarly = $("input[id$=isEarlyPaymentDiscountContField]").val();
+			if(paymentTermType=='Fixed')
+			{
+				$("div[id$=fixedTypeInputs]").css("display","block");			
+				$("div[id$=domTypeInputs]").css("display","none");
+				if(isPaidEarly=="true")
+				{
+					$("table[id$=fixedTypeDiscountInputs]").css("display","table");
+				}
+				else
+				{
+					$("table[id$=fixedTypeDiscountInputs]").css("display","none");
+				}
+			}
+			else
+			{
+				$("div[id$=fixedTypeInputs]").css("display","none");			
+				$("div[id$=domTypeInputs]").css("display","block");			
+				if(isPaidEarly=="true")
+				{
+					$("table[id$=domTypeDiscountInputs]").css("display","table");
+				}
+				else
+				{
+					$("table[id$=domTypeDiscountInputs]").css("display","none");
+				}
+			}			
+		});
+		
+		function updatePaymentTermInputDisplay()
+		{
+			if($("input[value=Fixed]").attr("checked"))
+			{
+				$("input[id$=paymentTermTypeContField]").val("Fixed");
+				$("div[id$=fixedTypeInputs]").css("display","block");			
+				$("div[id$=domTypeInputs]").css("display","none");
+				
+				if($("input[id$=applyDiscount]").attr("checked"))
+				{
+					$("table[id$=fixedTypeDiscountInputs]").css("display","table");
+					$("table[id$=domTypeDiscountInputs]").css("display","none");
+				}			
+			}
+			else if($("input[value=Dom]").attr("checked"))
+			{
+				$("input[id$=paymentTermTypeContField]").val("Dom");
+				$("div[id$=fixedTypeInputs]").css("display","none");			
+				$("div[id$=domTypeInputs]").css("display","block");			
+
+				if($("input[id$=applyDiscount]").attr("checked"))
+				{
+					$("table[id$=fixedTypeDiscountInputs]").css("display","none");
+					$("table[id$=domTypeDiscountInputs]").css("display","table");
+				}			
+			}
+		}
+		
+		function changeApplyDiscount(ctl)
+		{
+			if($(ctl).attr("checked")==true)
+			{
+				$("input[id$=isEarlyPaymentDiscountContField]").val("true");
+				if($("input[value=Fixed]").attr("checked"))
+				{
+					$("table[id$=fixedTypeDiscountInputs]").css("display","table");
+					$("table[id$=domTypeDiscountInputs]").css("display","none");
+				}
+				else
+				{
+					$("table[id$=fixedTypeDiscountInputs]").css("display","none");
+					$("table[id$=domTypeDiscountInputs]").css("display","table");
+				}
+			}
+			else
+			{
+				$("input[id$=isEarlyPaymentDiscountContField]").val("false");
+				$("table[id$=fixedTypeDiscountInputs]").css("display","none");
+				$("table[id$=domTypeDiscountInputs]").css("display","none");
+			}
+		
+		}
+	
+	</script>
+
+	<apex:pageMessages /> 
+	<apex:form >
+		<apex:sectionHeader title="Sales Term Edit" subtitle="{!paymentTerm.Name}" rendered="{!isNewPaymentTerm==false}" help="{!ifsHelpUrl}" />
+		<apex:sectionHeader title="Sales Term Edit" subtitle="New Sales Term" rendered="{!isNewPaymentTerm==true}" help="{!ifsHelpUrl}" />
+		
+		<apex:pageBlock >
+
+	        <apex:pageBlockButtons >
+	            <apex:commandButton action="{!save}" value="Save"/>
+	            <apex:commandButton action="{!cancel}" value="Cancel"/>
+	        </apex:pageBlockButtons>
+
+	        <apex:pageBlockSection columns="1" collapsible="false">
+	            <apex:outputPanel styleClass="requiredExampleOuter" layout="block" style="float:right;">
+	                <apex:outputPanel styleClass="requiredExampleOuter">
+	                    <apex:outputPanel styleClass="requiredExample">&nbsp;</apex:outputPanel>
+	                </apex:outputPanel>
+	                <apex:outputPanel styleClass="requiredMark">*</apex:outputPanel>
+	                <apex:outputPanel styleClass="requiredText">= Required Information</apex:outputPanel>
+	            </apex:outputPanel>
+	        </apex:pageBlockSection>
+	        
+	        <!-- Information -->
+	        <apex:pageBlockSection id="infoblock" title="Information" columns="1" collapsible="false">
+	            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, dataCol1">
+	                <apex:outputText value="Sales Term Name" />
+	                <apex:outputPanel styleClass="requiredInput" layout="block">
+	                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+	                    <apex:inputField value="{!paymentTerm.Name}" />
+	                </apex:outputPanel>
+	            </apex:panelGrid> 
+	        </apex:pageBlockSection>
+		
+	        <!-- Fixed or Dom payment term type-->
+	        <apex:pageBlockSection title="Sales Term Type" columns="1"  collapsible="false">
+		      <apex:selectRadio value="{!paymentTermType}" id="paymentTermType" layout="pageDirection" onchange="updatePaymentTermInputDisplay();" style="margin-left:100px;">
+		      	<apex:selectOptions value="{!paymentTermTypeOptions}" />
+		      </apex:selectRadio>
+	    
+			<apex:outputPanel >
+
+		    	 <apex:outputPanel id="fixedTypeInputs" layout="block">
+		            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, dataCol1">
+		                <apex:outputText value="Number of fixed days" />
+		                <apex:outputPanel styleClass="requiredInput" layout="block">
+		                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+		                    <apex:inputField value="{!paymentTerm.kognoz1__DueDays__c}" />
+		                </apex:outputPanel>
+		                <apex:outputPanel >&nbsp;</apex:outputPanel>
+		                <apex:outputPanel >&nbsp;</apex:outputPanel>
+		            </apex:panelGrid> 
+		    	 </apex:outputPanel>	
+		    
+		    	 <apex:outputPanel id="domTypeInputs" layout="block" style="display:none;">
+		            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, dataCol1">
+		                <apex:outputText value="Day of the month" />
+		                <apex:outputPanel styleClass="requiredInput" layout="block">
+		                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+		                    <apex:inputField value="{!paymentTerm.kognoz1__DayOfMonthDue__c}" />
+		                </apex:outputPanel>
+		                <apex:outputText value="Due next month if issued within" />
+		                <apex:outputPanel >
+		                	<apex:inputField value="{!paymentTerm.kognoz1__DueNextMonthDays__c}" /> 
+		                	<apex:outputText value=" days of due date" styleClass="labelCol"/>
+		                </apex:outputPanel>
+		            </apex:panelGrid> 
+		    	 </apex:outputPanel>	
+
+	    	</apex:outputPanel>
+	        </apex:pageBlockSection>
+
+	        <!-- Apply Discount -->
+	        <apex:pageBlockSection title="Early Payment Discount" columns="1" collapsible="false">
+	            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, dataCol1">
+	                <apex:outputText value="Apply disocunt if paid early" />
+					<apex:inputcheckBox id="applyDiscount" value="{!isEarlyPaymentDiscount}" onclick="changeApplyDiscount(this);"/>	            
+				</apex:panelGrid> 
+
+		    	 <apex:outputPanel layout="block">
+		            <apex:panelGrid id="fixedTypeDiscountInputs" columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, dataCol1" style="display:none;">
+		                <apex:outputText value="Discount (%)" />
+		                <apex:outputPanel styleClass="requiredInput" layout="block">
+		                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+		                    <apex:inputField value="{!paymentTerm.kognoz1__DiscountPercent__c}" />
+		                </apex:outputPanel>
+		                <apex:outputText value="Apply discount if paid within" />
+		                <apex:outputPanel styleClass="requiredInput" layout="block">
+		                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+		                    <apex:inputField value="{!paymentTerm.kognoz1__DiscountDays__c}" />
+		                	<apex:outputText value=" days from invoice date" styleClass="labelCol"/>
+		                </apex:outputPanel>
+		            </apex:panelGrid> 
+		            <apex:panelGrid id="domTypeDiscountInputs" columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, dataCol1" style="display:none;">
+		                <apex:outputText value="Discount (%)" />
+		                <apex:outputPanel styleClass="requiredInput" layout="block">
+		                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+		                    <apex:inputField value="{!paymentTerm.kognoz1__DateDiscountPercent__c}" />
+		                </apex:outputPanel>
+		                <apex:outputText value="Apply discount if paid on the" />
+		                <apex:outputPanel styleClass="requiredInput" layout="block">
+		                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+		                    <apex:inputField value="{!paymentTerm.kognoz1__DiscountDayOfMonth__c}" />
+		                	<apex:outputText value=" day of the month" styleClass="labelCol"/>
+		                </apex:outputPanel>
+		            </apex:panelGrid> 
+		    	 </apex:outputPanel>	
+
+
+	        </apex:pageBlockSection>
+
+		
+		</apex:pageBlock>
+        <apex:inputText value="{!paymentTermType}" id="paymentTermTypeContField" style="display:none"/>
+        <apex:inputText value="{!isEarlyPaymentDiscount}" id="isEarlyPaymentDiscountContField" style="display:none"/>
+	</apex:form>
+</apex:page>

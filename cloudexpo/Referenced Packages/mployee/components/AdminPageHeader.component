@@ -1,0 +1,406 @@
+<apex:component id="pageHeader" layout="none" >
+	
+	<apex:attribute name="AppMenuItemList" description="" type="AppMenuItem[]" />
+	<apex:attribute name="selectedApp" description="" type="Schema.DescribeTabSetResult" />
+	<apex:attribute name="sfdcBaseURL" description="" type="String" />
+	
+	<style>
+.navbar-salesforce {
+  margin-bottom: 500px;
+}
+.container > .navbar-salesforce {
+  background-color: #1797c0;
+}
+.navbar {
+  border-radius: 4px;
+}
+.navbar-salesforce {
+  background-image: -webkit-gradient(linear, left 0%, left 100%, from(#1797c0), to(#1797c0));
+  background-image: -webkit-linear-gradient(top, #1797c0, 0%, #1797c0, 100%);
+  background-image: -moz-linear-gradient(top, #1797c0 0%, #1797c0 100%);
+  background-image: linear-gradient(to bottom, #1797c0 0%, #1797c0 100%);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='@sfdc-blue', endColorstr='@sfdc-blue', GradientType=0);
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 5px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 5px rgba(0, 0, 0, 0.075);
+}
+.navbar-salesforce {
+  margin-bottom: 15px;
+  border-bottom: 5px solid #1797c0;
+  border-left: 5px solid #1797c0;
+  border-right: 5px solid #1797c0;
+}
+.navbar-header {
+  height: 65px;
+}
+.navbar-collapse {
+  height: 65px;
+}
+.navbar-form {
+  margin-top: 16px;
+}
+.navbar-nav {
+  margin-top: 8px;
+}
+.nav-pills {
+  margin-top: 16px;
+  margin-left: 20px;
+}
+.navbar-salesforce a,
+.navbar-salesforce a:hover,
+.navbar-salesforce a:focus {
+  color: #FFF;
+}
+.navbar-salesforce .navbar-nav > li > a:hover,
+.navbar-salesforce .navbar-nav > li > a:focus {
+  color: #fff;
+  background-color: transparent;
+}
+.navbar-salesforce .nav .caret,
+.navbar-salesforce .nav a:hover .caret {
+  border-top-color: #FFF;
+  border-bottom-color: #FFF;
+}
+.navbar-salesforce .dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus {
+  background: #e3f3ff none;
+  color: #015ba7;
+}
+.navbar-salesforce .navbar-nav > li > .dropdown-menu {
+  border-top-right-radius: 11px;
+  border-top-left-radius: 11px;
+  border-bottom-right-radius: 11px;
+  border-bottom-left-radius: 11px;
+}
+li.dropdown.active.open > #appSwitcher.dropdown-toggle,
+li.dropdown.open > #userSwitcher.dropdown-toggle {
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+#appSwitcher {
+  -moz-border-radius: 11px;
+  -webkit-border-radius: 11px;
+  border-radius: 11px;
+}
+.nav-pills > li.active > a {
+  background-color: #35b4e9;
+}
+/*
+	 *	nav-apps
+	 *
+	*/
+.nav-pills.nav-apps > li > a {
+  padding: 5px 12px;
+}
+.nav-pills.nav-apps > li > a.dropdown-toggle {
+  -webkit-border-radius: 11px;
+  -moz-border-radius: 11px;
+  border-radius: 11px;
+}
+.nav-pills.nav-apps > li > a.dropdown-toggle:hover,
+.nav-pills.nav-apps > li > a.dropdown-toggle:focus {
+  color: #35b4e9;
+  background-color: #FFF;
+}
+.nav-pills.nav-apps > li.open > a,
+.nav-pills.nav-user > li.open > a:hover {
+  color: #35b4e9;
+  background-color: #FFF;
+  -webkit-border-bottom-left-radius: 0;
+  -webkit-border-bottom-right-radius: 0;
+  -moz-border-radius-bottomleft: 0;
+  -moz-border-radius-bottomright: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.nav-pills.nav-apps > li.dropdown.open > ul.dropdown-menu {
+  min-width: 190px;
+  border: 0;
+  margin: 0;
+  -webkit-border-radius: 11px;
+  -webkit-border-top-right-radius: 0;
+  -moz-border-radius: 11px;
+  -moz-border-radius-topright: 0;
+  border-radius: 11px;
+  border-top-right-radius: 0;
+}
+.nav-pills.nav-apps > li.open > a .caret,
+.nav-pills.nav-apps a:hover .caret {
+  border-top-color: #35b4e9;
+  border-bottom-color: #35b4e9;
+}
+/*
+	 *	nav-user
+	 *
+	*/
+.nav-user {
+  float: right;
+}
+.nav-pills.nav-user > li > a {
+  padding: 5px 12px;
+}
+.nav-pills.nav-user > li > a {
+  color: #FFF;
+  background-color: transparent;
+}
+.nav-pills.nav-user > li > a.dropdown-toggle {
+  -webkit-border-radius: 11px;
+  -moz-border-radius: 11px;
+  border-radius: 11px;
+}
+.nav-pills.nav-user > li > a.dropdown-toggle:hover,
+.nav-pills.nav-user > li > a.dropdown-toggle:focus {
+  color: #35b4e9;
+  background-color: #ffffff;
+}
+.nav-pills.nav-user > li.open > a .caret,
+.nav-pills.nav-user a:hover .caret {
+  border-top-color: #35b4e9;
+  border-bottom-color: #35b4e9;
+}
+.nav-pills.nav-user > li.open > a,
+.nav-pills.nav-user > li.open > a:hover {
+  color: #35b4e9;
+  background-color: #ffffff;
+  -webkit-border-bottom-left-radius: 0;
+  -webkit-border-bottom-right-radius: 0;
+  -moz-border-radius-bottomleft: 0;
+  -moz-border-radius-bottomright: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.nav-pills.nav-user > li.dropdown.open > ul.dropdown-menu {
+  right: 0;
+  left: inherit;
+  min-width: 160px;
+  border: 0;
+  margin: 0;
+  border-top-right-radius: 0;
+  border-top-left-radius: 11px;
+  border-bottom-right-radius: 11px;
+  border-bottom-left-radius: 11px;
+}
+/*
+	 *	Tabs
+	 *
+	*/
+ .nav-sfdc{
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-topright: 5px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  background: -moz-linear-gradient(#e5f2f6, #cde8f0);
+  background: -webkit-linear-gradient(#e5f2f6, #cde8f0);
+  background: linear-gradient(#e5f2f6, #cde8f0);
+  -moz-box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  -webkit-box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+.nav-sfdc a {
+  color: #353535;
+  font-weight: bold;
+}
+.nav-sfdc {
+  border-bottom: 3px solid #1797c0;
+}
+.nav-sfdc > li > a:hover {
+  border-color: #1797c0;
+}
+.nav > li > a:hover,
+.nav > li > a:focus {
+  color: #FFF;
+  text-decoration: none;
+  background-color: #1797c0;
+}
+.nav.nav-sfdc > li.dropdown > a:hover,
+.nav.nav-sfdc > li.dropdown > a:focus {
+  border-color: #FFF;
+  border-bottom-color: #1797c0;
+  background-color: #FFF;
+}
+.nav.nav-sfdc > li.dropdown.open > ul.dropdown-menu {
+  right: 0;
+  left: inherit;
+  min-width: 160px;
+  border: 0;
+  margin-right: 2px;
+  border-top-right-radius: 0;
+  border-top-left-radius: 11px;
+  border-bottom-right-radius: 11px;
+  border-bottom-left-radius: 11px;
+}
+.navbar-salesforce {
+            background: url({!selectedApp.logoUrl}) no-repeat #1797c0;
+        }
+        
+		/*
+		 *
+		 *	Overide style.css
+		 *
+		*/
+        .nav .dropdown-menu {
+        	left:inherit;
+			right:0;
+			padding: 5px 0;
+			background-color: #fff;
+			opacity: 1;
+				        
+		}
+        .nav .dropdown-menu li {
+        	border-top:0px;
+        	border-bottom: 0px;
+        	
+        }
+        .nav .dropdown-menu li a {
+			
+			padding: 5px 10px!important;
+			margin: 0 6px;
+			
+			line-height: 20px;
+			-webkit-border-radius: 4px;
+-moz-border-radius: 4px;
+border-radius: 4px;
+			color: #333;
+			white-space: normal!important;
+		}		
+	</style>
+
+	<script>
+	$(document).ready(function() {
+		calculateLIsInRow();
+	});
+	
+	
+    function calculateLIsInRow() {
+	    
+	    $('ul.nav-sfdc li').each(function(index) {
+	    	if( $(this).hasClass('dropdown') ){
+	    		
+	    	} else {	    	
+	    		
+		    	if($(this).prev().length > 0) {
+		    		if( $(this).position().top != $(this).prev().position().top ){	    			 
+		    			$(this).appendTo('.nav-sfdc ul.dropdown-menu');
+		    		} else {
+		    			$('ul.nav-sfdc ul.dropdown-menu li').each(function(index) {		    				
+		    				$(this).insertBefore('ul.nav-sfdc li.dropdown');
+		    			});
+		    		}
+		    	}
+		    }
+	    });
+	     
+	    var n = $('ul.nav-sfdc ul.dropdown-menu li').length;
+	    console.log('length: '+n);
+	    if(n <= 0){
+	    	$('ul.nav-sfdc li.dropdown').hide();
+	    } else {
+	    	$('ul.nav-sfdc li.dropdown').show();
+	    }
+	}
+	
+	
+	
+	$(window).resize(calculateLIsInRow);
+
+     
+
+	</script>	
+	
+	<nav class="navbar-salesforce" role="navigation">
+	
+	
+	  <!-- Brand and toggle get grouped for better mobile display -->
+	  <div class="navbar-header">
+	    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+	      <span class="sr-only">Toggle navigation</span>
+	      <i class="icon-cog"></i>
+	    </button>
+	    
+	  </div>
+	
+	  <!-- Collect the nav links, forms, and other content for toggling -->
+	  <div class="collapse navbar-collapse navbar-ex1-collapse">
+	    <ul class="nav nav-pills navbar-right nav-apps">
+			<li class="dropdown active">
+							
+				<a href="javscript:;" class="dropdown-toggle" data-toggle="dropdown">				
+					{!selectedApp.label}
+					<b class="caret"></b>
+				</a> 
+				
+				<ul class="dropdown-menu">
+					<apex:repeat value="{!AppMenuItemList}" var="appMenuItem">
+						
+						<li><a href="{!appMenuItem.StartUrl}">{!appMenuItem.label}</a></li>	
+					</apex:repeat>	
+					<li class="divider"></li>
+					<li><a href="https://appexchange.salesforce.com" target="_blank">AppExchange</a></li>
+					<li><a href="http://developer.force.com/" target="_blank">Developer Community</a></li>
+				</ul>
+				
+			</li>
+	    </ul>
+	    <ul class="nav nav-pills nav-user">
+	    	
+	      <li class="dropdown ">
+							
+				<a href="javscript:;" class="dropdown-toggle" data-toggle="dropdown">
+					{!$User.FirstName} {!$User.LastName}
+					<b class="caret"></b>
+				</a>			
+				<ul class="dropdown-menu">
+					<li><a href="../_ui/core/userprofile/UserProfilePage?tab=sfdc.ProfilePlatformFeed">My Profile</a></li>
+					<li><a href="../ui/setup/Setup?setupid=PersonalSetup">My Settings</a></li>
+					<li><a href="javascript:;">Developer Console</a></li>
+					<li><a href="../secur/logout.jsp">Logout</a>
+					</li>
+				</ul>
+			</li>
+			<li><a href="../setup/forcecomHomepage.apexp">Setup</a></li>
+			<li><a href="../setup/forcecomHomepage.apexp">Help</a></li>
+		</ul>		
+		
+	    <!-- 
+	    <form class="navbar-form navbar-right" role="search">
+	      <div class="form-group">
+	        <input type="text" class="form-control input-sm search-query" placeholder="Search"/>
+	      </div>
+	    </form>
+	     -->
+	  </div><!-- /.navbar-collapse -->  
+	
+	</nav>
+
+	
+		<ul class="nav nav-tabs nav-sfdc">
+			<apex:repeat rendered="true" value="{!selectedApp.tabs}" var="tab">		
+	    		<li><a href="{!tab.url}">{!tab.label}</a></li>
+	    	</apex:repeat>
+	    		<li class="dropdown">					
+					<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown">
+						<b class="caret"></b>
+					</a>
+					<ul class="dropdown-menu">
+						
+					</ul>    				
+				</li>
+	    	
+		    	
+	    	
+		</ul>
+		
+		
+	
+	
+	
+	
+
+	
+	
+	
+
+
+
+
+</apex:component>

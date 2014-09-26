@@ -1,0 +1,7 @@
+<apex:component >    
+    <apex:attribute name="title" description="The title off the toolbar" type="String" default="Edit record"/>
+    <apex:attribute name="icon" description="The image in the toolbar" type="String"/>
+       
+ 
+    <div class="pagetitle {!icon}"><h2>{!title}</h2></div>    
+</apex:component>

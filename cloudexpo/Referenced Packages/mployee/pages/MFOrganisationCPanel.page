@@ -1,0 +1,116 @@
+<apex:page sidebar="false" tabStyle="organization__tab" >
+<apex:composition template="mployee__templateMployee">
+<apex:define name="toolbar">
+    <c:MFToolbar title="Organization Manager"
+        icon="icon-48-article-add"                    
+    />
+</apex:define>
+
+<apex:define name="body">
+<div id="cpanel" class="AdminCpanel">
+    <div class="adminform">        
+        <!-- Start Cpanel left-->
+        <div class="cpanel-left">
+        <apex:form >            
+            <div id="cpanel">                
+                <!-- MF_Organization__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Organization__c}/o" title="{!$ObjectType.mployee__MF_Organization__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_organisation.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Organization__c.labelPlural}</span>
+                         </apex:outputLink>
+                    </div>
+                </div>
+                
+                <!-- mployee__MF_Organisation_Position__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Organisation_Position__c}/o" title="{!$ObjectType.mployee__MF_Organisation_Position__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_organisation_position.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Organisation_Position__c.labelPlural}</span>
+                         </apex:outputLink>
+                    </div>
+                </div>
+                
+                <!-- mployee__MF_Organisation_PositionVacancy__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Organisation_PositionVacancy__c}/o" title="{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_organisation_positionVacancy.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.labelPlural}</span>
+                         </apex:outputLink>
+                    </div>
+                </div>
+                <div class="clr"></div>
+                
+                <h1>{!$Label.MF_Inventories}</h1>
+                
+                <!-- MF_TrainingInventory__c -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_TrainingInventory__c}/o" title="{!$ObjectType.mployee__MF_TrainingInventory__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_training.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_TrainingInventory__c.labelPlural}</span>
+                         </apex:outputLink>
+                    </div>
+                </div>                                
+                <!-- MF_Organisation_CompanyCarInventory-->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Organisation_CompanyCarInventory__c}/o" title="{!$ObjectType.mployee__MF_Organisation_CompanyCarInventory__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_companycars.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Organisation_CompanyCarInventory__c.labelPlural}</span>
+                         </apex:outputLink>
+                    </div>
+                </div>
+                <!-- MF_Organisation_PropertyInventory -->
+                <div class="icon-wrapper">
+                    <div class="icon">
+                        <apex:outputLink value="{!$Site.Domain}/{!$ObjectType.MF_Organisation_PropertyInventory__c}/o" title="{!$ObjectType.mployee__MF_Organisation_PropertyInventory__c.labelPlural}">
+                            <apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-mployee_organisation_PropertyInventory.png')}"/>
+                             <span>{!$ObjectType.mployee__MF_Organisation_PropertyInventory__c.labelPlural}</span>
+                         </apex:outputLink>
+                    </div>
+                </div>
+                <div class="clr"></div>
+                
+                <!-- MF_Document_type__c -->
+                
+            </div>
+        </apex:form>
+        </div>
+        <!-- End Cpanel left-->
+        
+        <!-- Start Cpanel right-->
+        <div class="cpanel-right">        
+            <h3><apex:image url="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/images/header/icon-48-add.png')}"/>{!$Label.MF_CreateNew}</h3>
+            <br />
+            <br />
+            <ul class="adminformlist">
+              <li>
+                <apex:outputLink value="{!URLFOR($Action.MF_Organization__c.New)}" title="Add New {!$ObjectType.mployee__MF_Organization__c.label}">
+                    {!$ObjectType.mployee__MF_Organization__c.label}
+                </apex:outputLink>
+              </li>              
+              <li>
+                <apex:outputLink value="{!URLFOR($Action.MF_Organisation_Position__c.New)}" title="Add New {!$ObjectType.mployee__MF_Organisation_Position__c.label}">
+                    {!$ObjectType.mployee__MF_Organisation_Position__c.label}
+                </apex:outputLink>
+              </li>
+              <li>
+                <apex:outputLink value="{!URLFOR($Action.MF_Organisation_PositionVacancy__c.New)}" title="Add New {!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.label}">
+                    {!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.label}
+                </apex:outputLink>
+              </li>
+            </ul>        
+        </div>        
+        <!-- End Cpanel right-->
+    </div>
+    <div class="clr"></div>
+</div>
+<div class="clr"></div>
+
+</apex:define>
+</apex:composition>
+</apex:page>

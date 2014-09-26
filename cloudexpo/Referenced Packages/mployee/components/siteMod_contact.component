@@ -1,0 +1,28 @@
+<apex:component id="siteMod_contact"
+	controller="mployee.com_siteMod_contactController"
+>
+
+	
+	<apex:outputPanel layout="block" styleClass="container">
+		
+		<apex:outputPanel layout="block" styleClass="row">
+		
+					
+			<apex:repeat value="{!items}" var="item">
+				<apex:outputPanel layout="block" styleClass="col-md-4">					
+					
+					<apex:image styleClass="img-thumbnail" rendered="{!!ISNULL(item.mployee__profilePhotoId__c)}" style="height:200px; width:300px" url="{!URLFOR($Action.Attachment.Download, item.mployee__profilePhotoId__c)}"  /><br/>
+					<apex:outputField value="{!item.Name}" /><br/>
+					<apex:outputField value="{!item.mployee__position__c}"/><br/>
+					
+				</apex:outputPanel>				
+			</apex:repeat>
+			
+		
+		</apex:outputPanel><!-- /row -->
+		
+	</apex:outputPanel><!-- /container -->
+	
+	
+		
+</apex:component>

@@ -1,0 +1,22 @@
+<apex:component id="pageHeader" layout="none">
+
+    <apex:attribute name="iconStyleClass" description="Generate a page header" type="String" required="false" default="fa fa-leaf"/>
+    <apex:attribute name="title" description="The text displayed at the top" type="String" required="false"/>
+    <apex:attribute name="subtitle" description="TThe text displayed just under the main title" type="String" required="false"/>
+    
+    <apex:outputPanel layout="block" rendered="true" styleClass="page-header">
+	    <h1>
+	        <apex:outputPanel layout="inline" styleClass="{!iconStyleClass}"/>&nbsp;
+	        
+	        <apex:outputText styleClass="hidden-phone" value="{!title}"/>
+	        
+	        <small><apex:outputText styleClass="hidden-phone" value="{!subtitle}"/></small>
+	    </h1>    
+    </apex:outputPanel>
+    
+    
+    <apex:outputPanel layout="block" rendered="false" styleClass="page-header">    
+    
+    </apex:outputPanel>
+    
+</apex:component>

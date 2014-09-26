@@ -1,0 +1,132 @@
+<apex:page id="profileEducation"
+           docType="html-5.0" 
+           controller="mployee.SiteProfileEducationController" 
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"            
+>
+	<apex:variable var="config" value="{!siteSettings.modules['mod_candidateEducations']}" />
+	
+	
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+        <apex:define name="body">
+        	<apex:messages />        	
+        	
+        	<div class="container">
+                <div class="row well">
+                	<apex:form styleClass="form-horizontal" id="adminform"> 
+                		
+                		<!-- Side Bar -->						
+						<ul class="nav {!siteSettings.navStyleClass} nav-stacked col-xs-4 col-md-push-8">
+							<li class="nav-header"><apex:outputText styleClass="hidden-phone" value="{!$Label.GLIB_HTML_SELECT_ACTION}"/></li>							
+							<li>
+                        		<apex:commandLink action="{!importItems}">
+                        			<apex:param name="service" assignto="{!service}" value="linkedin" />
+                        			<span class="glyphicon glyphicon-cloud-download"/>&nbsp;
+                        			<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_IMPORT_FROM}"><apex:param value="LinkedIn" /></apex:outputText>  
+                        		</apex:commandLink>
+                        	</li> 
+							<li><apex:commandLink action="{!saveNew}"><span class="glyphicon glyphicon-plus"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_NEW}"/></apex:commandLink></li>
+							<li><apex:commandLink action="{!saveClose}"><span class="glyphicon glyphicon-check"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_SAVE_CLOSE}"/></apex:commandLink></li>                        
+                        	<li><apex:commandLink action="{!remove}"><span class="glyphicon glyphicon-trash"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_DELETE}"/></apex:commandLink></li>                        
+                        	<li><apex:commandLink action="{!cancel}"><span class="glyphicon glyphicon-remove"/>&nbsp;<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_CANCEL}"/></apex:commandLink></li>
+						</ul>
+						
+	                    <div class="col-xs-8 col-md-pull-4">
+	                    	
+	                    	<apex:dynamicComponent componentValue="{!pageHeader}" />
+	                    	
+							<fieldset>
+	                    		<legend>
+	                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id == null,true,false)}">	
+	                    				<apex:outputText value="{!$Label.GLOBAL_ACTION_NEW_OBJECT}">
+	                    					<apex:param value="{!$ObjectType.candidateEducation__c.Label}"/> 
+	                    				</apex:outputText>
+	                    			</apex:outputPanel>
+	                    			<apex:outputPanel layout="none" rendered="{!IF(item.Id != null,true,false)}">
+	                    				<apex:outputText value="{!item.name}"/>	                    					                   
+	                    			</apex:outputPanel>	                    			 			
+	                    		</legend>
+	                    		
+	                    		<div class="form-group">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.Name.label}" for="name"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">
+										<apex:inputField value="{!item.Name}" id="name" html-placeholder="{!$ObjectType.candidateEducation__c.Fields.Name.label}" styleClass="form-control required"/>
+								    </div>
+							  	</div>
+							  	<apex:outputpanel styleClass="form-group" rendered="false" layout="block">								    
+								    <apex:outputLabel styleClass="col-sm-2 control-label" value="{!$ObjectType.candidateEducation__c.Fields.startDate__c.label}" for="startDate__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass} ">										
+										<apex:inputField value="{!item.startDate__c}" id="startDate__c" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="false" layout="block">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.endDate__c.label}" for="endDate__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass} ">										
+										<apex:inputField value="{!item.startDate__c}" id="endDate__c" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">
+							  		<apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.startDateYear__c.label}" for="startDateYear__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass} ">										
+										<apex:inputField value="{!item.startDateYear__c}" id="startDateYear__c" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">
+							  		<apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.endDateYear__c.label}" for="endDateYear__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass} ">										
+										<apex:inputField value="{!item.endDateYear__c}" id="endDateYear__c" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.degree__c.label}" for="degree__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass} ">										
+										<apex:inputField value="{!item.degree__c}" id="degree__c" html-placeholder="{!$ObjectType.candidateEducation__c.Fields.degree__c.label}" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.fieldOfStudy__c.label}" for="fieldOfStudy__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass} ">										
+										<apex:inputField value="{!item.fieldOfStudy__c}" id="fieldOfStudy__c" html-placeholder="{!$ObjectType.candidateEducation__c.Fields.fieldOfStudy__c.label}" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="true" layout="block">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.grade__c.label}" for="grade__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass} ">										
+										<apex:inputField value="{!item.grade__c}" id="grade__c" html-placeholder="{!$ObjectType.candidateEducation__c.Fields.grade__c.label}" styleClass="form-control"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="{!config.params['showActivities']}" layout="block">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.activities__c.label}" for="activities__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass} ">										
+										<apex:inputField value="{!item.activities__c}" id="activities__c" html-placeholder="{!$ObjectType.candidateEducation__c.Fields.activities__c.label}" styleClass="form-control" style="resize:vertical"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="{!config.params['showActivitiesLong']}" layout="block">								    
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.activitiesLong__c.label}" for="activitiesLong__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">										
+										<apex:inputField value="{!item.activitiesLong__c}" id="activitiesLong__c" html-placeholder="{!$ObjectType.candidateEducation__c.Fields.activitiesLong__c.label}" styleClass="form-control" style="resize:vertical"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	<apex:outputpanel styleClass="form-group" rendered="{!config.params['showNotes']}" layout="block">
+								    <apex:outputLabel styleClass="{!siteSettings.form.labelStyleClass} control-label" value="{!$ObjectType.candidateEducation__c.Fields.notes__c.label}" for="notes__c"/>
+								    <div class="{!siteSettings.form.inputStyleClass}">										
+										<apex:inputField value="{!item.notes__c}" id="notes__c" html-placeholder="{!$ObjectType.candidateEducation__c.Fields.notes__c.label}" styleClass="form-control" style="resize:vertical"/>
+								    </div>
+							  	</apex:outputpanel>
+							  	
+							  									
+	                    	</fieldset>
+	                    	
+	                    	
+						</div>
+						
+						
+					</apex:form>
+				</div>
+			</div>
+		</apex:define>
+	</apex:composition>
+</apex:page>

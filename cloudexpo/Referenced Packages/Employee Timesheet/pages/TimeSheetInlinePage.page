@@ -1,0 +1,30 @@
+<apex:page standardController="EMP_TIME__Employee__c" extensions="EMP_TIME.TimesheetClass">  
+  <apex:form >
+     <div class="dvTable">
+         <table width="100%" border="1" cellspacing="0" cellpadding="3">
+            <tr>
+              <th>Time #</th>
+              <th>Project</th>
+              <th>Task</th>
+              <th>Location</th>
+              <th>Project Type</th>
+              <th>Date</th>
+              <th>Hours</th>
+              <th>Comments</th>
+            </tr> 
+           <apex:repeat value="{!lstTimeForDetailAllRecord}" var="objTime">
+            <tr>
+               <td><a href= "/{!objTime.Id}?nooverride=1" onclick="window.open(this.href,'_parent')">{!objTime.Name}</a></td>
+               <td>{!objTime.Project__c}</td>
+               <td>{!objTime.Task__c}</td>
+               <td>{!objTime.Location__c}</td>
+               <td>{!objTime.Project_Type__c}</td>
+               <td><apex:outputText value="{0,date,EE,d'th' MMMM, yyyy}"> <apex:param value="{!objTime.EMP_TIME__Date__c}" /> </apex:outputText></td>
+               <td>{!objTime.EMP_TIME__Hours__c}</td>
+               <td>{!objTime.EMP_TIME__Comments__c}</td>
+            </tr>
+          </apex:repeat> 
+        </table>   
+     </div>
+  </apex:form>
+ </apex:page>

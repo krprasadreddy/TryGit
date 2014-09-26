@@ -1,0 +1,73 @@
+<apex:page standardController="mployee__MF_Organisation_Position__c" renderAs="" standardStylesheets="false" showHeader="false" >
+
+<html>
+    <head>
+    
+    <style> 
+    body    {
+        font-family: Arial Unicode MS;
+        font-size:12px;
+    }
+    h3 {
+        font-style: italic;
+    }
+    table {
+        border: 1px;
+        cellpadding: 5px;
+        cellmargin: 5px;
+    }   
+    .label{
+        font-weight:bold;
+    }
+    </style>
+ 
+    </head>
+    <body>
+ 
+        <center>
+          <h1>{!$Label.MF_FunctionDescription}</h1>
+            <apex:outputText value="{!mployee__MF_Organisation_Position__c.Name}"/>
+         </center>
+         <br />
+         <br />
+         <apex:panelGrid columns="2" width="500px">
+            <apex:outputText value="{!$Label.MF_FunctionName}" styleClass="label" />
+            <apex:outputText value="{!mployee__MF_Organisation_Position__c.Name}" />
+            
+            <apex:outputText value="{!$ObjectType.mployee__MF_Organisation_Position__c.Fields.mployee__Organization__c.Label}" styleClass="label" />
+            <apex:outputField value="{!mployee__MF_Organisation_Position__c.mployee__Organization__c}" />
+            
+            <apex:outputText value="{!$ObjectType.mployee__MF_Organisation_Position__c.Fields.mployee__Organisation_Position__c.Label}" styleClass="label" />
+            <apex:outputField value="{!mployee__MF_Organisation_Position__c.mployee__Organisation_Position__c}" />
+            
+            <apex:outputText value="{!$ObjectType.mployee__MF_Organisation_Position__c.Fields.mployee__FTE__c.Label}" styleClass="label" />
+            <apex:outputField value="{!mployee__MF_Organisation_Position__c.mployee__FTE__c}" />
+         </apex:panelGrid>
+         
+         <apex:panelGrid columns="1">     
+             <!-- General Description -->
+             <h3>{!$ObjectType.mployee__MF_Organisation_Position__c.Fields.mployee__DescriptionPDF__c.Label}:</h3>
+             <p>
+               <apex:outputField value="{!mployee__MF_Organisation_Position__c.mployee__DescriptionPDF__c}"/>
+             </p>
+             
+             <!-- Duties and Responsibilities: -->
+             <h3>{!$ObjectType.MF_Organisation_Position__c.Fields.ResponsibilitiesPDF__c.Label}:</h3>
+             <p>
+               <apex:outputField value="{!mployee__MF_Organisation_Position__c.mployee__ResponsibilitiesPDF__c}"/>
+             </p>
+             
+             <!-- Required Skills -->
+             <h3>{!$ObjectType.MF_Organisation_Position__c.Fields.RequiredSkillsPDF__c.Label}:</h3>
+             <p>
+               <apex:outputField value="{!mployee__MF_Organisation_Position__c.mployee__RequiredSkillsPDF__c}"/>
+             </p>
+             <!-- Educational Requirements -->
+             <h3>{!$ObjectType.MF_Organisation_Position__c.Fields.RequiredEducationPDF__c.Label}:</h3>
+             <p>
+               <apex:outputField value="{!mployee__MF_Organisation_Position__c.mployee__RequiredEducationPDF__c}"/>
+             </p>
+        </apex:panelGrid>
+    </body>
+</html>
+</apex:page>

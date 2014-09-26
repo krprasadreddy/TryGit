@@ -1,0 +1,44 @@
+<apex:page id="adminTemplate" 
+           docType="html-5.0" 
+           
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+                     
+>
+<html>
+    <head>
+        <meta charset="utf-8"/>        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <!-- Bootstrap core CSS -->        
+        <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css"/>
+        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet"/>
+        <!-- Bootstrap theme -->
+        <!-- Optional theme -->
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap-theme.min.css"/>
+        
+        <apex:insert name="css"/>
+        
+        <!-- start: JavaScript-->
+        <apex:includeScript value="https://code.jquery.com/jquery.js"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBootstrap,'assets/js/bootstrap.js')}"  />
+        
+        <apex:insert name="javascript"/>
+        
+    </head>
+    
+    <body>
+        <apex:insert name="body"/>
+	        <div class="container">
+				<div class="row">
+					<apex:insert name="component"/>		
+				</div>
+			</div>        
+        
+    </body>
+
+</html> 
+</apex:page>

@@ -1,0 +1,63 @@
+<apex:page standardController="mployee__MF_EmployeeFamily__c"
+			recordSetVar="MF_EmployeeFamily__c"
+			extensions="mployee.MF_EmployeeFamilyControllerExt"
+			tabStyle="mployee__MF_EmployeeFile__c"
+			sidebar="true" >
+
+	<apex:includeScript value="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/js/jquery/core/jquery-1.6.4.js')}"  />
+	<apex:includeScript value="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/js/jquery/ui/js/jquery-ui-1.8.16.custom.min.js')}"  />
+    <script type="text/javascript">
+        var j$ = jQuery.noConflict();     
+        function scroll(){
+            var docHeight = j$(document).height();
+            var winHeight = j$(window).height();
+            
+            j$('html,body').animate({scrollTop: docHeight - winHeight}, 1000);
+        }
+    </script>
+    
+    <apex:sectionHeader title="{!$Label.MF_AddFamily}" subtitle="{!employee.Name}"/>  
+    <apex:form >
+
+        <apex:pageBlock mode="maindetail" title="{!$Label.MF_AddFamily}" id="employee">    
+            <apex:pageMessages />
+            
+            <apex:pageBlockSection title="Employee" columns="2">
+            	<apex:outputField value="{!employee.Name}"/>            		        	
+            </apex:pageBlockSection>
+            
+            <apex:pageBlockSection title="Current Families" columns="1">
+            	<apex:pageBlockTable value="{!employee.EmployeeFamilies__r}" var="item">
+	           		<apex:column value="{!item.name}"/>
+	           		<apex:column value="{!item.mployee__BirthDate__c}"/>
+	           		<apex:column value="{!item.mployee__BirthPlace__c}"/>
+	           		<apex:column value="{!item.mployee__BirthCountry__c}"/>
+	           		<apex:column value="{!item.mployee__Gender__c}"/>
+	       		</apex:pageBlockTable>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+                    
+		<apex:pageBlock title="{!$Label.MF_AddFamily}" mode="edit"  id="families" >
+			
+			<apex:pageBlockButtons >                
+                <apex:commandButton value="{!$Label.MF_NewFamily}" action="{!newFamilyMember}" reRender="families" oncomplete="scroll();"/>
+                <apex:commandButton action="{!save}" value="{!$Label.MF_Save}"/>
+                <apex:commandButton action="{!cancel}" value="{!$Label.MF_Cancel}" />
+            </apex:pageBlockButtons>
+             
+			<apex:repeat value="{!families}" var="f">
+			    <apex:pageBlockSection title="{!IF(f.Name =='','New family member',f.Name)}" columns="2">
+			        <apex:inputField value="{!f.Name}" required="true"/> 
+			        <apex:inputField value="{!f.mployee__NameLast__c}"/>
+			        <apex:inputField value="{!f.mployee__BirthDate__c}"/>
+			        <apex:inputField value="{!f.mployee__BirthPlace__c}"/>
+			        <apex:inputField value="{!f.mployee__Gender__c}" required="true"/>
+			        <apex:inputField value="{!f.mployee__Relationship__c}"/>
+			        <apex:inputField value="{!f.mployee__BirthCountry__c}"/>                        
+			    </apex:pageBlockSection>
+		    </apex:repeat>
+		    
+		</apex:pageBlock>
+
+    </apex:form>
+</apex:page>

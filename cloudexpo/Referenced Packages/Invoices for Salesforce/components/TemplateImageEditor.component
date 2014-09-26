@@ -1,0 +1,306 @@
+<apex:component controller="kognoz1.TemplateImageEditorController">
+<script type="text/javascript" >
+    $(function(){
+
+        /*
+            Cancel button binding
+        */
+        $("#imageEditorCancelBtn").click(function(event) {
+            // clean up the editor elements
+            $('#fileImagePreview').empty();
+            $('#imageFileId').empty();
+            $("select[id$='imageList']").val("");
+            $("select[id$='docsList']").val("");
+
+            var selectorId = $("#imageEditor").dialog("option","selectorId");
+            // close the dialog
+            $("#imageEditor").dialog("close");
+        });
+        
+        /*
+            Done button binding
+        */
+        $("#imageEditorDoneBtn").click(function(event) {
+            var editorMode = $("#imageEditor").dialog("option","dialogMode");
+            if(editorMode=="createNewItem")
+            {
+                if($('#imageFileId').html()=="")
+                    window.alert("No image was selected. Select one or cancel.");
+                else
+                {
+                    imageItemsCounter+=1;
+                    var topMargin = parseInt($("#mainContainer").css("margin-top").replace("px",""));
+                    var leftMargin = parseInt($("#mainContainer").css("margin-left").replace("px",""));
+                    var topPos = $("#mainContainer").position().top + topMargin;
+                    var leftPos = $("#mainContainer").position().left + leftMargin;
+                    var imageContainerStyle = "cursor:pointer;";
+                    imageContainerStyle = 'position: absolute; border:1px dashed #94B9D1;top: '+topPos+'px; left:'+leftPos+'px;'+imageContainerStyle;
+                    $("#mainContainer").append('<div id="imgbox'+imageItemsCounter+'"  style="'+imageContainerStyle+'" ></div>');
+                    var imageId = $('#imageFileId').html();
+                    var imageContainerId = 'imgbox'+imageItemsCounter;
+                    var imageContainerSelector = "#"+imageContainerId;
+                    $(imageContainerSelector).append('<img alt="" attId="'+imageId+'" id="image'+imageContainerId+'" src="/servlet/servlet.FileDownload?file='+imageId+'"/>');
+                    var imgsrc = $("#deleteEditorItemImg").attr("src");
+                    var img = '<img alt="" class="hideEditBt removeBoxBt" src="'+imgsrc+'" style="position: absolute; left: -18px; top: 0px;" title="Remove item"/>';
+                    var imgNode = '<div class="imgsDiv" style="position:relative;top: 0px; left: 0px;z-index:inherit;">'+img+'</div>';
+                    $(imageContainerSelector).append(imgNode);
+
+                    var sizeNode = '<div id="sizeDiv" style="position:absolute;top:-16px;left:0px;width:70px; height:15px;background-color:#FFFFFF;color:red;font-size:9px;font-weight:bold;display:none" />';
+                    $(imageContainerSelector).append(sizeNode);
+
+                    $(imageContainerSelector).children("div[id=sizeDiv]").click(function(){
+                        window.alert("Image resizing preserves the image aspect ratio. Use the handle to resize it.");
+                    });
+    
+                    var imageSelectorOnCanvas = "#image"+imageContainerId;
+                    $(imageSelectorOnCanvas).load(function() {
+                        $(imageSelectorOnCanvas).width($(this).width());
+                        $(imageSelectorOnCanvas).height($(this).height());
+                        $(imageSelectorOnCanvas).css("position","absolute");
+                        $(imageContainerSelector).css("width",$(imageSelectorOnCanvas).attr("width"));
+                        $(imageContainerSelector).css("height",$(imageSelectorOnCanvas).attr("height"));
+                    });
+    
+                    $(imageContainerSelector).resizable({
+                        grid: [1,1],
+                        aspectRatio:true,
+                        alsoResize: imageSelectorOnCanvas,
+                        autoHide:true,
+                        resize:function(event,ui){
+                            $(this).children("div[id=sizeDiv]").html("W:"+ui.size.width.toFixed()+" H:"+ui.size.height.toFixed());
+                            $(this).children("div[id=sizeDiv]").css("display","block");
+                        }
+                    });
+                        
+                    $(imageContainerSelector).draggable({
+                        containment: 'parent',
+                        grid: [1, 1], 
+                        stack: "div[id=mainContainer] > div[id^=box], div[id^=imgbox], div[id=prodsTable], div[id=summaryTable],div[id^=lineElement]" 
+                    });
+                    
+                    $(imageContainerSelector).click(function() {
+                        $('.ui-selected').each(function(index){
+                            $(this).removeClass('ui-selected');
+                            $(this).children('.imgsDiv').children('img').addClass('hideEditBt');
+                            $(this).children('.imgsDiv').children('img').removeClass('showEditBt');
+                            $(this).children("div[id=sizeDiv]").css("display","none");
+                        });
+                        $(this).addClass('ui-selected');
+                        $(this).children('.imgsDiv').children('img').addClass('showEditBt');
+                        $(this).children('.imgsDiv').children('img').removeClass('hideEditBt');
+                        var w = parseInt($(this).css("width").replace("px","")).toFixed();
+                        var h = parseInt($(this).css("height").replace("px","")).toFixed();
+                        $(this).children("div[id=sizeDiv]").html("W:"+w+" H:"+h);
+                        $(this).children("div[id=sizeDiv]").css("display","block");
+                        var zindex = calculateMaxZIndex();
+                        $(this).css("z-index",zindex);
+                    });
+                    var zindex = calculateMaxZIndex();
+                    $(imageContainerSelector).css("z-index",zindex);
+    
+                    var fileImgPreview  =  $("#fileImagePreview").html();
+                    var imgId           =   $("#imageFileId").html();
+                    var selImg          =   $("select[id$=imageList]").val();
+                    var selFolder       =   $("select[id$=docsList]").val();
+                    $(imageContainerSelector).dblclick(function() {
+                        $("#fileImagePreview").html(fileImgPreview);
+                        $("#imageFileId").html(imgId);
+                        $("select[id$=imageList]").val(selImg);
+                        $("select[id$=docsList]").val(selFolder);
+                        $("#imageEditor").dialog("option","dialogMode","editExistingItem");
+                        $("#imageEditor").dialog("option","selectorId",$(this).attr("id"));
+                        $("#imageEditor").dialog("open");
+                    });
+    
+                    $(imageContainerSelector).addClass("ui-selected");
+                    $(imageContainerSelector).children('.imgsDiv').children('img').addClass('showEditBt');
+                    $(imageContainerSelector).children('.imgsDiv').children('img').removeClass('hideEditBt');
+    
+                    $('#fileImagePreview').empty();
+                    $('#imageFileId').empty();
+                    $("select[id$='imageList']").val("");
+                    $("select[id$='docsList']").val("");
+        
+                    // close the dialog
+                    $("#imageEditor").dialog("option","lastAttId",imgId);
+                    $("#imageEditor").dialog("close");
+                }
+            }
+            else
+            {
+                if($('#imageFileId').html()=="")
+                    window.alert("No image was selected. Select one or cancel.");
+                else
+                {
+                    var selectorId = $("#imageEditor").dialog("option","selectorId");
+                    var lastImgId = $("#imageEditor").dialog("option","lastAttId");
+                    var imageContainerSelector = "#"+selectorId;
+                    var imageSelectorOnCanvas = "#image"+selectorId;
+
+                    if(lastImgId!=$("#imageFileId").html())
+                    {
+                        $(imageSelectorOnCanvas).unbind("load");
+                        $(imageSelectorOnCanvas).load(function() {
+                            $(imageSelectorOnCanvas).width($(this).width());
+                            $(imageSelectorOnCanvas).height($(this).height());
+                            $(imageSelectorOnCanvas).css("position","absolute");
+                            $(imageContainerSelector).css("width",$(imageSelectorOnCanvas).attr("width"));
+                            $(imageContainerSelector).css("height",$(imageSelectorOnCanvas).attr("height"));
+                        });
+    
+                        $(imageContainerSelector).css("width","");
+                        $(imageContainerSelector).css("height","");
+                        var imgSelector = "#"+selectorId+" > img";
+                        $(imgSelector).css("width","");
+                        $(imgSelector).css("height","");
+                        $(imgSelector).attr("id","image"+selectorId);
+                        $(imgSelector).attr("attId",$("#imageFileId").html());
+                        $(imgSelector).attr("src","/servlet/servlet.FileDownload?file="+$("#imageFileId").html());
+        
+                        
+                        $(imgSelector).unbind("dbclick");
+                        var fileImgPreview  =  $("#fileImagePreview").html();
+                        var imgId           =   $("#imageFileId").html();
+                        var selImg          =   $("select[id$=imageList]").val();
+                        var selFolder       =   $("select[id$=docsList]").val();
+                        $(imageContainerSelector).dblclick(function() {
+                            $("#fileImagePreview").html(fileImgPreview);
+                            $("#imageFileId").html(imgId);
+                            $("select[id$=imageList]").val(selImg);
+                            $("select[id$=docsList]").val(selFolder);
+                            $("#imageEditor").dialog("option","dialogMode","editExistingItem");
+                            $("#imageEditor").dialog("option","selectorId",$(this).attr("id"));
+                            $("#imageEditor").dialog("open");
+                        });
+                    
+                    }
+    
+                    $('#fileImagePreview').empty();
+                    $('#imageFileId').empty();
+                    $("select[id$='imageList']").val("");
+                    $("select[id$='docsList']").val("");
+        
+                    // close the dialog
+                    $("#imageEditor").dialog("option","lastAttId",imgId);
+                    $("#imageEditor").dialog("close");
+                }
+            }
+        });
+
+    });
+
+    function changeImagePreview()
+    {
+        var idAttToView = $("select[name$='imageList']").val();
+        $('#fileImagePreview').empty();
+        var imageString = '<image src="/servlet/servlet.FileDownload?file='+idAttToView+'" />';
+        $('#imageFileId').empty();
+        $('#imageFileId').append(idAttToView);
+        $('#fileImagePreview').append(imageString);
+    
+    }
+    
+    function displayFileFolderInProgress()
+    {
+        $('#imageFileId').empty();
+        $('#fileImagePreview').empty();
+        $("#selectFolderFileStatMsg").css("display","block");
+        $("#selectFolderFileMsg").html("Loading ...");  
+    }
+    
+    function displayFileFolderDone()
+    {
+        $("#selectFolderFileStatMsg").css("display","none");    
+    
+    }
+    
+    function invalidatePicSelection()
+    {
+        if($("select[id$=imageList]").val()=="invalid")
+        {
+            window.alert("The selected picture size is above the maximum 20k allowed");
+            $("select[id$=imageList]").val("");
+            return false;
+        }
+        return true;
+    }   
+
+</script>
+
+    <div id="imageEditor" style="background-color:white; display: none;">
+        <apex:form >
+            <div style="float:right;padding-bottom:5px">
+                <input id="imageEditorCancelBtn" type="button" value="Cancel"/>
+                <input id="imageEditorDoneBtn" type="button" value="Done"/>
+            </div>
+            
+            <div>
+                <span style="font-size:0.93em;font-weight: normal;display:block;clear:both;border-top:solid thin;padding-top:5px">1. Select the document's folder and then choose an image file.</span> 
+                <br/>
+                    <span>Please note that only files type image are shown, and that the maximum image size allowed is 20k.</span>  
+                <center>        
+                    <br /><br />
+                    <table style="width:80%">
+                        <tr>
+                            <td style="width:40%">
+                                <span style="font-weight: normal; font-family: Verdana,Arial,sans-serif; font-size: 12px; width:200px"> Document Folders</span>
+                            </td>
+                            <td style="width:60%">
+                                <apex:actionStatus onstart="displayFileFolderInProgress();" onstop="displayFileFolderDone();" id="fileFolderStatus"/>
+                                <apex:actionFunction name="onChangeFolder" action="{!onChangeFolder}" rerender="imageList" status="fileFolderStatus"/>
+                                <apex:selectList style="width:200px" value="{!folder}" onchange="onChangeFolder()" id="docsList" size="1"> 
+                                    <apex:selectOptions value="{!folders}" />
+                                </apex:selectList>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width:40%">
+                                <span style="font-weight: normal; font-family: Verdana,Arial,sans-serif; font-size: 12px; width:200px"> Image Files</span>
+                            </td>
+                            <td style="width:60%">
+                                <apex:outputPanel id="docsPan">
+                                    <apex:actionStatus onstart="displayFileFolderInProgress();" onstop="displayFileFolderDone();" id="fileStatus"/>
+                                    <apex:actionFunction name="onChangeFile" action="{!onChangeFile}" rerender="fileImagePreview" status="fileStatus"/>
+                                    <apex:selectList style="width:200px" value="{!file}" id="imageList" size="1" onchange="if(invalidatePicSelection()) onChangeFile(); changeImagePreview();" > 
+                                        <apex:selectOptions value="{!files}"/>
+                                    </apex:selectList>
+                                </apex:outputPanel> 
+                            </td>
+                        </tr>
+                    </table>    
+                </center>
+                <br />  
+                <hr />
+                <span style="font-size:0.93em;font-weight: normal;display:block;clear:both;">2. Preview image</span>
+                <br/>
+                <center>
+                <div id="fileImagePreview">
+                </div>
+                </center>
+                
+                <span id="imageFileId" style="display:none"></span>
+            </div>
+            <!-- ###########################################
+            
+                    ACTION STATUS IN PROGRESS
+            
+             ###############################################-->
+            <div id="selectFolderFileStatMsg"  class="statusPopup" > <!-- style="position:absolute;left:0;top:0;display:none;width:100%;height:100%;" -->
+                <div  class="popupStatus1" >
+                </div>
+                <div style="position:relative;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+                    <div style="text-align:center;margin-top:15px;" > 
+                        <table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+                            <tr>
+                                <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+                                <td><span id="selectFolderFileMsg" style="z-index:153;"></span></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        
+        </apex:form>
+    </div>
+    
+</apex:component>

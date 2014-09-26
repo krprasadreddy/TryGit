@@ -1,0 +1,151 @@
+<apex:component id="candidate-languages" layout="none" >
+	
+	<apex:attribute name="items" description="Desc" type="mployee__candidateLanguage__c[]" required="false"/>
+	<apex:attribute name="config" description="Config Settings" type="mployee.SiteModConfig" required="false"/>
+	
+	
+	<a name="languages"/>
+	
+	<style>
+		
+		.languages-view li {
+			float: left;
+			width: 277px;
+			margin-left: 0px;
+			margin-right: 20px;
+			margin-top: 0px;
+			margin-bottom: 15px;
+			min-height: 45px;
+			height: auto;
+		}
+		.languages-proficiency {
+			font-size: 12px;
+			line-height: 14px;
+			color: #999;
+		}
+	</style>
+	
+	<apex:outputPanel styleClass="well" layout="block" id="layout-default" rendered="{!IF(config.params['layout'] =='default',true,false)}">	
+		
+		<apex:outputPanel layout="block" rendered="true">
+			<h3>
+            	<span class="glyphicon glyphicon-bookmark"/>&nbsp;<apex:outputText value="{!$ObjectType.mployee__candidateLanguage__c.LabelPlural}" rendered="true"/>
+          		<small>
+            		<apex:outputLink styleClass="link-add" value="{!$Page.mployee__SiteProfileLanguage}">                		
+                		<apex:param name="action" value="add"/>
+						<apex:param name="object" value="language"/>
+                		<i class="fa fa-plus"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_ADD}"/>
+              		</apex:outputLink>
+          		</small>
+          	</h3>
+		</apex:outputPanel>
+		
+		<apex:dataList styleClass="languages-view list-unstyled" value="{!items}" var="item">
+	        <h4>
+	        	<apex:outputField value="{!item.Name}"/>
+                <small>
+                	<apex:outputLink styleClass="link-edit" value="{!$Page.mployee__SiteProfileLanguage}">
+                		<apex:param name="id" value="{!item.id}"/>
+                		<apex:param name="action" value="edit"/>
+						<apex:param name="object" value="language"/>
+                		<i class="fa fa-edit"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_EDIT}"/>                		
+	                </apex:outputLink>
+	            </small>                        	
+            </h4>
+	        <apex:outputPanel layout="inline" styleClass="languages-proficiency">
+	        	<apex:outputField value="{!item.mployee__proficiency__c}"/>
+	        </apex:outputPanel>
+	    </apex:dataList>
+	    <div class="clearfix"/>		
+	
+	</apex:outputPanel>
+	
+	<!-- Template Unicorn -->
+	<apex:outputPanel styleClass="well" layout="block" id="layout-unicorn" rendered="{!IF(config.params['layout'] =='unicorn',true,false)}">
+	
+		
+		<apex:outputPanel layout="block" rendered="true">
+			<h3>
+            	<i class="linkedin-languages"/>&nbsp;<apex:outputText value="{!$Label.MOD_CANDIDATE_LANGUAGE_TITLE}" rendered="true"/>
+          		<small>
+            		<apex:outputLink styleClass="link-add" value="{!$Page.mployee__SiteProfileLanguage}">                		
+                		<apex:param name="action" value="add"/>
+						<apex:param name="object" value="language"/>
+                		<i class="fa fa-plus"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_ADD}"/>
+              		</apex:outputLink>
+          		</small>
+          	</h3>
+		</apex:outputPanel>
+		
+		<apex:outputPanel layout="block" styleClass="alert alert-block alert-warning" rendered="{!OR(ISNULL(items),items.size=0)}">                
+            <a class="close" data-dismiss="alert" href="#">×</a>
+            <h4 class="alert-heading"><apex:outputText value="{!$Label.MOD_CANDIDATE_NO_ITEMS_HEADING}"/></h4>
+            <apex:outputText value="{!$Label.MOD_CANDIDATE_NO_ITEMS_MSG}">
+            	<apex:param value="{!$Label.MOD_CANDIDATE_LANGUAGE_TITLE}" />
+            </apex:outputText>                
+        </apex:outputPanel>
+		
+		<apex:dataList value="{!items}" var="item" styleClass="languages-view list-unstyled">
+	        <h4>
+	        	<apex:outputField value="{!item.Name}"/>
+                <small>
+                	<apex:outputLink styleClass="link-edit" value="{!$Page.mployee__SiteProfileLanguage}">
+                		<apex:param name="id" value="{!item.id}"/>
+                		<apex:param name="action" value="edit"/>
+						<apex:param name="object" value="language"/>
+                		<i class="fa fa-edit"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_EDIT}"/>      
+	                </apex:outputLink>
+	            </small>                        	
+            </h4>
+	        <apex:outputPanel layout="inline" styleClass="languages-proficiency">
+	        	<apex:outputField value="{!item.mployee__proficiency__c}"/>
+	        </apex:outputPanel>
+	    </apex:dataList>
+	    
+	    <div class="clearfix"/>
+	    <hr/>
+	
+	</apex:outputPanel>
+	
+	<!-- Template Base -->
+	<apex:outputPanel layout="block" id="layout-base" rendered="{!IF(config.params['layout'] =='base',true,false)}">	
+		
+		<apex:outputPanel layout="block" styleClass="widget stacked">
+			<apex:outputPanel layout="block" styleClass="widget-header" rendered="true">
+				<i class="icon-star"></i>				
+				<h3>
+					<apex:outputText value="{!$ObjectType.mployee__candidateLanguage__c.LabelPlural}"/>
+					<small>
+	            		<apex:outputLink styleClass="link-add" value="{!$Page.mployee__SiteProfileLanguage}">                		
+	                		<apex:param name="action" value="add"/>
+							<apex:param name="object" value="language"/>
+	                		<i class="fa fa-plus"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_ADD}"/>
+	              		</apex:outputLink>
+	          		</small>
+					
+				</h3>
+			</apex:outputPanel> <!-- /widget-header -->
+			<apex:outputPanel layout="block" styleClass="widget-content">
+			
+				<apex:dataList value="{!items}" var="item" styleClass="list-unstyled">
+					<h4>
+	                	<apex:outputField value="{!item.Name}"/>
+	                	<small>
+		                	<apex:outputLink styleClass="link-edit" value="{!$Page.mployee__SiteProfileLanguage}">
+		                		<apex:param name="id" value="{!item.id}"/>
+		                		<apex:param name="action" value="edit"/>
+								<apex:param name="object" value="language"/>
+		                		<i class="fa fa-edit"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_EDIT}"/>      
+			                </apex:outputLink>
+			            </small>	                	
+	                </h4>
+					<apex:outputPanel layout="inline" styleClass="languages-proficiency">
+						<apex:outputField value="{!item.mployee__proficiency__c}"/>
+					</apex:outputPanel>
+	            </apex:dataList>
+				
+			</apex:outputPanel> <!-- /widget-content -->
+		</apex:outputPanel> <!-- /widget-stacked -->	
+	</apex:outputPanel>
+
+</apex:component>

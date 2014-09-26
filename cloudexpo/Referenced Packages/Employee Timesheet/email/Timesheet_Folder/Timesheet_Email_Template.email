@@ -1,0 +1,7 @@
+Hello,<br/><br/>
+Please approve the Timesheet,{!Timesheet__c.Name}, by navigating to this link: 
+{!Timesheet__c.Link}<br/><br/>
+
+Thanks,<br/><br/>
+
+----------

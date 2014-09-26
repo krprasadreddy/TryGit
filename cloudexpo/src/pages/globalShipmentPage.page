@@ -1,0 +1,191 @@
+<apex:page controller="globalShipmentController" docType="html-5.0" showHeader="false" standardStyleSheets="true" sidebar="false" >
+ 
+<head>
+          <!--<meta name="viewport" content="width=device-width;initial-scale=1.0;minimum-scale=1.0;maximum-scale=1.0"/>-->
+          <!-- <apex:includeScript value="{!$jResource.JQuery}"/> -->
+          <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"/> 
+    	  <apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"/>
+          
+          <script type='text/javascript' src='/canvas/sdk/js/publisher.js'></script>  
+          
+          <!--Include Stylsheets for the Mobile look and feel -->
+          <apex:stylesheet value="{!URLFOR($Resource.Mobile_Design_Templates, 'Mobile-Design-Templates-master/common/css/app.min.css')}"/> 
+          <apex:includeScript value="{!URLFOR($Resource.Mobile_Design_Templates,'Mobile-Design-Templates-master/common/js/jQuery2.0.2.min.js')}"/>
+          <apex:includeScript value="{!URLFOR($Resource.Mobile_Design_Templates,'Mobile-Design-Templates-master/common/js/jquery.touchwipe.min.js')}"/>
+          <apex:includeScript value="{!URLFOR($Resource.Mobile_Design_Templates,'Mobile-Design-Templates-master/common/js/main.min.js')}"/>
+          
+          <!--This library needs to be included to use publisher events-->     
+          <script type='text/javascript' src='/canvas/sdk/js/publisher.js'></script>
+          
+    <style>
+              /* default S1 color styles */ 
+              .list-view-header, .data-capture-buttons a {
+                    background: -webkit-linear-gradient(#2a93d5,#107abb);
+                    background: linear-gradient(#2a93d5,#107abb);
+                    box-shadow: 0 1px 3px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.21);
+                    color: white;
+                    font-weight: bold; 
+              } 
+    </style>
+     
+    <script type="text/javascript">
+    	$j = jQuery.noConflict(); 
+    
+         $j(document).ready(function(){
+                findMerchandise();
+                
+                $j("#searchPage").show();
+                $j("#resultPage").hide();
+                Sfdc.canvas.publisher.subscribe({
+		          name: "publisher.post",
+		          onData:function(e) {
+		             var merchId = $j("#merchId_result").text(), 
+		                 quantity = $j('input[id$=shipment_quantity]').val(); 
+        				 status = $j('select[id$=shipment_status] option:selected').val(); 
+        				 receivedAt = $j('input[id$=shipment_receivedAt]').val();
+		            Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.globalShipmentController.insertShipment}',merchId, quantity, status, receivedAt,
+		             function(result, event){
+		                 if (event.status) {
+		                     console.log(result);
+		                     Sfdc.canvas.publisher.publish({name: "publisher.close", payload:{ refresh:"true"}});
+		                 } else if (event.type === 'exception') {
+		                     //exception case code  
+		                     console.log(result);        
+		                 } else {
+		                                        
+		                 }
+		             });          
+		          }
+		        });
+         });
+         
+        //Sfdc.canvas.publisher.publish({ name : "publisher.setValidForSubmit", payload:"true"});
+
+        //This function will run a query to find merchandise
+        function findMerchandise(){  
+             var searchVar = ($j("#searchCriteria").val() != null) ? $j("#searchCriteria").val() : ''; 
+             
+             //Use this method in your globalShipmentController Apex class based off of the parameters in the form
+             Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.globalShipmentController.remoteMerchandise}', searchVar,
+                 function(result, event){
+                     if (event.status) {
+                         console.log(result);
+                         $j("#searchResults").empty();
+                         
+                         //Build the list of merchandise based off of the result set returned from the query
+                         $j.each(result, function(){
+                             //this creates a list item based off of the merchandise information
+                             var newLi = $j('<li></li>');
+                             var newLink = $j('<div class="thumbs"><img class="thumb" src="'+this.imgURL__c+'"/></div>'
+                             +'<a href="#" class="content"> <h2>'+this.Name+'</h2><br/>'+this.Description__c
+                             +'<div class="list-view-icons"><span class="icon-right-arrow">&nbsp;</span></div></a>');
+
+                             var mId = this.Id;
+                             var mName = this.Name;
+                             
+                            //When merchandise is selected for the quick order, you first need to create an invoice to relate the line item to
+                            newLink.click(function(e) {
+                                e.preventDefault();
+                                            
+                                $j("#merchName_result").text(mName);
+                                $j("#merchId_result").text(mId);
+                                $j("#searchPage").hide();
+                                $j("#resultPage").show();
+                                Sfdc.canvas.publisher.publish({ name : "publisher.setValidForSubmit", payload:"true"});
+                            });
+                            
+                            newLi.append(newLink);            
+                            newLi.appendTo('#searchResults');
+                         });      
+                     } else if (event.type === 'exception') {
+                         //exception case code  
+                         console.log(result);        
+                     } else {
+                                            
+                     }
+                 });
+          }
+    </script>
+    </head>
+    
+    <apex:form >
+    <div id="app-wrapper">
+        <div class="app-content">
+        <div id="searchPage">
+            <div class="list-view-header">Search</div>
+            <section class="border-bottom">
+                 <div class="content">
+                      <div class="form-control-group">
+                           <div class="form-control form-control-text">
+                                <input type="text" name="searchCriteria" id="searchCriteria" onkeyup="findMerchandise();" />
+                           </div>
+                      </div>
+                 </div>
+            </section>
+            <div class="list-view-header">Results</div>
+            <ul class="list-view with-swipe left-thumbs right-one-icons" id="searchResults">            
+            </ul>
+        </div> <!--searchPage-->
+        
+        <!-- this page displays the form to add order criteria -->
+        <div id="resultPage">
+            <div class="list-view-header">Shipment Information</div>
+                <div>
+                    <section class="border-bottom">
+                     <div class="content">
+                      <h3>Merchandise Name</h3>
+                      <div class="form-control-group">
+                       <div class="form-control form-control-text">
+                        <h1 id="merchName_result" />
+                        <h2 id="merchId_result" style="display:none;"/>
+                       </div>
+                      </div>
+                     </div>
+                    </section>
+                    
+                    <section class="border-bottom">
+                     <div class="content">
+                      <h3><apex:outputLabel value="Quantity" /></h3>
+                      <div class="form-control-group">
+                       <div class="form-control form-control-text">
+                          <apex:inputField type="auto" value="{!shipment.Quantity__c}" id="shipment_quantity" />
+                       </div>
+                      </div>
+                     </div>
+                    </section>
+                    
+                    <section class="border-bottom">
+                     <div class="content">
+                      <h3><apex:outputLabel value="Status" /></h3>
+                      <div class="form-control-group">
+                       <div class="form-control form-control-text">
+                          <apex:inputField type="auto" value="{!shipment.Status__c}" id="shipment_status" />
+                       </div>
+                      </div>
+                     </div>
+                    </section>
+                    
+                    <section class="border-bottom">  
+                     <div class="content">
+                      <h3><apex:outputLabel value="Received At" /></h3>
+                      <div class="form-control-group">
+                       <div class="form-control form-control-text">
+                          <apex:inputField type="date" value="{!shipment.Received_At__c}" id="shipment_receivedAt" showDatePicker="false" />
+                       </div>
+                      </div>
+                     </div>
+                    </section>
+                    
+                    <section class="data-capture-buttons one-buttons">
+                        <div class="content">
+                            <section class="data-capture-buttons one-buttons">
+                                 <a href="#" id="goBack" onClick="$j('#searchPage').hide();$j('#resultPage').show();" >Back</a>
+                            </section>
+                        </div>
+                    </section>
+              </div> 
+        </div><!--resultPage-->
+        </div><!--#app-content-->
+    </div><!--#app-wrapper-->
+    </apex:form>
+</apex:page>

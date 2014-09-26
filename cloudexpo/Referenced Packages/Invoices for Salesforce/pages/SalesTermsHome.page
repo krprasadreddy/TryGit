@@ -1,0 +1,137 @@
+<apex:page controller="kognoz1.SalesTermsHomeController" tabStyle="Invoices_Configuration__tab" title="Sales Terms: Home">
+
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/ifspagination.js')}"></script>
+	<style type="text/css">
+		.ifsthBack {font-size:0.95em;}
+	</style>
+	<script type="text/javascript">
+	    $(function() {
+	        $("#errorInfoPanel").dialog({
+	                modal: true, 
+	                autoOpen: false,
+	                width: 600,
+	                height:'auto',
+	                title:'Processing information'
+	        });
+	    });
+	    
+		function displayDeleteStatus()
+		{
+		      $("span[id=statusMsg]").html("Deleting Sales Term ...");
+		      $("#statusMsgContainer").css("display","block");
+		}
+		
+		function hideDeleteStatus()
+		{
+	        var isError = $("input[id*=errorInController]").val();
+		    $("#statusMsgContainer").css("display","none");
+	        if(isError=="true")
+	        {
+	        	$("span[id*=errorPanel]").empty();
+	            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+	            if(errorsJsonObjStr)
+	            {
+	              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+	              var errorHtml="";
+	              for(var i=0;i<errorsJsonObj.length;i++)
+	              {
+	                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+	              }
+	         	}
+		        $("span[id*=errorPanel]").html(errorHtml);
+				$("#statusMsgContainer").css("display","none");
+		        $("#errorInfoPanel").dialog("open");
+			}
+		}
+	    
+	</script>
+		
+	<apex:outputPanel layout="block" style="clear:both;">
+		<br/>&nbsp;« &nbsp;
+		<apex:outputLink value="InvoicesConfigurationHome" style="color:#015BA7;text-decoration:none;">Back to Invoices Configuration page</apex:outputLink>
+	</apex:outputPanel>
+	<apex:sectionHeader title="Sales Terms" subtitle="Home" help="{!ifsHelpUrl}"/>
+	<p> Sales Terms are the terms you offer your customers to pay the sales invoices. 
+	    For example, you may offer some customers to defer their payment up to 30 days from the invoice date, whereas you may expect other customers to pay them upon receipt.
+	    The sales term assigned to each customer is used, along with the invoice date, to automatically calculate the invoice due date.
+	    Sales Terms can be assigned to accounts and opportunities, and if assigned to both that assigned to the opportunity takes
+	    precedence in the calculation of the invoice due date.
+	</p>
+	<apex:form >
+		<apex:pageBlock title="Available Sales Terms" mode="detail">
+			<apex:pageBlockButtons location="top">
+				<apex:commandButton value="New" action="{!redirectToCreatePaymentTerm}"/>
+			</apex:pageBlockButtons>
+
+			<apex:outputPanel layout="block" id="paymentTermList" style="background-color:#FFFFFF;">
+				<apex:dataTable value="{!paymentTerms}" var="paymentTerm" id="paymentTermTable" headerClass="ifsthBack" rowClasses="ifsTableRows" columnsWidth="10%,30%,60%" width="100%" cellspacing="0" cellpadding="2px">
+	
+					<apex:column >
+						<apex:facet name="header">Action</apex:facet>
+						<apex:outputPanel style="color:#999999">
+							<apex:outputLink value="SalesTermEdit?Id={!paymentTerm.Id}" style="color:#015BA7;text-decoration:none;">Edit</apex:outputLink>
+								&nbsp;|&nbsp;
+                              <apex:actionStatus onstart="displayDeleteStatus();" onstop="hideDeleteStatus();" id="preprocessingStatus"/>
+                             <apex:commandLink style="color:#015BA7;text-decoration:none;"  action="{!deletePaymentTerm}" value="Del" onclick="if(!confirm('Are you sure ?')) return false;" status="preprocessingStatus" reRender="errorInController, errorBagJSONContField, paymentTermList">
+                                 <apex:param value="{!paymentTerm.Id}" name="paymentTermId"/> 
+                             </apex:commandLink>
+
+						</apex:outputPanel>
+					</apex:column>
+	
+					<apex:column >
+						<apex:facet name="header">Name</apex:facet>
+						<apex:outputText value="{!paymentTerm.Name}" />
+					</apex:column>
+	
+					<apex:column >
+						<apex:facet name="header">Last Modified</apex:facet>
+						<apex:outputField value="{!paymentTerm.LastModifiedDate}" />
+					</apex:column>
+				
+				</apex:dataTable>
+			</apex:outputPanel>
+
+		</apex:pageBlock>
+
+        <apex:inputText value="{!isError}" id="errorInController" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+        <!-- ###########################################
+        
+                ERROR HANDLING MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="errorInfoPanel" style="display:none;">
+            <apex:outputPanel id="errorPanel">
+            </apex:outputPanel>
+        </div>  
+        <!-- ###########################################
+        
+                STATUS MESSAGE CONTAINER
+        
+         ###############################################-->
+        <div id="statusMsgContainer" class="statusPopup" >
+			<div  class="popupStatus1" >
+			</div>
+            <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+            	<div style="text-align:center;margin-top:15px;" > 
+            		<table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+            			<tr>
+			                <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+			                <td><span id="statusMsg" style="z-index:153;"></span></td>
+	                	</tr>
+	                </table>
+                </div>
+            </div>
+        </div>
+
+	</apex:form>	
+	
+<!-- 	<apex:enhancedList type="SalesTerm__c" height="500" rowsPerPage="25"  id="PaymentTermsList" customizable="False" />  -->
+<!-- 	<apex:ListViews type="SalesTerm__c" />  -->
+</apex:page>

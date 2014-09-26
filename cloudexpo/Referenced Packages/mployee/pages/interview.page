@@ -1,0 +1,106 @@
+<apex:page id="interview"
+    standardController="mployee__Interview__c" 
+    docType="html-5.0"
+    applyHtmlTag="false"
+    applyBodyTag="false"
+    standardStylesheets="false"
+    showHeader="false"
+    cache="false"
+>
+	<apex:variable value="{!mployee__Interview__c}" var="item"/>
+	
+    <apex:composition template="mployee__AdminTemplateBootstrap">
+    	<apex:define name="css">
+    	</apex:define>
+    	
+    	<apex:define name="javascript">
+            <script type="text/javascript">
+                $(document).ready( function() {
+                    
+                    $( ".detailList" ).addClass( "table" );
+                });
+                
+            </script>
+        </apex:define>
+        
+        <apex:define name="body">
+        	<div class="container-fluid">
+	        	<div class="row">
+		        	<div class="col-md-12">		        	
+						<h1 class="page-header"><apex:outputField value="{!item.Name}"/>&nbsp;
+						<small>
+							<apex:outputText value="{0,date,dd-MM-yyyy}">
+                				<apex:param value="{!item.mployee__startDateTime__c}" />
+               				</apex:outputText>
+               				&nbsp;
+               				<apex:outputText value="{0,date,HH:mm z}">
+                				<apex:param value="{!item.mployee__startDateTime__c}" />
+               				</apex:outputText>
+               				&nbsp;-&nbsp;
+							<apex:outputText value="{0,date,HH:mm z}">
+                				<apex:param value="{!item.mployee__endDateTime__c}" />
+               				</apex:outputText>
+						</small></h1>		            
+		        	</div>
+		        </div>
+		        
+		        <div class="row">
+		        
+		        	<div class="col-md-6">
+						<div class="panel panel-default">
+							<!-- Default panel contents -->
+							<div class="panel-heading"><apex:outputText value="What: {!$ObjectType.mployee__MF_Organisation_PositionVacancy__c.label}"/></div>													
+							<!-- Table -->
+							<apex:pageBlock id="vacancyBlock" mode="maindetail">
+								<apex:pageBlockSection columns="2">								
+									<apex:outputField value="{!item.Job_Application__r.Vacancy__r.mployee__Account__c}"/>
+									<apex:outputField value="{!item.Job_Application__r.Vacancy__r.Name}"/>
+									<apex:outputField value="{!item.Job_Application__r.Vacancy__r.mployee__Contact__c}"/>
+									<apex:outputField value="{!item.Job_Application__r.Vacancy__r.Position__r.Name}"/>
+								</apex:pageBlockSection>								
+							</apex:pageBlock>
+							<!-- Default panel contents -->
+							<div class="panel-heading"><apex:outputText value="Who: {!$ObjectType.mployee__MF_Recruitment_Candidate__c.label}"/></div>
+											
+							<!-- Table -->
+							<apex:pageBlock id="candidateBlock" mode="maindetail">
+								<apex:pageBlockSection columns="2">
+	                				<apex:outputField value="{!item.Job_Application__r.Candidate__r.mployee__NameFull__c}"/>
+	                				<apex:outputField value="{!item.Job_Application__r.Candidate__r.mployee__Email__c}"/>
+	                				<apex:outputField value="{!item.Job_Application__r.mployee__Candidate__c}"/>
+									<apex:outputField value="{!item.Job_Application__r.Candidate__r.mployee__PhoneMobile__c}"/>
+									
+								</apex:pageBlockSection>								
+							</apex:pageBlock>
+						</div>
+						
+						
+						
+		        	</div>
+		        
+		        	
+		        	
+		        	<div class="col-md-6">
+						<div class="panel panel-default">
+							<!-- Default panel contents -->
+							<div class="panel-heading"><apex:outputText value="What: {!$ObjectType.mployee__Interview__c.Fields.mployee__assessment__c.label}"/></div>
+							<div class="panel-body">
+							    <apex:outputField value="{!item.mployee__assessment__c}"/>
+							    <div class="progress">
+								<div class="progress-bar" role="progressbar" aria-valuenow="{!item.rating__c}" aria-valuemin="0" aria-valuemax="100" style="width: {!item.rating__c}%;">
+								  <span class="sr-only">{!item.rating__c}% Rating</span>
+								</div>
+							</div>
+							</div>							
+							
+						</div>
+		        	</div>
+		        	
+		        	
+		        	
+		        </div>
+			</div>
+    	
+		</apex:define>
+	</apex:composition>
+</apex:page>

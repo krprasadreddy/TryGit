@@ -1,0 +1,23 @@
+<apex:page standardController="Opportunity" recordSetVar="opportunities" extensions="SelectedSizeWorkaround" showHeader="false" id="muopp">
+    <apex:form id="muform">
+    	<apex:pageMessage summary="Selected Collection Size: {!mySelectedSize}" severity="info" id="iMessage"/>
+    	<apex:pageMessage summary="Record Set Size: {!myRecordsSize}" severity="info" id="iMessages"/>
+        <apex:pageBlock title="Opportunity Mass-Update">
+        	<apex:pageBlockSection >
+        		<apex:inputField value="{!opportunity.stageName}">
+        			<apex:actionSupport event="onchange" rerender="selectedlist"/>
+        		</apex:inputField>
+        	</apex:pageBlockSection>
+        	<apex:pageBlockButtons >
+        		<apex:commandButton value="Save" action="{!save}"/>
+        		<apex:commandButton value="Cancel" action="{!cancel}"/>
+        	</apex:pageBlockButtons>
+        </apex:pageBlock>
+        <apex:pageBlock title="Selected Opportunities" id="selectedlist">
+        	<apex:pageBlockTable value="{!selected}" var="opp">
+        		<apex:column value="{!opp.Name}"/>
+        		<apex:column value="{!opp.stageName}"/>
+        	</apex:pageBlockTable>        
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

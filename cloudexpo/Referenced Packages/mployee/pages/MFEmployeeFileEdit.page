@@ -1,0 +1,125 @@
+<apex:page id="page" standardController="mployee__MF_EmployeeFile__c">
+<apex:variable value="{!mployee__MF_EmployeeFile__c}" var="employee"/>
+<apex:stylesheet value="{!URLFOR($Resource.mployee__mployee, 'mployee/assets/js/jquery/ui/css/mployee-theme/jquery-ui-1.8.16.custom.css')}"  />
+<apex:stylesheet value="{!URLFOR($Resource.mployee__mployee, 'mployee/assets/css/template.css')}"  />
+<apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeView, '/view.css')}"  />
+<!-- Include the Jquery Script files -->
+<apex:includeScript value="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/js/jquery/core/jquery-1.6.4.js')}"  />
+<apex:includeScript value="{!URLFOR($Resource.mployee__mployee, '/mployee/assets/js/jquery/ui/js/jquery-ui-1.8.16.custom.min.js')}"  />
+<apex:includeScript value="{!URLFOR($Resource.mployee__mployeeView, '/view.js')}"  />
+
+<script type="text/javascript">
+init();
+function init(){
+    jQuery.noConflict();
+    jQuery(document).ready( function() {
+        // Checks if the div #toolbar exists if not the function creates the toolbar
+        if (!jQuery('div.toolbar-list').length ) {            
+            createToolbar();
+        }
+        // Checks if the div #RelatedTabs exists if not the function create tabs
+        if (!jQuery('#RelatedTabs').length ) {
+            createTabs();
+        }        
+        //createFieldsets();
+
+        //jQuery('.bPageBlock').css('border', 'none');
+        //jQuery('.bPageBlock').css('background-image', 'none');
+        //jQuery('.bPageBlock').css({'background-color': 'none', 'background-image': 'none'});
+    });
+};
+
+jQuery(function () {
+    var NameElement      = document.getElementById('{!$Component.page.form.pageBlock.pageBlockSectionInformation.Name}');
+    jQuery(NameElement).attr('disabled', 'disabled');
+    var firstNameElement = document.getElementById('{!$Component.page.form.pageBlock.pageBlockSectionName.NameFirst__c}');    
+    var lastNameElement  = document.getElementById('{!$Component.page.form.pageBlock.pageBlockSectionName.NameLast__c}');
+    var firstName        = jQuery(firstNameElement).keyup(mergeName);
+    var lastName         = jQuery(lastNameElement).keyup(mergeName);
+    
+    function mergeName() {
+        var firstNameValue = firstName.val();
+        var lastNameValue  = lastName.val();
+        var name = firstNameValue+ ' '+lastNameValue
+        jQuery(NameElement).val(name);
+    }
+});  
+</script>
+
+<apex:form id="form" >
+<apex:sectionHeader title="{!$Label.MF_EmployeeFile_Edit_New}" subtitle="{!employee.Name}"/>
+<apex:pageBlock id="pageBlock" title="{!$Label.MFEmployeeFileEdit_File}">
+    <apex:pageBlockButtons >
+        <apex:commandButton action="{!save}" title="{!$Label.MF_Save}" value="{!$Label.MF_Save}" />
+        <apex:commandButton action="{!cancel}" title="{!$Label.MF_Cancel}" value="{!$Label.MF_Cancel}" />
+    </apex:pageBlockButtons>
+    <apex:pageBlockSection id="pageBlockSectionInformation" title="{!$Label.MFEmployeeFileEdit_Info}" columns="2" >
+        <apex:inputField id="State__c" value="{!employee.mployee__State__c}"/>
+        <apex:inputField id="EmployeeNumber__c" value="{!employee.mployee__EmployeeNumber__c}"/>
+        <apex:inputField id="SSN__c" value="{!employee.mployee__SSN__c}"/>
+        <apex:inputField id="EmployedSince__c" value="{!employee.mployee__EmployedSince__c}"/>
+        <apex:inputField id="PersonnelAssociationMember__c" value="{!employee.mployee__PersonnelAssociationMember__c}"/>
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="pageBlockSectionName" title="{!$Label.MF_Name}" columns="2" >
+        <apex:inputField id="NameFirst__c" value="{!employee.mployee__NameFirst__c}"/>
+        <apex:inputField id="NameFirstLetters__c" value="{!employee.mployee__NameFirstLetters__c}"/>
+        <apex:inputField id="NameLast__c" value="{!employee.mployee__NameLast__c}"/>
+        <apex:inputField id="NameMaiden__c" value="{!employee.mployee__NameMaiden__c}"/>
+        <apex:inputField id="Title__c" value="{!employee.mployee__Title__c}"/>
+        <apex:inputField id="gender__c" value="{!employee.mployee__gender__c}"/>
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="blockSectionAddress" columns="2" title="{!$Label.address}">          
+        <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__Address}" var="address">    
+            <apex:inputField value="{!employee[address]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="blockSectionAdditionalBirth" columns="2" title="{!$Label.birth}">          
+        <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__Birth}" var="bir">    
+            <apex:inputField value="{!employee[bir]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection> 
+    
+    <apex:pageBlockSection id="blockSectionAdditionalInformation" columns="2" title="{!$Label.MF_Additional}">          
+        <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__AdditionalInformation}" var="add">    
+            <apex:inputField value="{!employee[add]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection> 
+    
+    <apex:pageBlockSection id="blockSectionEmergency" columns="2" title="{!$Label.MFEmployeeFileEdit_Emergency}">          
+        <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__Emergency}" var="emergency">    
+            <apex:inputField value="{!employee[emergency]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="blockSectionFamily" columns="2" title="{!$Label.MFEmployeeFileEdit_Family}">
+        <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__Family}" var="family">    
+            <apex:inputField value="{!employee[family]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="blockSectionBank" columns="2" title="{!$Label.MFEmployeeFileEdit_Bank}">
+        <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__Bank}" var="bank">    
+            <apex:inputField value="{!employee[bank]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="blockSectionLanguages" columns="2" title="{!$Label.MFEmployeeFileEdit_Languages}">
+        <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__Languages}" var="languages">
+            <apex:inputField value="{!employee[languages]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection>
+    
+    <apex:pageBlockSection id="blockSectionExitInformation" columns="2" title="{!$Label.MFEmployeeFileEdit_Exit}">
+        <apex:repeat value="{!$ObjectType.mployee__MF_EmployeeFile__c.FieldSets.mployee__ExitInformation}" var="exit">
+            <apex:inputField value="{!employee[exit]}"/>
+        </apex:repeat>                                                  
+    </apex:pageBlockSection>
+
+</apex:pageBlock>
+
+</apex:form>
+
+</apex:page>

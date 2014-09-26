@@ -1,0 +1,10 @@
+<apex:page id="MFRecruitmentCandidateRelatedList"
+	standardController="mployee__MF_Recruitment_Candidate__c"
+	applyBodyTag="false"
+	applyHtmlTag="false"
+	showHeader="false"
+>
+
+	<c:adminMod_activityHistory /> 
+
+</apex:page>

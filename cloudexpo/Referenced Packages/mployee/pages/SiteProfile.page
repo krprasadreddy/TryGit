@@ -1,0 +1,125 @@
+<apex:page id="profile" 
+           docType="html-5.0" 
+           controller="mployee.SiteProfileController"
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"
+           action="{!isAuthorised}"
+           language="{!$CurrentPage.parameters.lang}"
+>
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+        <apex:define name="javascript">
+        <script type="text/javascript">
+        	$(document).ready(function(){
+        		var order = 'profile,skills,positions,educations,languages'.split(",");
+		    	$('#container').reOrder(order, 'candidate-');
+        	
+        	});
+        
+		  $(function() {
+		  $('#go').click(function() {
+		
+		    //var order = $('#order').val() == ""? null: $('#order').val().split(",");
+		    var order = 'profile,skills,positions,educations,languages'.split(",");
+		    $('#container').reOrder(order, 'candidate-');
+		  });
+		});
+		
+		(function($) {
+		
+		$.fn.reOrder = function(array, prefix) {
+		  return this.each(function() {
+		    prefix = prefix || "";
+		
+		    if (array) {    
+		      for(var i=0; i < array.length; i++) 
+		        array[i] = $('#' + prefix + array[i]);
+		        console.log('array: '+array[i]);
+		
+		      $(this).empty();  
+		
+		      for(var i=0; i < array.length; i++)
+		        $(this).append(array[i]);      
+		    }
+		  });    
+		}
+		})(jQuery);      
+        </script>
+ 
+        
+        </apex:define>
+        
+        <apex:define name="body">
+        	<apex:messages />  
+        	
+        	<apex:outputPanel layout="block" styleClass="{!IF(siteSettings.template.isFluid,'','container')}" rendered="{!IF(candidate == null,false,true)}">
+        	
+        	
+        		
+                
+                <div class="row">
+                    <div id="container" class="col-md-8">
+                    		
+                                      		
+                  		<section id="candidate-profile">                  			             			
+                  			<c:siteMod_Candidate item="{!candidate}"
+                  				config="{!siteSettings.modules['mod_candidate']}"
+                  				rendered="{!IF(siteSettings.modules['mod_candidate'].module.published__c == 1,true,false)}"
+                  			/>
+                  		</section>                  		
+                  		<section id="candidate-skills">
+                  			<c:siteMod_CandidateSkills items="{!candidate.mployee__candidateSkills__r}"
+                  				config="{!siteSettings.modules['mod_candidateSkills']}"  
+                  				rendered="{!IF(siteSettings.modules['mod_candidateSkills'].module.published__c == 1,true,false)}"
+                  			/>
+                  		</section>                  		
+                  		<section id="candidate-positions">
+                  			<c:siteMod_CandidatePositions items="{!candidate.mployee__candidatePositions__r}"
+                  				config="{!siteSettings.modules['mod_candidatePositions']}"
+                  				rendered="{!IF(siteSettings.modules['mod_candidatePositions'].module.published__c == 1,true,false)}"
+                  			 />
+                  		</section>
+                  		<section id="candidate-educations">
+                  			<c:siteMod_CandidateEducations items="{!candidate.mployee__candidateEducations__r}"
+                  				config="{!siteSettings.modules['mod_candidateEducations']}"
+                  				rendered="{!IF(siteSettings.modules['mod_candidateEducations'].module.published__c == 1,true,false)}"
+                  			/>
+                  		</section>
+                  		<section id="candidate-languages">
+                  			<c:siteMod_CandidateLanguages items="{!candidate.mployee__candidateLanguages__r}"
+                  				config="{!siteSettings.modules['mod_candidateLanguages']}"
+                  				rendered="{!IF(siteSettings.modules['mod_candidateLanguages'].module.published__c == 1,true,false)}"
+                  			/>
+                  		</section>
+                    </div>
+                    <div class="col-md-4">
+                  		<section id="candidate-toolbox">
+                  			<c:siteMod_CandidateToolbox profile="{!siteProfile}"
+                  				config="{!siteSettings.modules['mod_candidateToolbox']}"                  				
+                  				rendered="{!IF(siteSettings.modules['mod_candidateToolbox'].module.published__c == 1,true,false)}"
+                  			/>
+                  		</section>
+                  		
+                  		<section id="candidate-attachments">
+                  			<c:siteMod_CandidateAttachment items="{!candidate.Attachments}"
+                  				config="{!siteSettings.modules['mod_candidateAttachment']}"                  				
+                  				rendered="{!IF(siteSettings.modules['mod_candidateAttachment'].module.published__c == 1,true,false)}"
+                  			/>
+                  		</section>
+                  		<section id="candidate-applications">
+                  			<c:siteMod_CandidateApplications items="{!candidate.mployee__Candidate__r}" 
+                  				config="{!siteSettings.modules['mod_candidateApplications']}"
+                  				rendered="{!IF(siteSettings.modules['mod_candidateApplications'].module.published__c == 1,true,false)}"/>
+                  		</section>
+                  		
+                  		
+                    </div>
+				</div>
+			</apex:outputPanel>
+        
+        
+        </apex:define>
+	</apex:composition>
+</apex:page>

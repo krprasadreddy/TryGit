@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Report xmlns="http://soap.sforce.com/2006/04/metadata">
+    <columns>
+        <field>CUST_NAME</field>
+    </columns>
+    <filter>
+        <criteriaItems>
+            <column>MF_EmployeeFile__c.State__c</column>
+            <operator>equals</operator>
+            <value>employed</value>
+        </criteriaItems>
+    </filter>
+    <format>Matrix</format>
+    <groupingsDown>
+        <dateGranularity>Year</dateGranularity>
+        <field>MF_EmployeeFile__c.EmployedSince__c</field>
+        <sortOrder>Asc</sortOrder>
+    </groupingsDown>
+    <name>Amount Employees per CY</name>
+    <params>
+        <name>co</name>
+        <value>1</value>
+    </params>
+    <reportType>CustomEntity$MF_EmployeeFile__c</reportType>
+    <scope>organization</scope>
+    <showDetails>false</showDetails>
+    <timeFrameFilter>
+        <dateColumn>MF_EmployeeFile__c.Birthdate__c</dateColumn>
+        <interval>INTERVAL_CUSTOM</interval>
+    </timeFrameFilter>
+</Report>

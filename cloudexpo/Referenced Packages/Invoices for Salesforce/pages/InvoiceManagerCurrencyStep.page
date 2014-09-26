@@ -1,0 +1,148 @@
+<apex:page controller="kognoz1.InvoiceManagerController" tabStyle="Invoice_Manager_1__tab" title="Invoice Manager"> 
+
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+    <link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/invoicesforsalesforce.css')}" />
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-json-2.2.js')}"></script> 
+    <script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+
+    <apex:form >
+        <apex:sectionHeader title="" subtitle="Invoice Manager" help="{!ifsHelpUrl}"/>
+        <div class="ifsWizardBlock ifsTertiaryPalette">
+            <div class="ifsWizardTitle ifsTertiaryPalette">        
+                    <h2>Select the billing currency</h2>
+            </div>
+            <div class="ifsBody ">
+              <div class="ifsWizardHeader">
+                  <div class="ifsTopButtons" style="white-space: nowrap;">
+                    <apex:actionStatus onstart="displayNextInProgress1();" onstop="hideNextInProgress1();" id="nextStatus1"/>  
+                    <apex:commandButton value="Back" action="{!back}" immediate="false"/>
+                    <apex:commandButton value="Next" action="{!checkCurrency}"  status="nextStatus1" rerender="errorInController,errorBagJSONContField"  title="Go to processing invoices" /> <!-- PE debuggin ,isServerEnabledContField -->
+                  </div>
+              </div>
+            <div class="ifsWizardBody">
+                <div class="typeStep">
+                    <div class="ifsPageBlock ifsSecondaryPalette">
+                        <div class="ifsBody">
+                            <table width="auto" cellspacing="3" cellpadding="3">
+                                <tr height="50px">
+                                    <td style="vertical-align:middle">
+                                        <apex:outputText value="Billing Currency" styleClass="ifsRecordTypesHeading"/>
+                                    </td>
+                                    <td style="vertical-align:bottom">
+                                        <apex:selectList value="{!selectedCurencyIsoCode}" size="1" multiselect="false">
+                                            <apex:selectOptions value="{!currencyOptionsList}"/>
+                                        </apex:selectList><p/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="ifsFooter ifsSecondaryPalette">
+                            <div class="bg">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>  
+      </div>
+       <div style="margin-top:8px;">
+        The billing currency selected will be used to filter accounts with opportunities on that currency only.
+        For example, if the selected billing currency is USD, only accounts with opportunities in USD will be
+        included in the billing scenario, and in the processed invoices.
+       </div>
+      
+        <apex:inputText value="{!isError}" id="errorInController" style="display:none"/>
+        <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+
+        <!-- ###########################################
+        
+                ERROR HANDLING MODAL DIALOG BOX
+        
+         ###############################################-->
+        <div id="errorInfoPanel" style="display:none;">
+            <apex:outputPanel id="errorPanel">
+            </apex:outputPanel>
+        </div>  
+
+
+        <!-- ###########################################
+        
+                ACTION STATUS IN PROGRESS
+        
+         ###############################################-->
+        <div id="nextStatMsg" class="statusPopup" >
+            <div  class="popupStatus1" >
+            </div>
+            <div style="position:absolute;left:45%;top:40%;z-index:152;background-color:white;height:50px;width:300px;border:2px solid grey;">
+                <div style="text-align:center;margin-top:15px;" > 
+                    <table cellspacing="0" cellpadding="2" border="0" style="margin:auto;">
+                        <tr>
+                            <td><img alt="" src="{!URLFOR($Resource.invoicesforsalesforce,'images/loading.gif')}"></img></td>
+                            <td><span id="nextMsg" style="z-index:153;"></span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ########################################### -->
+        <!-- ###########################################
+        
+                ACTION FUNCTIONS
+        
+         ###############################################-->
+        <apex:actionFunction action="{!redirectToInvoiceManagerMCStep2}" name="redirectToInvoiceManagerMCStep2" />  
+
+    </apex:form>
+
+<script type="text/javascript" >
+
+    function hideNextInProgress1()
+    {
+        var isError = $("input[id*=errorInController]").val();
+        if(isError=="true")
+        {
+            $("span[id*=errorPanel]").empty();
+            var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+            if(errorsJsonObjStr)
+            {
+              var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+              var errorHtml="";
+              for(var i=0;i<errorsJsonObj.length;i++)
+              {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+              }
+              $("span[id*=errorPanel]").html(errorHtml);
+            }
+
+            $("#nextStatMsg").css("display","none");
+            $("#errorInfoPanel").dialog("open");
+        }
+        else
+        {
+            redirectToInvoiceManagerMCStep2();
+        }
+    }
+
+    function displayNextInProgress1()
+    {
+        $("#nextStatMsg").css("display","block");
+        $("#nextMsg").html("Applying currency selection ...");
+    }
+    
+
+
+    $(function() {
+        $("#errorInfoPanel").dialog({
+                modal: true, 
+                autoOpen: false,
+                width: 550,
+                height:'auto',
+                title:'Processing information'
+        });
+
+
+    });
+</script>
+</apex:page>

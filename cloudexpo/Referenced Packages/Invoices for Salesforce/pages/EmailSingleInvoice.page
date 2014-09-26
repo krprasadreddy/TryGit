@@ -1,0 +1,53 @@
+<apex:page standardController="kognoz1__Invoice2__c" extensions="kognoz1.EmailSingleInvoiceController" tabStyle="kognoz1__Invoice2__c" title="Email Invoice" >
+<apex:pageMessages /> 
+	<apex:form >
+    		<apex:sectionHeader title="Email Invoice" subtitle="Confirm Email Authoring" rendered="{!isEmail}"/>
+			<apex:outputPanel layout="block" rendered="{!isEmail}" >
+				<table cellspacing="0" cellpadding="0" style="margin-top:2%;margin-left:10%;">
+					<tr>
+						<td style="text-align:center;">Click "Author Email" to go to the Email Authoring page, or "Cancel" to go back </td>
+					</tr>
+					<tr>
+						<td style="text-align:center;">
+							<table cellpadding="0" cellspacing="0" style="display:inline-block;margin-top:2%;">
+								<tr>
+									<td>
+										<apex:commandButton action="{!sendEmailInvoice}" value="Author Email"/>
+									</td>
+									<td>&nbsp;</td>
+									<td>
+										<apex:commandButton action="{!cancel}" value="Cancel"/>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</apex:outputPanel>
+			<apex:sectionHeader title="Email Invoice" subtitle="Invoice Email Status" rendered="{!NOT(isEmail)}"/>
+			<apex:outputPanel layout="block" rendered="{!NOT(isEmail)}" >
+				<table cellspacing="0" cellpadding="0" style="margin-top:2%;margin-left:10%;">
+					<tr>
+						<td style="text-align:center;">Mark invoice <strong>{!invoice.Name}</strong> as Emailed ?</td>
+					</tr>
+					<tr>
+						<td style="text-align:center;">
+							<table cellpadding="0" cellspacing="0" style="display:inline-block;margin-top:2%;">
+								<tr>
+									<td>
+										<apex:commandButton action="{!markEmailedInvoice}" value="Yes"/>
+									</td>
+									<td>&nbsp;</td>
+									<td>
+										<apex:commandButton action="{!cancelback}" value="No"/>
+									</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</apex:outputPanel>
+
+
+	</apex:form>
+</apex:page>

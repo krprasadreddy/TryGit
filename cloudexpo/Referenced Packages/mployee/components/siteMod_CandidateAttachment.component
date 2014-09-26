@@ -1,0 +1,99 @@
+<apex:component id="candidate-attachments" layout="none">
+	
+	<apex:attribute name="items" description="Desc" type="Attachment[]" required="false"/>
+	<apex:attribute name="config" description="Config Settings" type="mployee.SiteModConfig" required="false"/>	
+	
+	
+	<a name="toolbox"/>
+	
+	
+	<script type="text/javascript">
+	
+		$(document).ready(function(){
+			$('.table').tooltip({
+				selector: "[data-toggle=tooltip]",
+				container: "body",
+				delay:{ show: 100, hide: 500 }
+			});
+		});           
+          	
+   	</script>
+        
+	
+	
+	
+	<!-- Template Default -->
+	<apex:outputPanel styleClass="well" layout="block" id="layout-default" rendered="{!IF(config.params['layout'] =='default',true,false)}">
+		
+		
+	</apex:outputPanel>
+	
+	<!-- Template Unicorn -->
+	<apex:outputPanel layout="block" id="layout-unicorn" rendered="{!IF(config.params['layout'] =='unicorn',true,false)}">	
+		
+			<hr/>
+			<h3>
+            	<span class="fa fa-files-o"/>&nbsp;<apex:outputText value="{!$ObjectType.Attachment.LabelPlural}" rendered="true"/>
+          		<small>
+              		
+              		<apex:outputLink styleClass="link-add" value="{!$Page.mployee__SiteProfileUpload}">                		
+                		<apex:param name="action" value="add"/>
+						<apex:param name="object" value="attachment"/>
+                		<i class="fa fa-plus"/>&nbsp;<apex:outputText value="{!$Label.GLOBAL_ACTION_ADD}"/>
+              		</apex:outputLink>
+              		
+          		</small>
+          	</h3>
+		
+		
+		
+		<div class="">
+			
+			<div class="widget-content nopadding table-responsive">
+				<table class="table ">
+					
+					<tbody>
+						<apex:repeat value="{!items}" var="item">
+						<tr>
+							<td class="action">
+								<apex:outputLink html-data-toggle="tooltip" html-data-placement="left" title="{!$Label.GLOBAL_ACTION_DELETE}" value="{!$Page.mployee__SiteProfileUpload}">
+									<i class="fa fa-trash-o"/>
+								</apex:outputLink>
+								<apex:outputLink html-data-toggle="tooltip" title="{!$Label.GLOBAL_ACTION_EDIT}" value="{!$Page.mployee__SiteProfileUpload}">
+									<i class="fa fa-edit"/>
+								</apex:outputLink>
+							</td>							
+							<td>
+								<apex:outputLink html-data-toggle="tooltip" title="{!$Label.GLOBAL_ACTION_VIEW}" value="{!URLFOR($Action.Attachment.Download, item.id)}" target="_blank">
+									<apex:outputText value="{!item.name}"/>
+								</apex:outputLink>
+								<apex:outputLink rendered="{!IF(item.Description =='', false,true)}" html-data-toggle="tooltip" html-data-placement="bottom" title="{!item.Description}">
+									<i class="fa fa-comment-o"/>
+								</apex:outputLink>								
+							</td>
+							
+							<apex:outputPanel layout="none" rendered="{!IF(config.params['showCreatedDate'] =='1',true,false)}" >
+							<td>
+								<i class="fa fa-clock-o"/>&nbsp;
+								<time>
+		                			<apex:outputText value="{0,date,dd-MM-yyyy HH:mm}">
+		                				<apex:param value="{!item.CreatedDate}" />
+		               				</apex:outputText>
+		             			</time>
+							</td>
+							</apex:outputPanel>
+						</tr>
+						</apex:repeat>						
+					</tbody>
+				</table>							
+			</div>
+		</div>
+		
+	</apex:outputPanel>
+	
+	<!-- Template Base -->
+	<apex:outputPanel layout="block" id="layout-base" rendered="{!IF(config.params['layout'] =='base',true,false)}">			
+	
+	</apex:outputPanel>
+
+</apex:component>

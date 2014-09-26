@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <deprecated>false</deprecated>
+    <enableActivities>true</enableActivities>
+    <enableEnhancedLookup>true</enableEnhancedLookup>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <fields>
+        <fullName>CompanyCarInventory__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>CompanyCarInventory</label>
+        <lookupFilter>
+            <active>true</active>
+            <filterItems>
+                <field>MF_Organisation_CompanyCarInventory__c.State__c</field>
+                <operation>equals</operation>
+                <value>Available</value>
+            </filterItems>
+            <isOptional>true</isOptional>
+        </lookupFilter>
+        <referenceTo>MF_Organisation_CompanyCarInventory__c</referenceTo>
+        <relationshipName>EmployeeCompanyCars</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>DateEndEstimated__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <inlineHelpText>Use this field if the (Estimated) End Date between Employer and Employee differs from the (Estimated) End Date between Lease Company and employer.</inlineHelpText>
+        <label>DateEndEstimated</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>DateEnd__c</fullName>
+        <deprecated>false</deprecated>
+        <description>The date that the cars was returned</description>
+        <externalId>false</externalId>
+        <label>DateReturn</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>DateStart__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>DateStart</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>DifferenceFee__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <formula>CompanyCarInventory__r.LeaseAmount__c  -  LeasePayment__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>DifferenceFee</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>2</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>EmployeeFile__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>EmployeeFile</label>
+        <referenceTo>MF_EmployeeFile__c</referenceTo>
+        <relationshipName>EmployeeCompanyCars</relationshipName>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>EndDateinventory__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <formula>CompanyCarInventory__r.DateEnd__c</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>EndDateinventory</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>LeaseContractSigned__c</fullName>
+        <defaultValue>false</defaultValue>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>LeaseContractSigned</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>LeasePayment__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>LeasePayment</label>
+        <precision>18</precision>
+        <required>false</required>
+        <scale>0</scale>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Currency</type>
+    </fields>
+    <fields>
+        <fullName>State__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <formula>IMAGE(IF( ISBLANK( DateEnd__c ), &quot;/img/samples/flag_green.gif&quot;,
+IF( DateEnd__c &lt;= TODAY(), &quot;/img/samples/flag_red.gif&quot;,
+&quot;/img/samples/flag_yellow.gif&quot;)),&quot;alternate_text&quot;)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>State Flag</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>State_of_Approval__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>State of Approval</label>
+        <picklist>
+            <picklistValues>
+                <fullName>Not Submitted</fullName>
+                <default>true</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Pending Approval</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Approved</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Processed</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Rejected</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Cancelled</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Requires Re-Approval</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Status__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>State</label>
+        <picklist>
+            <picklistValues>
+                <fullName>Active</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Not Active</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>TimeInUse__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <formula>IF( ISBLANK( DateEnd__c ) ,TEXT((YEAR( TODAY() )*12+MONTH( TODAY() ))-
+(YEAR( DateStart__c  )*12+MONTH(DateStart__c ))) + &apos; Months (Till today)&apos;, TEXT((YEAR(DateEnd__c )*12+MONTH( DateEnd__c ))-
+(YEAR( DateStart__c  )*12+MONTH(DateStart__c ))) + &apos; Months&apos;)</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>TimeInUse</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>Company Car</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>CompanyCarInventory__c</columns>
+        <columns>EmployeeFile__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+        <language>en_US</language>
+    </listViews>
+    <nameField>
+        <displayFormat>Car {00000}</displayFormat>
+        <label>Name</label>
+        <trackHistory>false</trackHistory>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Company Car</pluralLabel>
+    <searchLayouts>
+        <customTabListAdditionalFields>EmployeeFile__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>CompanyCarInventory__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>DateStart__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>DateEndEstimated__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>DateEnd__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>State__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>TimeInUse__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>LeasePayment__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>LeaseContractSigned__c</customTabListAdditionalFields>
+    </searchLayouts>
+    <sharingModel>Private</sharingModel>
+    <validationRules>
+        <fullName>DateEndCannotBeBeforeDateStart</fullName>
+        <active>true</active>
+        <errorConditionFormula>DateStart__c  &gt;  DateEnd__c</errorConditionFormula>
+        <errorDisplayField>CompanyCarInventory__c</errorDisplayField>
+        <errorMessage>Return date cannot be before Issue date.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>DateEndCannotBeLaterDateEndInventory</fullName>
+        <active>true</active>
+        <errorConditionFormula>DateEndEstimated__c &gt;  CompanyCarInventory__r.DateEnd__c</errorConditionFormula>
+        <errorMessage>Estimated end date cannot be after end date Inventory Company Car.</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>DateEndCannotBeSameAsDateStart</fullName>
+        <active>true</active>
+        <errorConditionFormula>DateEnd__c = DateStart__c</errorConditionFormula>
+        <errorMessage>End Date cannot be the same as Start Date</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>DateEndEstimatedCannotBeBeforeDateStart</fullName>
+        <active>true</active>
+        <errorConditionFormula>DateEndEstimated__c  &lt; DateStart__c</errorConditionFormula>
+        <errorMessage>Estimated End Date cannot be before Start Date</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>DateEndEstimatedCannotBeSameAsDateStart</fullName>
+        <active>true</active>
+        <errorConditionFormula>DateEndEstimated__c  = DateStart__c</errorConditionFormula>
+        <errorMessage>End Date Estimated cannot be the same as Start Date</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>DateStartCannotBeBeforeEmploymentdate</fullName>
+        <active>true</active>
+        <errorConditionFormula>DateStart__c &lt; EmployeeFile__r.EmployedSince__c</errorConditionFormula>
+        <errorMessage>Start Date cannot be before Employed Since</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>IssueDatecannotBeforeStartDateInventory</fullName>
+        <active>true</active>
+        <errorConditionFormula>DateStart__c &lt;  CompanyCarInventory__r.DateStart__c</errorConditionFormula>
+        <errorMessage>Issue date cannot be before Start date Inventory.</errorMessage>
+    </validationRules>
+    <webLinks>
+        <fullName>ReturnCar</fullName>
+        <availability>online</availability>
+        <displayType>button</displayType>
+        <height>600</height>
+        <linkType>page</linkType>
+        <masterLabel>Return Car</masterLabel>
+        <openType>sidebar</openType>
+        <page>MFEmployeeCompanyCarEndDate</page>
+        <protected>false</protected>
+    </webLinks>
+</CustomObject>

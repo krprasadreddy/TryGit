@@ -1,0 +1,66 @@
+<apex:page standardController="kognoz1__Global_Invoice_Number__c" extensions="kognoz1.GlobalInvoiceNumberEditController" tabStyle="Invoices_Configuration__tab" title="Global Invoice Number Edit">
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+	<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+	<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+	<style type="text/css">
+		 .bsCustomInp{width:100%;}
+		.dataCol1
+		{
+		    padding: 2px 2px 2px 10px;
+		    text-align: left;
+		}
+	</style>
+
+	<apex:pageMessages /> 
+	<apex:form >
+		<apex:sectionHeader title="Global Invoice Number Edit" subtitle="{!globalInvoiceNumber.Name}" rendered="{!isNewGlobalInvoiceNumber==false}" help="{!ifsHelpUrl}" />
+		<apex:sectionHeader title="Global Invoice Number Edit" subtitle="New Global Invoice Number" rendered="{!isNewGlobalInvoiceNumber==true}" help="{!ifsHelpUrl}" />
+		
+		<apex:pageBlock >
+	        <apex:pageBlockButtons >
+	            <apex:commandButton action="{!save}" value="Save"/>
+	            <apex:commandButton action="{!cancel}" value="Cancel"/>
+	        </apex:pageBlockButtons>
+	        <apex:pageBlockSection columns="1" collapsible="false">
+	            <apex:outputPanel styleClass="requiredExampleOuter" layout="block" style="float:right;">
+	                <apex:outputPanel styleClass="requiredExampleOuter">
+	                    <apex:outputPanel styleClass="requiredExample">&nbsp;</apex:outputPanel>
+	                </apex:outputPanel>
+	                <apex:outputPanel styleClass="requiredMark">*</apex:outputPanel>
+	                <apex:outputPanel styleClass="requiredText">= Required Information</apex:outputPanel>
+	            </apex:outputPanel>
+	        </apex:pageBlockSection>
+	        
+	        <apex:pageBlockSection id="infoblock" title="Information" columns="1" collapsible="false">
+	            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, dataCol1">
+	                <apex:outputText value="Global Invoice Number Name" />
+	                <apex:outputPanel styleClass="requiredInput" layout="block">
+	                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!globalInvoiceNumber.Name}" />
+	                </apex:outputPanel>
+	            </apex:panelGrid> 
+			</apex:pageBlockSection>
+
+	        <apex:pageBlockSection id="formatblock" title="Format and Counter" columns="1" collapsible="false">
+	            <apex:panelGrid columns="2" cellspacing="0" cellpadding="0" border="0" styleClass="bsCustomInp" columnClasses="labelCol, dataCol1">
+	                <apex:outputText value="Global Invoice Number Format" />
+	                <apex:outputPanel styleClass="requiredInput" layout="block">
+	                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!globalInvoiceNumber.kognoz1__Invoice_Number_Format__c}" />
+	                </apex:outputPanel>
+	                <apex:outputText value="Global Invoice Number Counter" />
+	                <apex:outputPanel styleClass="requiredInput" layout="block">
+	                    <apex:outputPanel styleClass="requiredBlock" layout="block"/>
+						<apex:inputField value="{!globalInvoiceNumber.kognoz1__Invoice_Number_Counter__c}" />
+	                </apex:outputPanel>
+	            </apex:panelGrid> 
+			</apex:pageBlockSection>
+
+
+
+		</apex:pageBlock>
+	</apex:form>
+
+
+</apex:page>

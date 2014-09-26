@@ -1,0 +1,92 @@
+<apex:page id="siteTemplate" 
+           docType="html-5.0" 
+           controller="mployee.SiteTemplateController" 
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false" 
+           language="nl-NL"          
+>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>{!siteConfig.mployee__title__c}</title>
+        <meta name="description" content="{!siteConfig.metaDescription__c}"/>
+        <meta name="keywords" content="{!siteConfig.metaKeywords__c}"/>                
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        
+        <!-- Bootstrap core CSS -->
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/bootstrap.min.css')}"/>        
+        <!-- Bootstrap theme -->        
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/bootstrap-responsive.min.css')}"/>
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,400,600" rel="stylesheet"/>
+        
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/font-awesome.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/ui-lightness/jquery-ui-1.10.0.custom.min.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/base-admin-3.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/base-admin-3-responsive.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateBase,'assets/css/custom.css')}"/>
+        
+        <style>        	
+        	.btn-primary {
+			  background-image: -webkit-gradient(linear, left 0%, left 100%, from(#428bca), to(#003A54));
+			  background-image: -webkit-linear-gradient(top, #428bca, 0%, #003A54, 100%);
+			  background-image: -moz-linear-gradient(top, #428bca 0%, #003A54 100%);
+			  background-image: linear-gradient(to bottom, #428bca 0%, #003A54 100%);
+			  background-repeat: repeat-x;
+			  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#428bca', endColorstr='#003A54', GradientType=0);
+			  border-color: #003A54;
+			}
+			.alert li{
+				list-style: none;
+			}
+			html,
+			body {
+				height: 100%;				
+				/* The html and body elements cannot have any padding or margin. */
+			}
+			.hidden-xs{
+       			display:inline;
+       		}
+			
+			
+			/* Wrapper for page content to push down footer */
+			#wrap {
+			  min-height: 100%;
+			  height: auto !important;
+			  height: 100%;
+			  /* Negative indent footer by its height */
+			  margin: 0 auto -53px;
+			  /* Pad bottom by footer height */
+			  padding: 0 0 53px;
+			}
+			
+			
+           
+        </style>
+        <apex:insert name="css"/>
+        
+        <!-- start: JavaScript-->
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBase,'assets/js/libs/jquery-1.9.1.min.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBase,'assets/js/libs/jquery-ui-1.10.0.custom.min.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBase,'assets/js/libs/bootstrap.min.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBase,'assets/js/Application.js')}"  />
+        <apex:insert name="javascript"/>
+        
+    </head>
+    
+    <body>
+    	<div id="wrap">    	
+        <c:SiteNavbar />
+        <div class="subnavbar"/>
+       
+        <apex:insert name="body"/>
+        </div>
+        
+        <c:SiteFooter rendered="false" />
+    </body>
+
+</html> 
+</apex:page>

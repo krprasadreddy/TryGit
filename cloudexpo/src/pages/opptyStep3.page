@@ -1,0 +1,42 @@
+<apex:page controller="newOpportunityController" tabStyle="Opportunity">
+
+<apex:includeScript value="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"/> 
+
+<script>
+	$j = jQuery.noConflict();
+	
+	$j(document).ready(function() { 
+		$j("[id*=cancel]").click(function() {
+			confirm("Do you want to cancel");
+		});
+	});
+		
+</script>	
+
+<apex:sectionHeader title="New Customer Opportunity" subtitle="Step 3 of 3"/>
+	<apex:form >
+		<apex:pageBlock title="Confirmation">
+			<apex:pageBlockSection title="Account Information">
+				<apex:outputField value="{!account.Name}"/>
+				<apex:outputField value="{!account.Site}"/>
+			</apex:pageBlockSection>			
+			<apex:pageBlockSection title="Contact Information">
+				<apex:outputField value="{!contact.FirstName}"/>
+				<apex:outputField value="{!contact.LastName}"/>
+				<apex:outputField value="{!contact.Phone}"/>
+				<apex:outputField value="{!role.Role}"/>
+			</apex:pageBlockSection>			
+			<apex:pageBlockSection title="Opportunity Information">
+				<apex:outputField value="{!opportunity.Name}"/>
+				<apex:outputField value="{!opportunity.Amount}"/>
+				<apex:outputField value="{!opportunity.closeDate}"/>
+			</apex:pageBlockSection>
+			
+			<apex:pageBlockButtons >
+				<apex:commandButton value="Previous" action="{!step2}"/>
+				<apex:commandButton value="Save" action="{!save}"/>				
+				<apex:commandButton value="cancel" action="{!cancel}" id="cancel" immediate="true"/>
+			</apex:pageBlockButtons>
+		</apex:pageBlock>
+	</apex:form>
+</apex:page>

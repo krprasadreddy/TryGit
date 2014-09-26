@@ -1,0 +1,92 @@
+<apex:component id="vacanciessearch"
+	controller="mployee.com_SiteVacanciesController"
+	layout="none"
+>        
+        
+        <apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/js/plugins/typeahead/typeahead-0.9.3.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/js/plugins/typeahead/hogan-2.0.0.js')}"  />
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__mployeeSite, 'assets/css/plugins/typeahead/typeahead.css')}"/>
+		
+		<script type="text/javascript">
+			$(document).ready(function(){
+			    $( "#slider" ).slider({
+			      value:{!vacancies.params.distance},
+			      min: 0,
+			      max: 500,
+			      step: 10,
+			      slide: function( event, ui ) {
+			        $('[id$=distance]').val( ui.value );
+			         $("#distancetext").text( ui.value );
+			      }
+			    });
+			    
+				$('[id$=distance]').val( $( "#slider" ).slider( "value" ) );
+				$("#distancetext").text( $( "#slider" ).slider( "value" ) );
+				//
+				$('.zipcity').typeahead({
+					name: 'title',
+					remote: {
+				  		//url: 'https://www.linkedin.com/ta/title?query=%QUERY',
+				  		url: 'http://api.geonames.org/postalCodeSearchJSON?placename_startsWith=%QUERY&maxRows=10&username=mployee',
+				  		filter: function(parsedResponse){
+				  			console.log(parsedResponse);
+				  			var dataset = [];
+				  			for(i = 0; i < parsedResponse.postalCodes.length; i++) {
+				  				dataset.push({
+				  					name: parsedResponse.postalCodes[i].placeName,
+				  					value: parsedResponse.postalCodes[i].placeName,
+				  				});
+				  			}
+				  			return dataset;
+				  			console.log('dataset: '+dataset);
+				  		},
+				  		dataType: 'jsonp',
+						beforeSend: function (jqXhr, settings) {
+							jqXhr.setRequestHeader('Accept-Language','nl');
+						
+						}
+					},   
+					                                      
+				  	limit: 10                                                                   
+				});
+				//
+			});
+		
+		</script>
+
+		<div class="panel panel-default">
+		  <div class="panel-heading">
+		    <h3 class="panel-title"><apex:outputText value="{!$Label.SITE_MOD_VACANCIES_SEARCH_TITLE}"/></h3>
+		  </div>
+			<div class="panel-body">
+		    	<apex:form id="adminform" styleClass="form-inline">
+		    		
+		    		<div class="form-group col-sm-6">
+		    			<apex:outputLabel styleClass="control-label" for="keywords" value="{!$Label.SITE_MOD_VACANCIES_SEARCH_FIELD_KEYWORDS_LABEL}" />		    			
+		    			<apex:inputText styleClass="form-control" id="keywords" value="{!vacancies.params.keywords}" html-placeholder="{!$Label.SITE_MOD_VACANCIES_SEARCH_FIELD_KEYWORDS_PLACEHOLDER}"/>
+		    		</div>
+		    		<div class="form-group col-sm-3">
+		    			<apex:outputLabel styleClass="control-label" for="zipcity" value="{!$Label.SITE_MOD_VACANCIES_SEARCH_FIELD_LOCATION_LABEL}"/>		    			
+		    			<apex:inputText styleClass="form-control zipcity" id="zipcity" value="{!vacancies.params.zipcity}" html-placeholder="{!$Label.SITE_MOD_VACANCIES_SEARCH_FIELD_LOCATION_PLACEHOLDER}"/>
+		    		</div>
+		    		<div class="form-group col-sm-3">
+		    			<apex:outputLabel styleClass="control-label" for="distance" value="{!$Label.SITE_MOD_VACANCIES_SEARCH_FIELD_DISTANCE_LABEL}">
+		    				&nbsp;<span id="distancetext"/>&nbsp;<apex:outputText value="{!vacancies.params.distanceunit}"/>
+		    			</apex:outputLabel>
+		    			
+		    			<div id="slider"></div>
+						<apex:inputHidden value="{!vacancies.params.distance}" id="distance"/>	
+		    		</div>
+		    		<div class="form-group">		    			
+		    			<label class="control-label">&nbsp;</label>
+		    			<apex:commandButton styleClass="form-control btn btn-default" action="{!searchVacancies}" value="{!$Label.GLOBAL_ACTION_SEARCH}"/>
+		    		</div>
+		    			
+		    	
+		    	</apex:form>
+		    	
+		    	
+		    	
+			</div>
+		</div>
+</apex:component>

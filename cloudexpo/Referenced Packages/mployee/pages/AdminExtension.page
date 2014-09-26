@@ -1,0 +1,207 @@
+<apex:page standardController="mployee__cms_Extension__c"
+	tabStyle="mployee__cms_Extension__c"
+	extensions="mployee.AdminExtensionController"
+	docType="html-5.0"
+	showHeader="false"
+	standardStylesheets="false"
+	cache="false"
+	applyBodyTag="false"
+	applyHtmlTag="false"
+> 
+	
+	
+	<apex:composition template="mployee__AdminTemplateAcme">
+		
+		<apex:define name="javascript">
+			<script type="text/javascript">	        	
+				$(document).ready(function(){
+					
+				});
+			</script>
+		</apex:define>
+		
+		<apex:define name="css">
+			<style type="text/css">
+				.form-horizontal input[type=text], .form-horizontal input[type=password], .form-horizontal textarea {
+					width: inherit;
+				}			
+			</style>
+		</apex:define>
+	
+	
+		<apex:define name="header-menu"> 
+			<c:AdminPageHeader rendered="true" AppMenuItemList="{!AppMenuItemList}" selectedApp="{!app}" sfdcBaseURL="{!sfdcBaseURL}" />
+		</apex:define>
+		
+		<apex:define name="sidebar-left">			
+			<c:adminMod_menu />
+		</apex:define>
+		
+		<apex:define name="content">
+						 
+			<div class="row">
+			
+			
+			<apex:form styleClass="form-horizontal" >
+				<fieldset>
+					<div class="form-actions">
+						<apex:commandLink styleClass="btn btn-small btn-success" action="{!save}" id="save" >
+							<i class="icon-edit"></i> Save
+						</apex:commandLink>
+						&nbsp;
+						<apex:commandLink styleClass="btn btn-small btn-success" action="{!createManifest}" id="manifest" >
+							<i class="icon-edit"></i> Create Manifest
+						</apex:commandLink>
+						&nbsp;
+						<apex:commandLink styleClass="btn btn-small btn-success" action="{!createParams}" id="createParams" >
+							<i class="icon-edit"></i> Create Params
+						</apex:commandLink>		
+						
+						
+					</div>
+					
+					<ul class="nav nav-tabs">
+				  		<li class="active"><a href= "#details" data-toggle="tab">Details</a></li>
+				  		<li><a href= "#params" data-toggle="tab">{!$ObjectType.mployee__cms_extension__c.Fields.params__c.Label}</a></li>
+				  		<li><a href= "#manifest" data-toggle="tab">{!$ObjectType.mployee__cms_extension__c.Fields.manifest_cache__c.Label}</a></li>
+				  		<li><a href= "#systemdata" data-toggle="tab">{!$ObjectType.mployee__cms_extension__c.Fields.system_data__c.Label}</a></li>
+				  		<li><a href= "#customdata" data-toggle="tab">{!$ObjectType.mployee__cms_extension__c.Fields.custom_data__c.Label}</a></li>				 
+					</ul>
+				 
+					<div class="tab-content">
+						<div class="tab-pane active" id="details">
+					  		<div class="row">				  		
+					  			
+					  			
+								<div class="col-md-6">
+									<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.name.Label}" for="name"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.Name}" id="name" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+								  	<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.mployee__type__c.Label}" for="type__c"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.mployee__type__c}" id="type__c" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+								  	<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.mployee__element__c.Label}" for="element__c"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.mployee__element__c}" id="element__c" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>			
+									<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.mployee__state__c.Label}" for="state__c"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.mployee__state__c}" id="state__c" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+								  	<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.mployee__enabled__c.Label}" for="enabled__c"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.mployee__enabled__c}" id="enabled__c" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+								  	<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.mployee__access__c.Label}" for="access__c"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.mployee__access__c}" id="access__c" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+								  	<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.mployee__ordering__c.Label}" for="ordering__c"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.mployee__ordering__c}" id="ordering__c" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>								  	
+								  	<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.mployee__protected__c.Label}" for="protected__c"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.mployee__protected__c}" id="protected__c" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+								  	
+									
+								</div>
+								<div class="col-md-6">
+									<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.Id.Label}" for="Id"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.Id}" id="Id" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+								  	<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.mployee__client_id__c.Label}" for="client_id__c"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.mployee__client_id__c}" id="client_id__c" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+								  	<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!$ObjectType.mployee__cms_Extension__c.Fields.mployee__folder__c.Label}" for="folder__c"/>
+									    <div class="col-sm-8">
+											<apex:inputField value="{!item.mployee__folder__c}" id="folder__c" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+								</div>
+							</div>
+						</div>
+						
+						<div class="tab-pane" id="params">
+							<div class="row-fluid">				  		
+						  		<div class="col-md-6">
+									<apex:repeat value="{!params}" var="param">
+									
+									<apex:outputpanel styleClass="form-group" layout="block">						    
+									    <apex:outputLabel styleClass="col-sm-4 control-label" value="{!param}" for="param"/>
+									    <div class="col-sm-8">
+											<apex:inputText value="{!params[param]}" id="param" styleClass="form-control"/>
+									    </div>
+								  	</apex:outputpanel>
+									</apex:repeat>
+								</div>
+							</div>
+							
+						</div>
+						<div class="tab-pane" id="manifest">	
+							<table class="table table-hover">
+								<thead></thead>
+								<tbody>								  
+								  <tr><td>Name</td><td>{!Manifest.name}</td></tr>								  
+								  <tr><td>Type</td><td>{!Manifest.type}</td></tr>
+								  
+								  <tr><td>Author</td><td>{!Manifest.author}</td></tr>
+								  <tr><td>Creation Date</td><td>{!Manifest.creationDate}</td></tr>
+								  <tr><td>copyright</td><td>{!Manifest.copyright}</td></tr>								  
+								  <tr><td>Author Email</td><td>{!Manifest.authorEmail}</td></tr>								  
+								  
+								  <tr><td>Description</td><td>{!Manifest.description}</td></tr>								  
+								</tbody>  
+							</table>							
+						</div>
+						<div class="tab-pane" id="systemdata">
+							<pre>
+								{!item.system_data__c}
+							</pre>
+						</div>
+						<div class="tab-pane" id="customdata">
+							<pre>
+								{!item.custom_data__c}
+							</pre>
+						</div>
+					</div>
+					
+				</fieldset>
+			
+			
+			</apex:form>
+				
+			
+			</div>
+		</apex:define>
+	
+	</apex:composition>
+	
+	
+</apex:page>

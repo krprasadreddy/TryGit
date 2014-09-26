@@ -1,0 +1,158 @@
+<apex:page id="vacancy" 
+           docType="html-5.0" 
+		   controller="mployee.SiteVacancyController" 
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false"            
+>
+    <apex:composition template="SiteTemplate{!siteSettings.template.name}">
+        <apex:define name="css">
+        	<style>
+	        	dd {
+					margin-left: 10px;
+				}
+        	</style>
+        </apex:define>
+        <apex:define name="body">
+        	
+        	
+            
+            <div class="container">
+                <div class="row">
+                	<!-- Sidebar -->
+                    <div class="col-md-3 hidden-print">
+                    	<div class="widget-box">
+                            <div class="widget-title">
+                            	
+                                <ul class="nav nav-tabs">
+                                    <li class="active"><a data-toggle="tab" href="#info"><apex:outputText value="{!$Label.SITE_VACANCY_TAB_INFO}" /></a></li>
+                                    <li class=""><a data-toggle="tab" href="#contact"><apex:outputText value="{!$Label.SITE_VACANCY_TAB_CONTACT}" /></a></li>
+                                </ul>
+                            </div>
+                            <div class="widget-content tab-content">
+                                
+                                <!-- tab info -->
+                                <div id="info" class="tab-pane active">
+                                	<dl>
+			            				<apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_position_name'],'1'))}">
+			                                <dt>{!$ObjectType.MF_Organisation_Position__c.Fields.Name.label}</dt>
+			                                <dd><apex:outputField id="Name" value="{!position.Name}"/></dd>	                                	
+		                                </apex:outputpanel>
+		                                
+		                                <apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_position_location'],'1'))}">
+			                                <dt>{!$ObjectType.MF_Organisation_Position__c.Fields.LocationCity__c.label}</dt>
+			                                <dd><apex:outputField id="positionLocation__c" value="{!position.LocationCity__c}"/></dd>	                                
+		                                </apex:outputpanel>
+		                                
+		                                <apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_position_employment_type'],'1') && position.Type__c !=null )}">
+		                                	<dt>{!$ObjectType.MF_Organisation_Position__c.Fields.Type__c.label}</dt>
+		                                	<dd><apex:outputField id="mployee__type__c" value="{!position.Type__c}"/></dd>
+		                                </apex:outputpanel>
+		                                                              
+		                                <apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_position_experienceLevel'],'1') && position.ExperienceLevel__c !='' )}">
+		                                	<dt>{!$ObjectType.MF_Organisation_Position__c.Fields.ExperienceLevel__c.label}</dt>
+		                                	<dd><apex:outputField id="mployeeRec__experienceLevel__c" value="{!position.ExperienceLevel__c}"/></dd>
+		                                </apex:outputpanel>
+		                                
+		                                <apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_position_industries'],'1') && position.mployee__positionIndustries__r.size > 0 )}">
+			                                <dt>{!$ObjectType.positionIndustry__c.label}</dt>
+			                                <dd>                               
+			                                    <apex:dataList value="{!position.mployee__positionIndustries__r}" var="industry">
+			                                        <apex:outputText value="{!industry.Industry__r.Name}"/>
+			                                    </apex:dataList>                               
+			                                </dd>
+		                                </apex:outputpanel>
+		                                
+		                                <apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_position_functions'],'1') && position.mployee__positionFunctions__r.size > 0 )}">
+			                                <dt>{!$ObjectType.positionFunction__c.label}</dt>
+			                                <dd>
+			                                    <apex:dataList value="{!position.mployee__positionFunctions__r}" var="function">
+			                                        <apex:outputField value="{!function.mployee__Function__r.Name}"/>
+			                                    </apex:dataList> 
+			                                </dd>
+		                                </apex:outputpanel>
+		                                
+		                                <apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_position_languages'],'1') && position.mployee__positionLanguages__r.size > 0 )}">
+			                                <dt>{!$ObjectType.positionLanguage__c.label}</dt>
+			                                <dd>
+			                                    <apex:dataList value="{!position.mployee__positionLanguages__r}" var="language">
+			                                        <apex:outputText value="{!language.Name}"/>
+			                                    </apex:dataList>
+			                                </dd> 
+		                                </apex:outputpanel>
+			            			</dl>	                                
+                                </div>
+                                
+                                <!-- tab contact -->
+                                <div id="contact" class="tab-pane">
+                               		<dl>
+		                                <dt><apex:outputText value="{!$Label.SITE_VACANCY_TAB_CONTACT}" /></dt>
+		                                <dd>
+		                                	<apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_contact_name'],'1'))}">			                                		
+		                                		<apex:outputText value="{!position.mployee__PositionsVacant__r[0].Owner.Name}"/><br/>
+		                                	</apex:outputpanel>
+		                                	<apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_contact_phone'],'1'))}">
+		                                		<i class="fa fa-phone"/>&nbsp;
+		                                		<apex:outputText value="{!position.mployee__PositionsVacant__r[0].Owner.Phone}"/><br/>
+		                                	</apex:outputpanel>
+		                                   	<apex:outputpanel layout="block" rendered="{!(CONTAINS(params['show_contact_email'],'1'))}">
+		                                    <i class="fa fa-envelope"/>&nbsp; 
+		                                    	<a href="mailto:{!position.mployee__PositionsVacant__r[0].Owner.Email}" target="_blank">
+		                                    		<apex:outputText value="{!position.mployee__PositionsVacant__r[0].Owner.Email}"/>
+		                                   		</a>
+		                                	<br/>
+		                                	</apex:outputpanel>
+		                                </dd>		                                
+		                            </dl>
+                                </div>                                
+                            </div>                            
+                        </div>
+						
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="col-md-6">
+                    
+                    	
+                    
+                    	<apex:outputpanel rendered="{!(CONTAINS(params['show_vacancy_titel'],'1'))}">
+                    		<legend><apex:outputText rendered="true" value="{!position.Name}" /></legend>
+                    	</apex:outputpanel>                        
+                        <apex:outputText rendered="false" value="{!position.VacancyText__c}" />
+                        <apex:outputField rendered="true" value="{!position.mployee__PositionsVacant__r[0].mployee__descriptionRTF__c}" />
+                        
+                        
+                        
+                    </div>
+                    <!-- Actionbar -->
+                    <apex:form styleClass="hidden-print" >
+                    <ul class="nav nav-tabs nav-stacked col-md-3 ">
+                    	<li class="nav-header"><apex:outputText styleClass="hidden-phone" value="{!$Label.GLIB_HTML_SELECT_ACTION}"/></li>
+                    	<li>
+                    		<apex:commandLink action="{!apply}">
+                    			<apex:param name="id" value="{!vacancy.Id}"/>
+                    			<i class="fa fa-plus"/>&nbsp;
+                    			<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_APPLY}"/>                    			
+                    		</apex:commandLink>
+                    	</li>                    	
+                    	<li>
+                    		<apex:outputLink value="javascript:window.print()">                    			
+                    			<i class="fa fa-print"/>&nbsp;
+                    			<apex:outputText styleClass="hidden-phone" value="{!$Label.GLOBAL_ACTION_PRINT}"/>
+                    		</apex:outputLink>
+                    	</li>
+                    </ul>
+                    </apex:form>
+                    
+                </div>
+                
+            </div>
+            
+            
+            
+            
+        </apex:define>
+    </apex:composition>
+</apex:page>

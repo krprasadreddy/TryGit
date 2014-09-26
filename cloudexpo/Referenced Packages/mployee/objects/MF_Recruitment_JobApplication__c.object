@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <deprecated>false</deprecated>
+    <description>Recruiting | Represents a candidate&apos;s application to a position.</description>
+    <enableActivities>true</enableActivities>
+    <enableEnhancedLookup>true</enableEnhancedLookup>
+    <enableFeeds>true</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <fields>
+        <fullName>CandidateImpression__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>CandidateImpression</label>
+        <length>32000</length>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>true</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>6</visibleLines>
+    </fields>
+    <fields>
+        <fullName>CandidatePersonalOpinion__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Personal Opinion</label>
+        <length>32768</length>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>CandidateProfile__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Profile</label>
+        <length>32768</length>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Candidate__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Candidate</label>
+        <referenceTo>MF_Recruitment_Candidate__c</referenceTo>
+        <relationshipName>Candidate</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>true</trackFeedHistory>
+        <trackHistory>true</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>DateEnd__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>DateEnd</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>DateStart__c</fullName>
+        <defaultValue>TODAY()</defaultValue>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>DateStart</label>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Date</type>
+    </fields>
+    <fields>
+        <fullName>DaysSinceDateStart__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <formula>IF( ISBLANK( DateEnd__c ), TEXT(TODAY()-DateStart__c), TEXT( DateEnd__c-DateStart__c))</formula>
+        <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+        <label>Days Open</label>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Position__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Position</label>
+        <lookupFilter>
+            <active>true</active>
+            <filterItems>
+                <field>MF_Organisation_Position__c.State__c</field>
+                <operation>equals</operation>
+                <value>Vancant</value>
+            </filterItems>
+            <isOptional>true</isOptional>
+        </lookupFilter>
+        <referenceTo>MF_Organisation_Position__c</referenceTo>
+        <relationshipName>Positions</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>true</trackFeedHistory>
+        <trackHistory>true</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <fields>
+        <fullName>Record_State__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Record State</label>
+        <picklist>
+            <picklistValues>
+                <fullName>Active</fullName>
+                <default>true</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Not Active</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>State__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>State</label>
+        <picklist>
+            <picklistValues>
+                <fullName>New</fullName>
+                <default>true</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Confirmation sent</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Assess Candidates</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Schedule Interviews</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>On hold</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Extend an Offer</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Hired</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>rejected</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackFeedHistory>true</trackFeedHistory>
+        <trackHistory>true</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>Vacancy__c</fullName>
+        <deleteConstraint>SetNull</deleteConstraint>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Vacancy</label>
+        <lookupFilter>
+            <active>false</active>
+            <filterItems>
+                <field>MF_Organisation_PositionVacancy__c.State__c</field>
+                <operation>equals</operation>
+                <value>Open/Approved</value>
+            </filterItems>
+            <isOptional>true</isOptional>
+        </lookupFilter>
+        <referenceTo>MF_Organisation_PositionVacancy__c</referenceTo>
+        <relationshipLabel>Sollicitaties</relationshipLabel>
+        <relationshipName>Job_Applications</relationshipName>
+        <required>false</required>
+        <trackFeedHistory>false</trackFeedHistory>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Lookup</type>
+    </fields>
+    <label>Job Application</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>Candidate__c</columns>
+        <columns>Vacancy__c</columns>
+        <columns>Position__c</columns>
+        <columns>Record_State__c</columns>
+        <columns>State__c</columns>
+        <columns>DateStart__c</columns>
+        <columns>DateEnd__c</columns>
+        <columns>DaysSinceDateStart__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+        <language>en_US</language>
+    </listViews>
+    <listViews>
+        <fullName>New</fullName>
+        <columns>NAME</columns>
+        <columns>Position__c</columns>
+        <columns>Candidate__c</columns>
+        <columns>State__c</columns>
+        <columns>DateStart__c</columns>
+        <columns>DaysSinceDateStart__c</columns>
+        <filterScope>Everything</filterScope>
+        <filters>
+            <field>State__c</field>
+            <operation>equals</operation>
+            <value>New</value>
+        </filters>
+        <label>New</label>
+        <language>en_US</language>
+    </listViews>
+    <nameField>
+        <displayFormat>JA-{00000}</displayFormat>
+        <label>Name</label>
+        <trackFeedHistory>true</trackFeedHistory>
+        <trackHistory>true</trackHistory>
+        <type>AutoNumber</type>
+    </nameField>
+    <pluralLabel>Job Applications</pluralLabel>
+    <searchLayouts>
+        <customTabListAdditionalFields>Candidate__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>Position__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>State__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>CandidateImpression__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>DateStart__c</customTabListAdditionalFields>
+        <customTabListAdditionalFields>DaysSinceDateStart__c</customTabListAdditionalFields>
+    </searchLayouts>
+    <sharingModel>ReadWrite</sharingModel>
+    <validationRules>
+        <fullName>DateEndCannotBeBeforeDateStart</fullName>
+        <active>true</active>
+        <description>DateEndCannotBeBeforeDateStart</description>
+        <errorConditionFormula>DateEnd__c &lt; DateStart__c</errorConditionFormula>
+        <errorMessage>End Date Cannot Be Before Start Date</errorMessage>
+    </validationRules>
+    <validationRules>
+        <fullName>DateEndCannotBeSameAsDateStart</fullName>
+        <active>true</active>
+        <description>DateEndCannotBeSameAsDateStart</description>
+        <errorConditionFormula>DateEnd__c = DateStart__c</errorConditionFormula>
+        <errorMessage>End Date Cannot Be the Same As Start Date.</errorMessage>
+    </validationRules>
+    <webLinks>
+        <fullName>Close_Job_Applications</fullName>
+        <availability>online</availability>
+        <displayType>massActionButton</displayType>
+        <linkType>javascript</linkType>
+        <masterLabel>Close Job Applications</masterLabel>
+        <openType>onClickJavaScript</openType>
+        <protected>false</protected>
+        <requireRowSelection>true</requireRowSelection>
+        <url>// Include and initialize the AJAX Toolkit javascript library
+//
+{!REQUIRESCRIPT(&quot;/soap/ajax/10.0/connection.js&quot;)}
+
+// Get the list of job applications that should be closed by using the
+// $ObjectType merge field to indicate the type of record Ids that
+// are expected.
+//
+var jobAppIdArr = {!GETRECORDIDS( $ObjectType.MF_Recruitment_JobApplication__c )};
+
+if (jobAppIdArr == null || jobAppIdArr.length == 0) {
+    alert(&quot;Please select the job applications you wish to reject.&quot;);
+
+} else {
+
+    // Retrieving the job applications that should be deleted from
+    // the database is inefficient and unnecessary. Instead, create
+    // new job application records for each job application that
+    // should be updated, store them in an array, and then use the
+    // update API call.
+    //
+    var jobApps = new Array();
+
+    for (var i = 0; i &lt; jobAppIdArr.length; i++) {
+        var jobApp = new sforce.SObject(&quot;Job_Application__c&quot;);
+
+        // Since we&apos;ll be using the update call, we must set the id
+        // on the new job application record.
+        //
+        jobApp.Id = jobAppIdArr[i];
+
+        // Next set the appropriate fields to reject the
+        //application.
+        //
+        jobApp.Status__c = &quot;Closed&quot;;
+        jobApp.Stage__c = &quot;Closed - Rejected&quot;;
+
+        // Finally add the record to our array.
+        //
+        jobApps.push(jobApp);
+    }
+
+    // Now make the update API call in a try statement so we can
+    // catch any errors. Save the resulting array so we can also
+    // check for problems with individual records.
+    //
+    var callCompleted = false;
+    try {
+        var result = sforce.connection.update(jobApps);
+        callCompleted = true;
+
+    } catch(error) {
+        alert(&quot;Failed to update Job Applications with error: &quot; + error);
+    }
+
+    // Now check for problems with individual records.
+    //
+    if (callCompleted) {
+        for (var i = 0; i &lt; result.length; i++) {
+            if (!result[i].getBoolean(&quot;success&quot;)) {
+                alert(&quot;Job Application (id=&apos;&quot; + jobAppIdArr[i] +
+                      &quot;&apos;) could not be updated with error: &quot; +
+                      result[i].errors);
+            }
+        }
+
+        // Finally, refresh the browser to provide confirmation
+        // to the user that the job applications were rejected.
+        //
+        window.location.reload(true);
+    }
+}</url>
+    </webLinks>
+    <webLinks>
+        <fullName>NewEmployee</fullName>
+        <availability>online</availability>
+        <description>Creates a employeeFile and a HR Contract from a Job Application</description>
+        <displayType>button</displayType>
+        <height>600</height>
+        <linkType>page</linkType>
+        <masterLabel>New Employee</masterLabel>
+        <openType>sidebar</openType>
+        <page>MFJobApplicationToEmployee</page>
+        <protected>false</protected>
+    </webLinks>
+    <webLinks>
+        <fullName>NewEmployeeJob</fullName>
+        <availability>online</availability>
+        <description>Creates a employeeFile, a HR Contract and a Job from a Job Application</description>
+        <displayType>button</displayType>
+        <height>600</height>
+        <linkType>page</linkType>
+        <masterLabel>New Employee &amp; Job</masterLabel>
+        <openType>sidebar</openType>
+        <page>MFJobApplicationToEmployeeJob</page>
+        <protected>false</protected>
+    </webLinks>
+    <webLinks>
+        <fullName>NewEmployeeSecondment</fullName>
+        <availability>online</availability>
+        <displayType>button</displayType>
+        <height>600</height>
+        <linkType>page</linkType>
+        <masterLabel>New Employee &amp; Secondment</masterLabel>
+        <openType>sidebar</openType>
+        <page>MFJobApplicationToEmployeeSecondment</page>
+        <protected>false</protected>
+    </webLinks>
+</CustomObject>

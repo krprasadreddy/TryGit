@@ -1,0 +1,13 @@
+<apex:page standardController="mployee__MF_Organisation_Position__c"
+	recordSetvar="positions"
+	sidebar="false"
+>
+			
+
+		<c:adminMod_GoogleMap />
+		<apex:includeScript value="https://code.jquery.com/jquery.js"  />
+		<script type="text/javascript">
+			google.maps.event.addDomListener(window, 'load', initialize);
+			getMarkers('mployee__MF_Organisation_Position__c');
+		</script>
+</apex:page>

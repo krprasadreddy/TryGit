@@ -1,0 +1,286 @@
+<apex:component controller="kognoz1.MergeFields20">
+ <apex:attribute name="mainController" type="kognoz1.InvoiceTemplateEditorController" description="Invoice template controller" assignTo="{!cont}" required="true"/>
+    
+<style type="text/css">
+    .containerClass{
+        height:150px;
+        width:180px;
+        overflow:auto;
+        border-color: gray; 
+        border-style: solid;
+        border-width: thin;
+        white-space:nowrap
+        
+    }
+    .fieldelementselected{
+        background-color:#D8D8D8;
+        cursor:default;
+    }
+    .expandableselected{
+        background-color:#81BEF7;
+        cursor:default;
+    }
+    
+    .fieldelement{cursor:default;}
+    .expandable{cursor:default;}
+    
+</style>    
+
+<script type="text/javascript" >
+
+var srName = null;
+var containers = 0;
+var maxParents = 3;
+function describeSObject(){}
+function describeSField(){}
+var describeSObjectsMap = new Array();
+var mergeFieldsMap = new Array();
+
+function insertMergeField1(){
+
+    var infoSelection = $(edittext).getSelection();
+
+    var mergefieldText = $("#tracerelsContainer").html();
+    var toInsert = '{'+'!'+mergefieldText+'}';
+    if (infoSelection.length == 0){
+         $(edittext).insertAtCaretPos(toInsert);
+    }
+    else{
+        $(edittext).replaceSelection(toInsert);
+    }
+}
+
+
+function createObjectDescriptionObject(obj){
+    var newSObject = new describeSObject();
+    newSObject.objectName = obj;
+    newSObject.fields = new Array();
+    describeSObjectsMap.push(newSObject);
+}
+
+function createObjectDescriptionObjectFields(oName, fName, fLabel, fRef, fRelName, fType, fPrecision, fScale, fLength){
+    var realObjectName = oName.replace('[', '').replace(']', '');
+    var SObjectDescriptor = jQuery.grep(describeSObjectsMap, function(n, i){
+                        if (n.objectName == realObjectName){
+                            var newFields = new Array();
+                            if ($(n).fields != null)
+                                newFields = $(n).fields;
+                            var newField = new describeSField();
+                            newField.name = fName;
+                            newField.label = fLabel;
+                            newField.relationshipName = fRelName;
+                            newField.referenceTo = fRef;
+                            newField.type = fType;
+                            newField.precision = fPrecision;
+                            newField.scale = fScale;
+                            newField.length = fLength;
+                            newFields.push(newField);
+                            n.fields.push(newField);
+                        }
+                        return (n.objectName == realObjectName);
+                    });
+}
+
+function loadObjectFieldsAndParents(SObjectName)
+{
+        var SObjectDescriptor = new Array();
+        if (describeSObjectsMap != null)
+        {
+            SObjectDescriptor = jQuery.grep(describeSObjectsMap, function(n, i){
+                return (n.objectName == SObjectName);
+            });
+            if (SObjectDescriptor.length > 0)
+            {
+                $("#objectsTable tr").append($('<td><div sobj="'+SObjectName+'"class="containerClass" id=\"container'+containers+'\"></div></td>'));
+                var newdiv = document.getElementById('container'+containers);
+                containers = containers + 1;                
+                for (i = 0; i < SObjectDescriptor[0].fields.length; i++)
+                {
+                    var fieldDescriptor = SObjectDescriptor[0].fields[i]; 
+                    var selections = $('.expandableselected').size();
+                    var tds = $("#objectsTable").children().children().children().size();
+                    if(tds <= maxParents && selections <= (maxParents-1))
+                    {
+                        if(fieldDescriptor.type.toLowerCase() != 'reference')
+                        {
+                            $(newdiv).append('<span class="fieldelement" objectName="'+fieldDescriptor.name+'">'+fieldDescriptor.label+'</span><br />');
+                        }
+                        else
+                        {
+                            if(selections < (maxParents-1))
+                            {
+                                if(fieldDescriptor.relationshipName=="")
+                                    $(newdiv).append('<span class="expandable" relname="'+fieldDescriptor.relationshipName+'" fieldname="'+fieldDescriptor.name+'" objectName="'+fieldDescriptor.referenceTo+'">'+fieldDescriptor.referenceTo+' > </span><br />');
+                                else
+                                    $(newdiv).append('<span class="expandable" relname="'+fieldDescriptor.relationshipName+'" fieldname="'+fieldDescriptor.name+'" objectName="'+fieldDescriptor.referenceTo+'">'+fieldDescriptor.relationshipName+' > </span><br />');
+                            }
+                        }
+                    }
+                    
+                }
+            }
+        }
+        
+    }
+
+    
+    function getTrace(){
+        var trace = 'Opportunity';
+        var tracenames = '';
+        var tracerelations = '';
+        $.each($("#objectsTable tr").children(), function(){
+            $.each($(this).find('span'), function(){
+                if ($(this).hasClass('expandableselected') == true){
+                    if (trace == '')
+                        trace = $(this).attr('objectname');
+                    else
+                        trace = trace+'.'+$(this).attr('objectname');
+                    if (tracenames == '')
+                        tracenames = $(this).attr('fieldname');
+                    else    
+                        tracenames = tracenames+'.'+$(this).attr('fieldname');
+                    if (tracerelations == '')
+                        tracerelations = $(this).attr('relname');
+                    else    
+                        tracerelations = tracerelations+'.'+$(this).attr('relname');
+                    
+                }
+                else if ($(this).hasClass('fieldelementselected') == true){
+                    if (trace == '')
+                        trace = $(this).attr('objectname');
+                    else
+                        trace = trace+'.'+$(this).attr('objectname');
+                    if (tracenames == '')
+                        tracenames = $(this).attr('objectname');
+                    else    
+                        tracenames = tracenames+'.'+$(this).attr('objectname');
+                    if (tracerelations == '')
+                        tracerelations = $(this).attr('objectname');
+                    else
+                        tracerelations = tracerelations+'.'+$(this).attr('objectname');
+                    sobjectToTrace = $(this).parent().attr("sobj");
+                    sfieldToTrace = $(this).attr('objectname');
+                }
+            });
+        });
+        $("#objectsTable tr").append($('<td><center><div id="traceContainer">'+trace+'</div><br />'+
+                                            '<div id="tracenamesContainer">'+tracenames+'</div><br />'+
+                                            '<div id="tracerelsContainer">'+tracerelations+'</div><br />'+
+        '<input type="button" value="Insert" onclick="mergeFieldsMapHandler(\''+trace+'\', \''+tracerelations+'\')"/><input type="button" value="Cancel" onclick="cleanupmfui();"/></center></td>'));
+        
+        
+    }
+    function mergeFieldsMapHandler(traceV, traceRelsV){
+    
+        var mergeFieldsMapElement = new Object();
+        mergeFieldsMapElement['relationshipTrace'] = traceRelsV;
+        mergeFieldsMapElement['nameTrace'] = traceV;
+        var addToMap = true;
+        $.each(mergeFieldsMap, function(){
+            if (this.relationshipTrace == traceRelsV){
+                addToMap = false;
+            }
+        });
+        if (addToMap == true){
+                mergeFieldsMap.push(mergeFieldsMapElement);
+        }
+        insertMergeField1();
+
+    }   
+
+    function cleanupmfui()
+    {
+        $("#objectsTable td").each(function(idx){
+            if(idx>0)
+                $(this).remove();
+            $(".fieldelement").each(function(){
+                $(this).removeClass('fieldelementselected')
+            });
+            $(".expandable").each(function(){
+                $(this).removeClass('expandableselected');
+            });
+        
+        }); 
+    }
+
+    function mergeFieldsMapSerializer(){
+        var serialMapValue = '';
+        $.each(mergeFieldsMap, function(){
+            var mfToCheck = this.relationshipTrace;
+            var addToMapSecondCheck = jQuery.grep(allMergeFields, function(n, i){
+                var mfToCheckAux = '{'+'!'+mfToCheck+'}';
+                if (mfToCheckAux == n){
+                    return n;
+                }
+                else{
+                    return '';
+                }   
+            });
+            if (addToMapSecondCheck != ''){
+                if (serialMapValue == ''){
+                    serialMapValue = '<mergefield>'+this.relationshipTrace+'<mergeseparator>'+this.nameTrace;
+                }
+                else{
+                    serialMapValue = serialMapValue+'<mergefield>'+this.relationshipTrace+'<mergeseparator>'+this.nameTrace;
+                }
+            }
+        
+        });
+        return serialMapValue;
+    
+}
+
+
+$(document).ready(function() {
+    $("#repeatPanel").html('');
+    $(".expandable").live("click", function(){
+        if ($(this).hasClass('expandableselected') == false){
+            $(this).parent().children().removeClass('expandableselected');
+            $(this).parent().children().removeClass('fieldelementselected');
+            $(this).addClass('expandableselected');
+            $(this).parent().parent().nextAll().remove();
+                loadObjectFieldsAndParents($(this).attr('objectName'));
+        }       
+    });
+     $(".fieldelement").live("click", function(){
+        $('.fieldelement').removeClass('fieldelementselected');
+        $(this).parent().children().removeClass('expandableselected');
+        $(this).addClass('fieldelementselected');
+        $(this).parent().parent().nextAll().remove();
+        getTrace();
+     });
+    
+    
+    loadObjectFieldsAndParents('Opportunity');
+
+}); 
+</script>
+
+
+    <div id="repeatPanel">
+        <apex:repeat value="{!objectsDescriptionConstructor}" var="o">
+            <apex:repeat value="{!o.Name}" var="n">
+            <script type="text/javascript">
+                srName = '{!JSENCODE(n)}';
+                createObjectDescriptionObject(srName);
+            </script>   
+            </apex:repeat>
+            <apex:repeat value="{!o.fields}" var="f">
+            <script type="text/javascript">
+                createObjectDescriptionObjectFields(srName, '{!JSENCODE(f.name)}', '{!JSENCODE(f.label)}', '{!JSENCODE(f.referenceTo)}', '{!JSENCODE(f.relName)}', '{!JSENCODE(f.typee)}', '{!JSENCODE(f.precision)}', '{!JSENCODE(f.scale)}',  '{!JSENCODE(f.length)}');
+            </script>
+            </apex:repeat>
+        </apex:repeat>
+    </div>
+
+    <table id="objectsTable">
+        <tr>
+        </tr>
+    </table>
+    <div id="queryPanel" style="display:none">
+        <center>
+            <table id="queryTable">
+            </table>
+        </center>
+    </div>
+</apex:component>

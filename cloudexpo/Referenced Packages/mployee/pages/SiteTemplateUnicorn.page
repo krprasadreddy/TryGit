@@ -1,0 +1,268 @@
+<apex:page id="siteTemplate" 
+           docType="html-5.0" 
+           controller="mployee.SiteTemplateController" 
+           showHeader="false" 
+           standardStylesheets="false"
+           cache="false"
+           applyBodyTag="false"
+           applyHtmlTag="false" 
+           language="{!language}"      
+>
+<html lang="{!language}">
+    <head>
+        <meta charset="utf-8"/>
+        <title>{!siteConfig.mployee__title__c}</title>
+        <meta name="description" content="{!siteConfig.metaDescription__c}"/>
+        <meta name="keywords" content="{!siteConfig.metaKeywords__c}"/>        
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        
+        <!-- Bootstrap core CSS -->
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/css/bootstrap.min.css')}"/>        
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/css/font-awesome.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/css/jquery-ui.css')}"/>
+        <apex:stylesheet value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/css/unicorn.css')}"/>
+        
+        <apex:stylesheet value="{!URLFOR(siteSettings.template.stylesheet,'assets/css/corporateStyle.css')}"/>
+        
+        
+        
+        <!--[if lt IE 9]>
+		<script type="text/javascript" src="js/respond.min.js"></script>
+		<![endif]-->
+       
+        <apex:insert name="css"/>
+        
+        <!-- start: JavaScript-->       
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/js/excanvas.min.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/js/jquery.min.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/js/jquery-ui.custom.js')}"  />
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateUnicorn,'assets/js/bootstrap.min.js')}"  />
+        
+        <apex:includeScript value="{!URLFOR($Resource.mployee__templateBootstrap,'assets/js/jquery.ui.touch-punch.min.js')}"  />
+        
+        <apex:includeScript value="{!URLFOR($Resource.mployee__mployeeSite,'assets/js/plugins/scroll-to-top/back-to-top.js')}"  />
+        
+        
+        <apex:insert name="javascript"/>
+        
+    </head>
+    <style>
+    	body{
+    		margin:0;
+    		background: #3c3c3c;    		
+    	}
+    	/* Excellence */
+    	#candidate-applications{
+   			margin-top: 50px;
+   		}
+    	body{
+    		font-family: "Netto OT","Helvetica Neue", Helvetica, Arial, sans-serif;
+    		margin:0;
+    		background: #5a5a5a;
+    		color: #d2d2d2;
+    	}
+    	a {
+			color: #d2d2d2;
+			text-decoration: none;
+			text-shadow: none;
+		}
+		hr {
+			margin: 20px 0;
+			border: 0;
+			border-top: 1px solid #eeeeee;
+			border-bottom: 1px solid #ffffff;
+		}
+		.link-add{
+			color:#67f9ac;
+			float:right;
+		}
+		h3 small,.h3 small {
+			font-size: 14px;
+		}
+		
+		.link-edit{
+			color:#67f9ac;
+		}
+    	legend {
+			text-transform: uppercase;
+			font-weight: bold;
+			color: #67f9ac;
+			padding-bottom: 10px;
+		}
+    	.form-horizontal .control-label {
+			font-weight: inherit;
+			color: #d2d2d2;
+			text-shadow: inherit;
+		}
+		.form-group {
+			border-top: none;
+			border-bottom: none;
+		}
+		.nav-tabs {
+			border-bottom: 0;
+		}
+		.nav-stacked>li+li {
+			margin-top:0;
+		}
+		.nav-header {
+			display: block;
+			padding: 10px 15px;
+			font-size: 11px;
+			font-weight: bold;
+			line-height: 20px;
+			color: #d2d2d2;
+			text-transform: uppercase;
+			text-shadow: none;
+		}
+		.nav-tabs>li>a {
+			border:1px solid #ddd;
+			border-radius:0;
+		}
+		.nav > li > a:hover {
+			background-color: #5a5a5a;
+		}
+		a:hover {
+			color: #67f9ac;
+			text-decoration: none;
+		}
+		.skill-pill {
+			margin-top: 5px;
+			margin-right: 5px;
+		}
+		.well{
+			background-color: inherit;
+			border: none;
+		}
+		
+		#footer {			
+			padding: 50px 0;
+			margin-top:50px;
+			min-height:200px;
+		}
+		
+		.tabbable.inline .tab-content {
+		  background-color: inherit;
+		}
+		.tabbable.inline .nav-tabs > li > a,
+		.tabbable.inline .nav-tabs > li > a:focus {
+		  background-color: inherit; 
+		}
+		
+		
+		
+		
+		/* 20140212
+		.tab-content {
+			overflow: auto;
+		}
+		*/
+		.widget-box{
+			border: 0;
+			border-radius:0;
+		}
+		/*
+		.tabs-below > .nav-tabs, .tabs-right > .nav-tabs, .tabs-left > .nav-tabs {
+			border-bottom: 0;
+		}		
+		.tabs-below > .nav-tabs,
+		.tabs-right > .nav-tabs,
+		.tabs-left > .nav-tabs {
+		  border-bottom: 0;
+		}
+		
+		.tabs-left > .nav-tabs > li,
+		.tabs-right > .nav-tabs > li {
+		  float: none;
+		}
+		.tabs-left > .nav-tabs > li > a,
+		.tabs-right > .nav-tabs > li > a {
+		  min-width: 74px;
+		  margin-right: 0;
+		  margin-bottom: 1px;
+		}
+		.tabs-left > .nav-tabs {
+		  float: left;
+		  margin-right: 19px;
+		  border-right: 0;
+		}
+		.tabs-left > .nav-tabs > li > a {
+		  margin-right: -1px;
+		  -webkit-border-radius: 0;
+		  -moz-border-radius: 0;
+		  border-radius: 0;
+		}
+		.tabs-left > .nav-tabs > li > a:hover {
+		  border-color: #eeeeee #dddddd #eeeeee #eeeeee;
+		  border-color: transparent transparent #ddd;
+		}
+		.tabs-left > .nav-tabs .active > a,
+		.tabs-left > .nav-tabs .active > a:hover {
+		  border-color: #ddd transparent #ddd #ddd;
+		  *border-right-color: #ffffff;
+		}
+		.tabs-left > .nav-tabs > li > a{
+			border:0;
+		}
+		
+		.tabs-left > .nav-tabs>li.active>a, 
+		.tabs-left > .nav-tabs>li.active>a:hover, 
+		.tabs-left > .nav-tabs>li.active>a:focus {
+			border: 0;
+		}
+		*/
+		
+		
+		
+		[class^="linkedin-"], [class*=" linkedin-"] {
+			display: inline-block;
+			width: 36px;
+			height: 36px;
+			line-height: 36px;
+			vertical-align: text-top;
+			
+			background-position: 36px 36px;
+			background-repeat: no-repeat;
+			margin-top: 1px;
+		}
+		.linkedin-certifications {background-position:0 -171px}
+		.linkedin-courses {background-position:0 -257px}
+		.linkedin-education {background-position:0 -343px}
+		.linkedin-experience {background-position:0 -429px}
+		.linkedin-honors {background-position:0 -84px}
+		.linkedin-languages {background-position:0 -515px}
+		.linkedin-organizations {background-position:0 -601px}
+		.linkedin-patents {background-position:0 -687px}
+		.linkedin-projects {background-position:0 -773px}
+		.linkedin-publications {background-position:0 -859px}
+		.linkedin-skills {background-position:0 -945px}
+		.linkedin-summary {background-position:0 -1031px}
+		.linkedin-test-scores {background-position:0 -1117px}
+		.linkedin-volunteering {background-position:0 -1203px}
+    	
+    
+    </style>
+    
+    <body >
+    	<c:SiteNavbar rendered="false" />
+    	<c:siteMod_navbar rendered="true" />
+    	
+    	<div class="container">
+    	
+	        	<apex:messages rendered="false" styleClass="alert alert-info list-unstyled"  />
+	        	<apex:pageMessage summary="This is apex:message" severity="info" strength="2" rendered="false"/>		        
+	        	<apex:pageMessages rendered="false" escape="true" showDetail="false"/>
+	        	
+        	</div>
+    	<apex:insert name="body"/>
+    	
+    	<footer id="footer">
+    		
+    	</footer>
+    	<site:googleAnalyticsTracking />
+        <site:previewAsAdmin />
+    	    
+    </body>
+
+</html> 
+</apex:page>

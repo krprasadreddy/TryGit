@@ -1,0 +1,140 @@
+<apex:page standardController="kognoz1__Billing_Condition__c" extensions="kognoz1.BillingRuleEditController" tabStyle="kognoz1__Configuration__c" title="Billing Rule Edit" >
+<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-1.4.4.min.js')}"></script>
+<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/invoicesforsalesforce.js')}"></script>
+<link rel="stylesheet" media="screen" type="text/css" href="{!URLFOR($Resource.invoicesforsalesforce, 'css/jquery-ui-1.8.7.custom.css')}" />
+<script type="text/javascript" src="{!URLFOR($Resource.invoicesforsalesforce, 'js/jquery-ui-1.8.7.custom.min.js')}"></script>
+
+
+<script type="text/javascript" >
+	$(function(){
+		var isError = $("input[id$=isError]").val();
+		if(isError)
+		{
+          var errorsJsonObjStr = $("input[id*=errorBagJSONContField]").val();
+          if(errorsJsonObjStr)
+          {
+            var errorsJsonObj = JSON.parse(errorsJsonObjStr);
+            var errorHtml="";
+            for(var i=0;i<errorsJsonObj.length;i++)
+            {
+                errorHtml+= "<p>"+errorsJsonObj[i].error+"</p>"; 
+            }
+            $("span[id$=errorPanel]").html(errorHtml);
+            $("span[id$=errorPanel]").css("display","block");
+          }
+		}
+	});
+	
+	function setFocusOnLoad() {}
+	 
+	function validateBillingRuleInput()
+	{
+		var isValid = true;
+		$(".errorInp").each(function(){
+			$(this).remove();
+		});
+		if($("td[id=variable]").find("input").attr("checked")==false)
+		{
+			var inpBox = $("td[id=inpBox]").find("input"); 
+			if($(inpBox).val()=="")
+			{
+				$(inpBox).parent().append('<div class="errorInp" style="color:#D74C3B; font-family:Arial,Helvetica,sans-serif;width: 150px; font-size: 12px;white-space:nowrap;"><strong>Error: </strong>You must enter a valid value or set the billing rule value to variable</div>');
+				isValid = false;			
+			}
+		}
+		return isValid;
+	}
+
+</script>
+ 
+<!-- <apex:pageMessages /> -->  
+ <apex:form >	
+	<apex:sectionHeader title="Billing Rule Edit" subtitle="Edit billing rule on {!billingRule.kognoz1__FieldLabel__c}" help="{!ifsHelpUrl}" />
+	<apex:pageBlock >
+		<apex:pageBlockButtons >
+			<apex:commandButton action="{!save}" value="Save" onclick="if(!validateBillingRuleInput()) return false;"/>
+			<apex:commandButton action="{!cancel}" value="Cancel"/>
+		</apex:pageBlockButtons>
+		
+		<apex:pageBlockSection columns="1" collapsible="false"> 
+			<apex:outputPanel layout="block" rendered="{!NOT(isError)}">
+			
+			<table>
+				<tr>
+					<td>
+						<!-- Field label -->
+						<apex:outputPanel style="float:left;"><apex:outputText value="{!billingRule.kognoz1__FieldLabel__c}"/></apex:outputPanel>
+						<apex:outputPanel style="float:left;">&nbsp;&nbsp;</apex:outputPanel>
+					</td>
+					<td>
+						<!-- Operator -->
+						<apex:outputPanel style="float:left;">
+							<apex:selectList value="{!operatorSelected}" size="1" multiselect="false">
+								<apex:selectOptions value="{!operatorOptions}" />
+							</apex:selectList>
+						</apex:outputPanel>
+					</td>
+					<td>
+						<apex:outputPanel style="float:left;">&nbsp;&nbsp;</apex:outputPanel>
+					</td>
+					<td id="inpBox">		
+						<!--  #### Field value #### -->
+						<!-- date field -->
+						 <apex:outputPanel style="float:left;" >
+						 	<apex:inputField value="{!billingRule.kognoz1__Date__c}" rendered="{!billingRule.kognoz1__Type__c=='date'}" id="dateBillingRule"/>
+						 </apex:outputPanel> 
+						<!-- date field -->
+						 <apex:outputPanel style="float:left;" >
+						 	<apex:inputField value="{!billingRule.kognoz1__Datetime__c}" rendered="{!billingRule.kognoz1__Type__c=='datetime'}" id="datetimeBillingRule"/>
+						 </apex:outputPanel> 
+						<!-- double field -->
+						 <apex:outputPanel style="float:left;" >
+						 	<apex:inputField value="{!billingRule.kognoz1__Double__c}" rendered="{!billingRule.kognoz1__Type__c=='double'}" id="doubeBillingRule"/>
+						 </apex:outputPanel> 
+						<!-- currency field -->
+						 <apex:outputPanel style="float:left;" >
+						 	<apex:inputField value="{!billingRule.kognoz1__Currency__c}" rendered="{!billingRule.kognoz1__Type__c=='currency'}" id="currencyBillingRule"/>
+						 </apex:outputPanel> 
+						<!-- percent field -->
+						 <apex:outputPanel style="float:left;" >
+						 	<apex:inputField value="{!billingRule.kognoz1__Percent__c}" rendered="{!billingRule.kognoz1__Type__c=='percent'}" id="percentBillingRule"/>
+						 </apex:outputPanel> 
+						<!-- integer field -->
+						 <apex:outputPanel style="float:left;" >
+						 	<apex:inputField value="{!billingRule.kognoz1__Integer__c}" rendered="{!billingRule.kognoz1__Type__c=='integer'}" id="integerBillingRule"/>
+						 </apex:outputPanel> 
+						<!-- text field -->
+						 <apex:outputPanel style="float:left;" >
+						 	<apex:inputField value="{!billingRule.kognoz1__Text__c}" rendered="{!billingRule.kognoz1__Type__c=='string'}" id="textBillingRule"/>
+						 </apex:outputPanel> 
+						<!-- value type: Picklist or Boolean-->
+						<apex:outputPanel style="float:left;" rendered="{!OR(billingRule.kognoz1__Type__c=='picklist',billingRule.kognoz1__Type__c=='boolean')}">
+							<apex:selectList value="{!valueSelected}" size="1" multiselect="false">
+								<apex:selectOptions value="{!valueOptions}" />
+							</apex:selectList>
+						</apex:outputPanel>
+						<!-- ############################# -->
+					</td>
+					<td>
+						<apex:outputPanel style="float:left;">&nbsp;&nbsp;</apex:outputPanel>
+					</td>
+					<td id="variable">
+						<apex:panelGrid columns="2">
+							<apex:inputCheckbox value="{!billingRule.kognoz1__Variable__c}" id="variableBillingRule"/>
+							<apex:outputText value="Variable"/>
+						</apex:panelGrid>
+					</td>
+				</tr>
+			</table>	
+				
+		</apex:outputPanel>
+		<apex:outputPanel id="errorPanel" style="display:none;">
+		</apex:outputPanel>
+		
+		</apex:pageBlockSection>
+	</apex:pageBlock>
+	<apex:inputText id="billingRuleType" value="{!billingRuleType}" style="display:none"/>
+	<apex:inputText id="isError" value="{!isError}" style="display:none"/>
+    <apex:inputText value="{!errorBagJSON}" id="errorBagJSONContField" style="display:none"/>
+ </apex:form>
+</apex:page>

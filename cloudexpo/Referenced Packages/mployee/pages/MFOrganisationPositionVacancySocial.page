@@ -1,0 +1,40 @@
+<apex:page standardController="mployee__MF_Organisation_PositionVacancy__c" id="thePage"  sidebar="false" showHeader="false">	
+    
+    <style>
+    	ul#social {
+    		padding-left: 0px;    		    	
+    	}
+    	ul#social li{
+    		margin-left:0;
+    		margin-right: 0.5em;
+    		display: inline; 
+    	}       
+    </style>
+    
+	<ul id="social" class="list-inline ">
+	    <li>
+	        <apex:outputLink target="_blank" title="Share this job on Twitter" id="share-twitter" value="https://twitter.com/intent/tweet">
+	            <apex:param name="original_referer" value="http://mployee.nl/&source=tweetbutton" />
+	            <apex:param name="text" value="We are looking for a {!mployee__MF_Organisation_PositionVacancy__c.mployee__Position__r.name}" />
+	            <apex:param name="url" value="http://mployeerec-developer-edition.eu2.force.com/mployeeRec__SiteApplicationNew?vacancy={!mployee__MF_Organisation_PositionVacancy__c.id}" />
+	            <apex:image id="twitter-icon" value="{!URLFOR($Resource.mployeeSite,	'assets/img/social/16/twitter.png')}" />
+	        </apex:outputLink>
+	    </li>
+	    <li>
+	        <apex:outputLink target="_blank" title="Share this job on LinkedIn" id="share-linkedin" value="https://www.linkedin.com/shareArticle">                        
+	            <apex:param name="mini" value="true" />
+	            <apex:param name="url" value="http://mployee.nl/" />
+	            <apex:param name="title" value="We are looking for a {!mployee__MF_Organisation_PositionVacancy__c.mployee__Position__r.name}" />
+	            <apex:param name="summary" value="http://mployeerec-developer-edition.eu2.force.com/mployeeRec__SiteApplicationNew?vacancy={!mployee__MF_Organisation_PositionVacancy__c.id}" />		                        
+	            <apex:image id="linkedin-icon" value="{!URLFOR($Resource.mployeeSite,	'assets/img/social/16/linkedin.png')}" />
+	        </apex:outputLink>
+	    </li>
+	    <li>
+	        <apex:outputLink target="_blank" title="Share this job on Facebook" id="share-facebook"
+	            value="http://www.facebook.com/sharer.php?u={!mployee__MF_Organisation_PositionVacancy__c.id}">                      
+	            <apex:image id="facebook-icon" value="{!URLFOR($Resource.mployeeSite,	'assets/img/social/16/facebook.png')}" />                      
+	        </apex:outputLink>
+	    </li>
+	</ul> 
+
+</apex:page>

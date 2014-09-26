@@ -1,0 +1,28 @@
+<apex:component layout="none" >
+
+	<apex:attribute name="selectedApp" description="" type="Schema.DescribeTabSetResult" />
+	<apex:attribute name="styleClass" description="" type="String" default="nav nav-tabs nav-stacked main-menu"/>
+	
+	
+
+
+	<ul class="{!styleClass}">
+		
+		<apex:repeat value="{!selectedApp.tabs}" var="tab">
+   		<li>
+   			<a href="{!tab.url}">
+   				<i class="fa fa-bar-chart-o"></i>
+   				<span class="hidden-sm"> {!tab.label}</span>
+   			</a>
+   		</li>
+    	</apex:repeat>
+    	<li class="active"><a href="index.html"><i class="fa fa-bar-chart-o"></i><span class="hidden-sm"> Dashboard</span></a></li>
+   		<li class="dropdown">
+			<a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown">
+				<b class="caret"></b>
+			</a>
+			<ul class="dropdown-menu">
+			</ul>
+		</li>
+	</ul>
+</apex:component>
